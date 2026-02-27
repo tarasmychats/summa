@@ -24,3 +24,14 @@ struct AssetPriceData: Codable {
     let change24h: Double?
     let updatedAt: String
 }
+
+struct SearchResponseBody: Codable {
+    let results: [SearchResultItem]
+}
+
+struct SearchResultItem: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let symbol: String
+    let category: String
+}

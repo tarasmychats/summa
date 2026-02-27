@@ -37,6 +37,29 @@ class PriceAPIClient {
         return decoded.prices
     }
 
+    func searchAssets(query: String) async throws -> [SearchResultItem] {
+        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return []
+        }
+
+        var components = URLComponents(string: "\(baseURL)/search")
+        components?.queryItems = [URLQueryItem(name: "q", value: query)]
+
+        guard let url = components?.url else {
+            throw APIError.invalidURL
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw APIError.serverError
+        }
+
+        let decoded = try JSONDecoder().decode(SearchResponseBody.self, from: data)
+        return decoded.results
+    }
+
     enum APIError: Error, LocalizedError {
         case invalidURL
         case serverError

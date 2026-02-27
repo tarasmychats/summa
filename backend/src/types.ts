@@ -27,3 +27,14 @@ export interface ErrorResponse {
   error: string;
   details?: string;
 }
+
+export interface SearchResult {
+  id: string;
+  name: string;
+  symbol: string;
+  category: AssetCategory;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+}

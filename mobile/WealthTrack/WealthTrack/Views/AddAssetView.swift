@@ -9,13 +9,10 @@ struct AddAssetView: View {
     @State private var searchText = ""
     @State private var selectedAsset: AssetDefinition?
     @State private var amount = ""
-
-    private var filteredAssets: [AssetDefinition] {
-        if searchText.isEmpty {
-            return AssetCatalog.all
-        }
-        return AssetCatalog.search(query: searchText)
-    }
+    @State private var searchResults: [AssetDefinition] = []
+    @State private var isSearching = false
+    @State private var searchError: String?
+    @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
         NavigationStack {
@@ -39,22 +36,47 @@ struct AddAssetView: View {
 
     private var assetPicker: some View {
         List {
-            ForEach(AssetCategory.allCases, id: \.self) { category in
-                let assets = filteredAssets.filter { $0.category == category }
-                if !assets.isEmpty {
-                    Section(category.displayName) {
-                        ForEach(assets) { asset in
-                            Button {
-                                selectedAsset = asset
-                            } label: {
-                                HStack {
-                                    Image(systemName: category.iconName)
-                                        .foregroundStyle(.secondary)
-                                    VStack(alignment: .leading) {
-                                        Text(asset.name)
-                                        Text(asset.symbol)
-                                            .font(.caption)
+            if searchText.isEmpty {
+                Section {
+                    Text("Type to search for crypto, stocks, ETFs, or currencies")
+                        .foregroundStyle(.secondary)
+                }
+            } else if isSearching {
+                Section {
+                    HStack {
+                        ProgressView()
+                        Text("Searching...")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else if let error = searchError {
+                Section {
+                    Text(error)
+                        .foregroundStyle(.red)
+                }
+            } else if searchResults.isEmpty {
+                Section {
+                    Text("No results for \"\(searchText)\"")
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                ForEach(AssetCategory.allCases, id: \.self) { category in
+                    let assets = searchResults.filter { $0.category == category }
+                    if !assets.isEmpty {
+                        Section(category.displayName) {
+                            ForEach(assets) { asset in
+                                Button {
+                                    selectedAsset = asset
+                                } label: {
+                                    HStack {
+                                        Image(systemName: category.iconName)
                                             .foregroundStyle(.secondary)
+                                        VStack(alignment: .leading) {
+                                            Text(asset.name)
+                                            Text(asset.symbol)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
                                     }
                                 }
                             }
@@ -63,7 +85,43 @@ struct AddAssetView: View {
                 }
             }
         }
-        .searchable(text: $searchText, prompt: "Search assets...")
+        .searchable(text: $searchText, prompt: "Search crypto, stocks, currencies...")
+        .onChange(of: searchText) { _, newValue in
+            debounceSearch(query: newValue)
+        }
+    }
+
+    private func debounceSearch(query: String) {
+        searchTask?.cancel()
+
+        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
+            searchResults = []
+            searchError = nil
+            isSearching = false
+            return
+        }
+
+        isSearching = true
+        searchError = nil
+
+        searchTask = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+
+            guard !Task.isCancelled else { return }
+
+            do {
+                let results = try await PriceAPIClient.shared.searchAssets(query: query)
+                guard !Task.isCancelled else { return }
+
+                searchResults = results.map { AssetDefinition(from: $0) }
+                searchError = nil
+            } catch {
+                guard !Task.isCancelled else { return }
+                searchResults = []
+                searchError = "Search failed. Check your connection."
+            }
+            isSearching = false
+        }
     }
 
     private func amountInput(for asset: AssetDefinition) -> some View {
@@ -110,7 +168,6 @@ struct AddAssetView: View {
             Text("Upgrade to Premium to track unlimited assets.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            // TODO: Add StoreKit purchase button in future
             Button("Maybe Later") { dismiss() }
                 .foregroundStyle(.secondary)
             Spacer()
