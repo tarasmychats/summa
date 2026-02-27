@@ -11,13 +11,13 @@ struct AssetListView: View {
             ForEach(assets) { asset in
                 HStack {
                     Image(systemName: asset.assetCategory.iconName)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.categoryColor(asset.assetCategory))
                     VStack(alignment: .leading) {
                         Text(asset.name)
-                            .font(.headline)
+                            .font(Theme.headlineFont)
                         Text("\(asset.amount, specifier: "%.4g") \(asset.symbol.uppercased())")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(Theme.bodyFont)
+                            .foregroundStyle(Theme.textMuted)
                     }
                     Spacer()
                 }
@@ -25,6 +25,7 @@ struct AssetListView: View {
                 .onTapGesture {
                     editingAsset = asset
                 }
+                .listRowBackground(Theme.bgCard)
             }
             .onDelete { indexSet in
                 for index in indexSet {
@@ -32,6 +33,8 @@ struct AssetListView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Theme.bgPrimary)
         .navigationTitle("My Assets")
         .sheet(item: $editingAsset) { asset in
             EditAssetView(asset: asset)
@@ -49,11 +52,11 @@ struct EditAssetView: View {
             VStack(spacing: 24) {
                 Spacer()
                 Text(asset.name)
-                    .font(.title2.bold())
+                    .font(Theme.titleFont)
                 TextField("Amount", text: $amountText)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
-                    .font(.title)
+                    .font(Theme.largeValue)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                 Button("Save") {
@@ -65,6 +68,7 @@ struct EditAssetView: View {
                 .buttonStyle(.borderedProminent)
                 Spacer()
             }
+            .background(Theme.bgPrimary)
             .navigationTitle("Edit \(asset.name)")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

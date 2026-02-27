@@ -27,7 +27,7 @@ struct ProjectionsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: Theme.sectionSpacing) {
                     Picker("Timeframe", selection: $selectedYears) {
                         ForEach(yearOptions, id: \.self) { years in
                             Text("\(years) Years").tag(years)
@@ -44,28 +44,28 @@ struct ProjectionsView: View {
                         .foregroundStyle(by: .value("Scenario", point.scenario))
                     }
                     .chartForegroundStyleScale([
-                        "Pessimistic": .red,
-                        "Expected": .blue,
-                        "Optimistic": .green,
+                        "Pessimistic": Theme.coral,
+                        "Expected": Theme.sage,
+                        "Optimistic": Theme.lavender,
                     ])
                     .frame(height: 300)
-                    .padding()
+                    .themeCard()
 
-                    // Final values
                     VStack(spacing: 12) {
-                        projectionRow("Pessimistic", value: projection.pessimistic, color: .red)
-                        projectionRow("Expected", value: projection.expected, color: .blue)
-                        projectionRow("Optimistic", value: projection.optimistic, color: .green)
+                        projectionRow("Pessimistic", value: projection.pessimistic, color: Theme.coral)
+                        projectionRow("Expected", value: projection.expected, color: Theme.sage)
+                        projectionRow("Optimistic", value: projection.optimistic, color: Theme.lavender)
                     }
-                    .padding()
+                    .themeCard()
 
                     Text("Based on historical average returns. Past performance does not guarantee future results.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textMuted)
                         .multilineTextAlignment(.center)
                         .padding()
                 }
             }
+            .background(Theme.bgPrimary)
             .navigationTitle("Projections")
             .task(id: assets.count) {
                 await refreshHoldings()
@@ -77,9 +77,10 @@ struct ProjectionsView: View {
         HStack {
             Circle().fill(color).frame(width: 12, height: 12)
             Text(label)
+                .font(Theme.bodyFont)
             Spacer()
             Text(value, format: .currency(code: "USD"))
-                .bold()
+                .font(Theme.headlineFont)
         }
     }
 

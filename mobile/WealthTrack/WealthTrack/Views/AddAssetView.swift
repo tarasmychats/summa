@@ -25,6 +25,7 @@ struct AddAssetView: View {
                     assetPicker
                 }
             }
+            .background(Theme.bgPrimary)
             .navigationTitle("Add Asset")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -39,26 +40,34 @@ struct AddAssetView: View {
             if searchText.isEmpty {
                 Section {
                     Text("Type to search for crypto, stocks, ETFs, or currencies")
-                        .foregroundStyle(.secondary)
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textMuted)
                 }
+                .listRowBackground(Theme.bgCard)
             } else if isSearching {
                 Section {
                     HStack {
                         ProgressView()
                         Text("Searching...")
-                            .foregroundStyle(.secondary)
+                            .font(Theme.bodyFont)
+                            .foregroundStyle(Theme.textMuted)
                     }
                 }
+                .listRowBackground(Theme.bgCard)
             } else if let error = searchError {
                 Section {
                     Text(error)
-                        .foregroundStyle(.red)
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.coral)
                 }
+                .listRowBackground(Theme.bgCard)
             } else if searchResults.isEmpty {
                 Section {
                     Text("No results for \"\(searchText)\"")
-                        .foregroundStyle(.secondary)
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textMuted)
                 }
+                .listRowBackground(Theme.bgCard)
             } else {
                 ForEach(AssetCategory.allCases, id: \.self) { category in
                     let assets = searchResults.filter { $0.category == category }
@@ -70,21 +79,25 @@ struct AddAssetView: View {
                                 } label: {
                                     HStack {
                                         Image(systemName: category.iconName)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(Theme.categoryColor(category))
                                         VStack(alignment: .leading) {
                                             Text(asset.name)
+                                                .font(Theme.bodyFont)
                                             Text(asset.symbol)
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
+                                                .font(Theme.captionFont)
+                                                .foregroundStyle(Theme.textMuted)
                                         }
                                     }
                                 }
+                                .listRowBackground(Theme.bgCard)
                             }
                         }
                     }
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Theme.bgPrimary)
         .searchable(text: $searchText, prompt: "Search crypto, stocks, currencies...")
         .onChange(of: searchText) { _, newValue in
             debounceSearch(query: newValue)
@@ -129,17 +142,18 @@ struct AddAssetView: View {
             Spacer()
 
             Text(asset.name)
-                .font(.title2.bold())
+                .font(Theme.titleFont)
 
             TextField("Amount", text: $amount)
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.roundedBorder)
-                .font(.title)
+                .font(Theme.largeValue)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
             Text("How much \(asset.symbol) do you own?")
-                .foregroundStyle(.secondary)
+                .font(Theme.bodyFont)
+                .foregroundStyle(Theme.textMuted)
 
             Button("Add to Portfolio") {
                 saveAsset(asset)
@@ -151,7 +165,8 @@ struct AddAssetView: View {
                 selectedAsset = nil
                 amount = ""
             }
-            .foregroundStyle(.secondary)
+            .font(Theme.bodyFont)
+            .foregroundStyle(Theme.textMuted)
 
             Spacer()
         }
@@ -162,14 +177,16 @@ struct AddAssetView: View {
             Spacer()
             Image(systemName: "lock.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textMuted)
             Text("Free Limit Reached")
-                .font(.title2.bold())
+                .font(Theme.titleFont)
             Text("Upgrade to Premium to track unlimited assets.")
-                .foregroundStyle(.secondary)
+                .font(Theme.bodyFont)
+                .foregroundStyle(Theme.textMuted)
                 .multilineTextAlignment(.center)
             Button("Maybe Later") { dismiss() }
-                .foregroundStyle(.secondary)
+                .font(Theme.bodyFont)
+                .foregroundStyle(Theme.textMuted)
             Spacer()
         }
         .padding()

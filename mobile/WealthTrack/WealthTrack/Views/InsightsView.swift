@@ -28,20 +28,23 @@ struct InsightsView: View {
                     ForEach(insights) { insight in
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: insight.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
-                                .foregroundStyle(insight.severity == .warning ? .orange : .blue)
+                                .foregroundStyle(insight.severity == .warning ? Theme.coral : Theme.lavender)
                                 .font(.title3)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(insight.title)
-                                    .font(.headline)
+                                    .font(Theme.headlineFont)
                                 Text(insight.message)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .font(Theme.bodyFont)
+                                    .foregroundStyle(Theme.textMuted)
                             }
                         }
                         .padding(.vertical, 4)
+                        .listRowBackground(Theme.bgCard)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.bgPrimary)
             .navigationTitle("Insights")
             .task(id: assets.count) {
                 await refreshHoldings()
