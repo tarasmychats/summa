@@ -13,7 +13,7 @@ struct DashboardView: View {
                 if assets.isEmpty {
                     emptyState
                 } else {
-                    VStack(spacing: 20) {
+                    VStack(spacing: Theme.sectionSpacing) {
                         totalValueCard
                         breakdownChart
                         riskScoreCard
@@ -24,6 +24,7 @@ struct DashboardView: View {
                     .padding()
                 }
             }
+            .background(Theme.bgPrimary)
             .navigationTitle("WealthTrack")
             .toolbar {
                 ToolbarItem(placement: .navigation) {
@@ -53,11 +54,11 @@ struct DashboardView: View {
             Spacer()
             Image(systemName: "chart.pie.fill")
                 .font(.system(size: 60))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.sage.opacity(0.5))
             Text("What do you own?")
-                .font(.title2.bold())
+                .font(Theme.titleFont)
             Text("Add your first asset to start tracking your wealth.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textMuted)
                 .multilineTextAlignment(.center)
             Button("Add Asset") {
                 showingAddAsset = true
@@ -71,83 +72,88 @@ struct DashboardView: View {
     private var totalValueCard: some View {
         VStack(spacing: 4) {
             Text("Total Portfolio Value")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(Theme.bodyFont)
+                .foregroundStyle(Theme.textMuted)
             Text(viewModel.totalValue, format: .currency(code: "USD"))
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .font(Theme.largeValue)
+                .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity)
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themeCard()
     }
 
     private var breakdownChart: some View {
         VStack(alignment: .leading) {
             Text("Allocation")
-                .font(.headline)
+                .font(Theme.headlineFont)
             Chart {
                 ForEach(Array(viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })), id: \.self) { category in
                     SectorMark(
                         angle: .value(category.displayName, viewModel.breakdown[category] ?? 0),
                         angularInset: 1.5
                     )
-                    .foregroundStyle(by: .value("Category", category.displayName))
+                    .foregroundStyle(Theme.categoryColor(category))
                 }
             }
             .frame(height: 200)
+
+            HStack(spacing: 16) {
+                ForEach(Array(viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })), id: \.self) { category in
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Theme.categoryColor(category))
+                            .frame(width: 10, height: 10)
+                        Text(category.displayName)
+                            .font(Theme.captionFont)
+                            .foregroundStyle(Theme.textMuted)
+                    }
+                }
+            }
+            .padding(.top, 4)
         }
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themeCard()
     }
 
     private var riskScoreCard: some View {
         HStack {
             VStack(alignment: .leading) {
                 Text("Risk Score")
-                    .font(.headline)
+                    .font(Theme.headlineFont)
                 Text(viewModel.riskScore.label)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.bodyFont)
+                    .foregroundStyle(Theme.textMuted)
             }
             Spacer()
             Text("\(viewModel.riskScore.value)")
-                .font(.system(size: 44, weight: .bold, design: .rounded))
-                .foregroundStyle(riskColor)
+                .font(Theme.largeValue)
+                .foregroundStyle(Theme.riskColor(viewModel.riskScore.value))
             Text("/ 10")
-                .foregroundStyle(.secondary)
+                .font(Theme.bodyFont)
+                .foregroundStyle(Theme.textMuted)
         }
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    private var riskColor: Color {
-        switch viewModel.riskScore.value {
-        case 1...3: return .green
-        case 4...6: return .yellow
-        default: return .red
-        }
+        .themeCard()
     }
 
     private func projectionPreviewCard(_ projection: Projection) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("10-Year Projection")
-                .font(.headline)
+                .font(Theme.headlineFont)
             HStack {
-                projectionColumn(label: "Pessimistic", value: projection.pessimistic, color: .red)
-                projectionColumn(label: "Expected", value: projection.expected, color: .blue)
-                projectionColumn(label: "Optimistic", value: projection.optimistic, color: .green)
+                projectionColumn(label: "Pessimistic", value: projection.pessimistic, color: Theme.coral)
+                projectionColumn(label: "Expected", value: projection.expected, color: Theme.sage)
+                projectionColumn(label: "Optimistic", value: projection.optimistic, color: Theme.lavender)
             }
         }
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themeCard()
     }
 
     private func projectionColumn(label: String, value: Double, color: Color) -> some View {
         VStack {
             Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Theme.captionFont)
+                .foregroundStyle(Theme.textMuted)
             Text(value, format: .currency(code: "USD"))
-                .font(.subheadline.bold())
+                .font(Theme.bodyFont.bold())
                 .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)

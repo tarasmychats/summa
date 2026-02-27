@@ -21,6 +21,7 @@ struct ContentView: View {
                     Label("Insights", systemImage: "lightbulb.fill")
                 }
         }
+        .tint(Theme.sage)
     }
 }
 
