@@ -5,7 +5,7 @@ export async function searchStocks(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return [];
 
   try {
-    const result = await yahooFinance.search(query, { quotesCount: 20, newsCount: 0 });
+    const result: any = await yahooFinance.search(query, { quotesCount: 20, newsCount: 0 });
     const quotes = result.quotes ?? [];
 
     return quotes
