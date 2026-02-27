@@ -1,0 +1,8 @@
+{
+  "name": "wealthtrack",
+  "private": true,
+  "workspaces": ["backend"],
+  "engines": {
+    "node": ">=20"
+  }
+}
