@@ -6,6 +6,7 @@ struct DashboardView: View {
     @Query private var assets: [Asset]
     @State private var viewModel = DashboardViewModel()
     @State private var showingAddAsset = false
+    @State private var cardsAppeared = false
 
     var body: some View {
         NavigationStack {
@@ -15,13 +16,18 @@ struct DashboardView: View {
                 } else {
                     VStack(spacing: Theme.sectionSpacing) {
                         totalValueCard
+                            .cardAppearance(index: 0, appeared: cardsAppeared)
                         breakdownChart
+                            .cardAppearance(index: 1, appeared: cardsAppeared)
                         riskScoreCard
+                            .cardAppearance(index: 2, appeared: cardsAppeared)
                         if let preview = viewModel.projectionPreview {
                             projectionPreviewCard(preview)
+                                .cardAppearance(index: 3, appeared: cardsAppeared)
                         }
                     }
                     .padding()
+                    .onAppear { cardsAppeared = true }
                 }
             }
             .background(Theme.bgPrimary)

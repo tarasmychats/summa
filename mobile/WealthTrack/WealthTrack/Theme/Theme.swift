@@ -96,4 +96,11 @@ extension View {
     func themeCard(tint: Color? = nil) -> some View {
         modifier(ThemeCard(tint: tint))
     }
+
+    func cardAppearance(index: Int, appeared: Bool) -> some View {
+        self
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 20)
+            .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.1), value: appeared)
+    }
 }
