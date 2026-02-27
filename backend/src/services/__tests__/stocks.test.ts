@@ -1,0 +1,46 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fetchStockPrices } from "../stocks.js";
+
+vi.mock("yahoo-finance2", () => ({
+  default: {
+    quote: vi.fn(),
+  },
+}));
+
+import yahooFinance from "yahoo-finance2";
+
+describe("fetchStockPrices", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns prices for requested stock tickers", async () => {
+    vi.mocked(yahooFinance.quote).mockResolvedValueOnce([
+      {
+        symbol: "VOO",
+        regularMarketPrice: 520.5,
+        regularMarketChangePercent: 0.45,
+        currency: "USD",
+      },
+    ] as any);
+
+    const result = await fetchStockPrices(["VOO"]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      id: "VOO",
+      category: "stock",
+      price: 520.5,
+      currency: "USD",
+      change24h: 0.45,
+      updatedAt: expect.any(String),
+    });
+  });
+
+  it("returns empty array on error", async () => {
+    vi.mocked(yahooFinance.quote).mockRejectedValueOnce(new Error("API down"));
+
+    const result = await fetchStockPrices(["VOO"]);
+    expect(result).toEqual([]);
+  });
+});
