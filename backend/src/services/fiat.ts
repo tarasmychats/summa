@@ -1,4 +1,5 @@
 import type { AssetPrice } from "../types.js";
+import { logger } from "../logger.js";
 
 const EXCHANGERATE_BASE = "https://v6.exchangerate-api.com/v6";
 
@@ -9,16 +10,25 @@ export async function fetchExchangeRates(
   if (targetCurrencies.length === 0) return [];
 
   const apiKey = process.env.EXCHANGERATE_API_KEY;
-  if (!apiKey) return [];
+  if (!apiKey) {
+    logger.warn("fiat fetch skipped: EXCHANGERATE_API_KEY not set");
+    return [];
+  }
 
   try {
     const response = await fetch(
       `${EXCHANGERATE_BASE}/${apiKey}/latest/${baseCurrency}`
     );
-    if (!response.ok) return [];
+    if (!response.ok) {
+      logger.warn("fiat rate fetch failed", { status: response.status, baseCurrency });
+      return [];
+    }
 
     const data = await response.json();
-    if (data.result !== "success") return [];
+    if (data.result !== "success") {
+      logger.warn("fiat rate api error", { result: data.result, baseCurrency });
+      return [];
+    }
 
     const now = new Date().toISOString();
     const rates = data.conversion_rates;
@@ -33,7 +43,8 @@ export async function fetchExchangeRates(
         change24h: null,
         updatedAt: now,
       }));
-  } catch {
+  } catch (err) {
+    logger.error("fiat rate fetch error", { baseCurrency, error: String(err) });
     return [];
   }
 }

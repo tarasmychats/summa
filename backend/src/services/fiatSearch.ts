@@ -1,4 +1,5 @@
 import type { SearchResult } from "../types.js";
+import { logger } from "../logger.js";
 
 const EXCHANGERATE_BASE = "https://v6.exchangerate-api.com/v6";
 
@@ -17,16 +18,25 @@ const CURRENCY_NAMES: Record<string, string> = {
 
 export async function searchFiat(query: string): Promise<SearchResult[]> {
   const apiKey = process.env.EXCHANGERATE_API_KEY;
-  if (!apiKey) return [];
+  if (!apiKey) {
+    logger.warn("fiat search skipped: EXCHANGERATE_API_KEY not set");
+    return [];
+  }
 
   try {
     const response = await fetch(
       `${EXCHANGERATE_BASE}/${apiKey}/latest/USD`
     );
-    if (!response.ok) return [];
+    if (!response.ok) {
+      logger.warn("fiat search fetch failed", { status: response.status });
+      return [];
+    }
 
     const data = await response.json();
-    if (data.result !== "success") return [];
+    if (data.result !== "success") {
+      logger.warn("fiat search api error", { result: data.result });
+      return [];
+    }
 
     const currencies = Object.keys(data.conversion_rates);
     const q = query.trim().toUpperCase();
@@ -44,7 +54,8 @@ export async function searchFiat(query: string): Promise<SearchResult[]> {
       symbol: code,
       category: "fiat" as const,
     }));
-  } catch {
+  } catch (err) {
+    logger.error("fiat search error", { error: String(err) });
     return [];
   }
 }

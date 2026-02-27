@@ -1,5 +1,6 @@
 import yahooFinance from "yahoo-finance2";
 import type { AssetPrice } from "../types.js";
+import { logger } from "../logger.js";
 
 export async function fetchStockPrices(
   tickers: string[]
@@ -21,7 +22,8 @@ export async function fetchStockPrices(
         change24h: q.regularMarketChangePercent ?? null,
         updatedAt: now,
       }));
-  } catch {
+  } catch (err) {
+    logger.error("stock price fetch error", { tickers, error: String(err) });
     return [];
   }
 }

@@ -1,4 +1,5 @@
 import type { SearchResult } from "../types.js";
+import { logger } from "../logger.js";
 
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 
@@ -13,7 +14,10 @@ export async function searchCrypto(query: string): Promise<SearchResult[]> {
 
   try {
     const response = await fetch(`${COINGECKO_BASE}/search?${params}`);
-    if (!response.ok) return [];
+    if (!response.ok) {
+      logger.warn("crypto search failed", { status: response.status, query });
+      return [];
+    }
 
     const data = await response.json();
     const coins = data.coins ?? [];
@@ -24,7 +28,8 @@ export async function searchCrypto(query: string): Promise<SearchResult[]> {
       symbol: (coin.symbol ?? "").toUpperCase(),
       category: "crypto" as const,
     }));
-  } catch {
+  } catch (err) {
+    logger.error("crypto search error", { query, error: String(err) });
     return [];
   }
 }

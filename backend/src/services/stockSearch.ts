@@ -1,5 +1,6 @@
 import yahooFinance from "yahoo-finance2";
 import type { SearchResult } from "../types.js";
+import { logger } from "../logger.js";
 
 export async function searchStocks(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return [];
@@ -17,7 +18,8 @@ export async function searchStocks(query: string): Promise<SearchResult[]> {
         symbol: q.symbol,
         category: "stock" as const,
       }));
-  } catch {
+  } catch (err) {
+    logger.error("stock search error", { query, error: String(err) });
     return [];
   }
 }
