@@ -1,0 +1,119 @@
+import SwiftUI
+import SwiftData
+import Charts
+
+struct ProjectionsView: View {
+    @Query private var assets: [Asset]
+    @State private var selectedYears = 10
+    @State private var holdings: [PortfolioHolding] = []
+
+    private let yearOptions = [10, 20, 50]
+
+    private var projection: Projection {
+        ProjectionEngine.project(holdings: holdings, years: selectedYears)
+    }
+
+    private var chartData: [ProjectionPoint] {
+        (0...selectedYears).flatMap { year in
+            let p = ProjectionEngine.project(holdings: holdings, years: year)
+            return [
+                ProjectionPoint(year: year, value: p.pessimistic, scenario: "Pessimistic"),
+                ProjectionPoint(year: year, value: p.expected, scenario: "Expected"),
+                ProjectionPoint(year: year, value: p.optimistic, scenario: "Optimistic"),
+            ]
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    Picker("Timeframe", selection: $selectedYears) {
+                        ForEach(yearOptions, id: \.self) { years in
+                            Text("\(years) Years").tag(years)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+
+                    Chart(chartData) { point in
+                        LineMark(
+                            x: .value("Year", point.year),
+                            y: .value("Value", point.value)
+                        )
+                        .foregroundStyle(by: .value("Scenario", point.scenario))
+                    }
+                    .chartForegroundStyleScale([
+                        "Pessimistic": .red,
+                        "Expected": .blue,
+                        "Optimistic": .green,
+                    ])
+                    .frame(height: 300)
+                    .padding()
+
+                    // Final values
+                    VStack(spacing: 12) {
+                        projectionRow("Pessimistic", value: projection.pessimistic, color: .red)
+                        projectionRow("Expected", value: projection.expected, color: .blue)
+                        projectionRow("Optimistic", value: projection.optimistic, color: .green)
+                    }
+                    .padding()
+
+                    Text("Based on historical average returns. Past performance does not guarantee future results.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+            }
+            .navigationTitle("Projections")
+            .task(id: assets.count) {
+                await refreshHoldings()
+            }
+        }
+    }
+
+    private func projectionRow(_ label: String, value: Double, color: Color) -> some View {
+        HStack {
+            Circle().fill(color).frame(width: 12, height: 12)
+            Text(label)
+            Spacer()
+            Text(value, format: .currency(code: "USD"))
+                .bold()
+        }
+    }
+
+    private func refreshHoldings() async {
+        do {
+            let prices = try await PriceAPIClient.shared.fetchPrices(
+                assets: assets,
+                baseCurrency: "USD"
+            )
+            let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
+            holdings = assets.map { asset in
+                PortfolioHolding(
+                    name: asset.name,
+                    amount: asset.amount,
+                    pricePerUnit: priceMap[asset.symbol] ?? 0,
+                    category: asset.assetCategory
+                )
+            }
+        } catch {
+            holdings = assets.map { asset in
+                PortfolioHolding(
+                    name: asset.name,
+                    amount: asset.amount,
+                    pricePerUnit: 0,
+                    category: asset.assetCategory
+                )
+            }
+        }
+    }
+}
+
+struct ProjectionPoint: Identifiable {
+    let id = UUID()
+    let year: Int
+    let value: Double
+    let scenario: String
+}
