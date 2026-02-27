@@ -4,7 +4,12 @@ class PriceAPIClient {
     static let shared = PriceAPIClient()
 
     // TODO: Change to production URL before App Store release
+    // Use localhost for simulator, local IP for physical device
+    #if targetEnvironment(simulator)
     private let baseURL = "http://localhost:3001/api"
+    #else
+    private let baseURL = "http://192.168.1.154:3001/api"
+    #endif
 
     func fetchPrices(
         assets: [Asset],
