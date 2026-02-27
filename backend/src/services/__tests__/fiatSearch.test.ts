@@ -53,10 +53,16 @@ describe("searchFiat", () => {
     expect(result).toHaveLength(3);
   });
 
-  it("returns empty array when API fails", async () => {
+  it("falls back to offline results when API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const result = await searchFiat("usd");
-    expect(result).toEqual([]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      id: "USD",
+      name: "US Dollar",
+      symbol: "USD",
+      category: "fiat",
+    });
   });
 });

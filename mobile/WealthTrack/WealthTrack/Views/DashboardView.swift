@@ -74,7 +74,6 @@ struct DashboardView: View {
 
     private var emptyState: some View {
         VStack(spacing: 16) {
-            Spacer()
             Image(systemName: "chart.pie.fill")
                 .font(.system(size: 60))
                 .foregroundStyle(Theme.sage.opacity(0.5))
@@ -87,9 +86,10 @@ struct DashboardView: View {
                 showingAddAsset = true
             }
             .buttonStyle(.borderedProminent)
-            Spacer()
         }
+        .frame(maxWidth: .infinity)
         .padding()
+        .containerRelativeFrame(.vertical) { height, _ in height * 0.7 }
     }
 
     private var totalValueCard: some View {

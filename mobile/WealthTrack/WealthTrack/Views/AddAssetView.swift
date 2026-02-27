@@ -77,15 +77,28 @@ struct AddAssetView: View {
                                 Button {
                                     selectedAsset = asset
                                 } label: {
-                                    HStack {
+                                    HStack(spacing: 12) {
                                         Image(systemName: category.iconName)
+                                            .font(.system(size: 16))
                                             .foregroundStyle(Theme.categoryColor(category))
-                                        VStack(alignment: .leading) {
+                                            .frame(width: 36, height: 36)
+                                            .background(Theme.categoryTint(category))
+                                            .clipShape(Circle())
+                                        VStack(alignment: .leading, spacing: 2) {
                                             Text(asset.name)
                                                 .font(Theme.bodyFont)
-                                            Text(asset.symbol)
-                                                .font(Theme.captionFont)
-                                                .foregroundStyle(Theme.textMuted)
+                                            HStack(spacing: 6) {
+                                                Text(asset.symbol)
+                                                    .font(Theme.captionFont)
+                                                    .foregroundStyle(Theme.textMuted)
+                                                Text(category.displayName)
+                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                                                    .foregroundStyle(Theme.categoryColor(category))
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(Theme.categoryTint(category))
+                                                    .clipShape(Capsule())
+                                            }
                                         }
                                     }
                                 }
@@ -207,6 +220,7 @@ struct AddAssetView: View {
         let asset = Asset(
             name: definition.name,
             symbol: definition.id,
+            ticker: definition.symbol,
             category: definition.category,
             amount: value
         )

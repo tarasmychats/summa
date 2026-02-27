@@ -15,7 +15,7 @@ struct AssetListView: View {
                     VStack(alignment: .leading) {
                         Text(asset.name)
                             .font(Theme.headlineFont)
-                        Text("\(asset.amount, specifier: "%.4g") \(asset.symbol.uppercased())")
+                        Text("\(asset.amount, specifier: "%.4g") \(asset.displayTicker)")
                             .font(Theme.bodyFont)
                             .foregroundStyle(Theme.textMuted)
                     }
@@ -55,36 +55,80 @@ struct EditAssetView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var amountText: String = ""
 
+    private var isValid: Bool {
+        guard let value = parseDecimal(amountText) else { return false }
+        return value > 0
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Spacer()
-                Text(asset.name)
-                    .font(Theme.titleFont)
-                TextField("Amount", text: $amountText)
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
-                    .font(Theme.largeValue)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                Button("Save") {
+            VStack(spacing: 0) {
+                VStack(spacing: 20) {
+                    // Asset identity
+                    VStack(spacing: 8) {
+                        Image(systemName: asset.assetCategory.iconName)
+                            .font(.system(size: 36))
+                            .foregroundStyle(Theme.categoryColor(asset.assetCategory))
+
+                        Text(asset.name)
+                            .font(Theme.titleFont)
+
+                        Text(asset.displayTicker)
+                            .font(Theme.captionFont)
+                            .foregroundStyle(Theme.textMuted)
+                    }
+                    .padding(.top, 32)
+
+                    // Amount input
+                    VStack(spacing: 8) {
+                        TextField("0", text: $amountText)
+                            .keyboardType(.decimalPad)
+                            .font(Theme.largeValue)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 24)
+                            .background(Theme.bgCard)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .padding(.horizontal, 40)
+
+                        Text("Amount held")
+                            .font(Theme.captionFont)
+                            .foregroundStyle(Theme.textMuted)
+                    }
+                }
+                .padding(.bottom, 32)
+
+                // Save button
+                Button {
                     if let value = parseDecimal(amountText), value > 0 {
                         asset.amount = value
                     }
                     dismiss()
+                } label: {
+                    Text("Save")
+                        .font(Theme.headlineFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(!isValid)
+                .padding(.horizontal, 40)
+
                 Spacer()
             }
             .background(Theme.bgPrimary)
             .navigationTitle("Edit \(asset.name)")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
             }
             .onAppear {
-                amountText = String(asset.amount)
+                // Format without trailing zeros (350.0 → "350", 1.5 → "1.5")
+                amountText = asset.amount.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(format: "%.0f", asset.amount)
+                    : String(asset.amount)
             }
         }
     }

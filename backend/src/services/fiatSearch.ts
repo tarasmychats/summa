@@ -16,11 +16,30 @@ const CURRENCY_NAMES: Record<string, string> = {
   AED: "UAE Dirham", SAR: "Saudi Riyal", EGP: "Egyptian Pound",
 };
 
+function searchOffline(query: string): SearchResult[] {
+  const q = query.trim().toUpperCase();
+  const codes = Object.keys(CURRENCY_NAMES);
+
+  const filtered = q
+    ? codes.filter((code) => {
+        const name = CURRENCY_NAMES[code].toUpperCase();
+        return code.includes(q) || name.includes(q);
+      })
+    : codes;
+
+  return filtered.map((code) => ({
+    id: code,
+    name: CURRENCY_NAMES[code],
+    symbol: code,
+    category: "fiat" as const,
+  }));
+}
+
 export async function searchFiat(query: string): Promise<SearchResult[]> {
   const apiKey = process.env.EXCHANGERATE_API_KEY;
   if (!apiKey) {
-    logger.warn("fiat search skipped: EXCHANGERATE_API_KEY not set");
-    return [];
+    // Fall back to built-in currency list when API key is not configured
+    return searchOffline(query);
   }
 
   try {
@@ -29,13 +48,13 @@ export async function searchFiat(query: string): Promise<SearchResult[]> {
     );
     if (!response.ok) {
       logger.warn("fiat search fetch failed", { status: response.status });
-      return [];
+      return searchOffline(query);
     }
 
     const data = await response.json();
     if (data.result !== "success") {
       logger.warn("fiat search api error", { result: data.result });
-      return [];
+      return searchOffline(query);
     }
 
     const currencies = Object.keys(data.conversion_rates);
@@ -56,6 +75,6 @@ export async function searchFiat(query: string): Promise<SearchResult[]> {
     }));
   } catch (err) {
     logger.error("fiat search error", { error: String(err) });
-    return [];
+    return searchOffline(query);
   }
 }
