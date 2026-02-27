@@ -42,6 +42,14 @@ struct AssetListView: View {
     }
 }
 
+private func parseDecimal(_ text: String) -> Double? {
+    if let value = Double(text) { return value }
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.locale = .current
+    return formatter.number(from: text)?.doubleValue
+}
+
 struct EditAssetView: View {
     @Bindable var asset: Asset
     @Environment(\.dismiss) private var dismiss
@@ -60,7 +68,7 @@ struct EditAssetView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                 Button("Save") {
-                    if let value = Double(amountText), value > 0 {
+                    if let value = parseDecimal(amountText), value > 0 {
                         asset.amount = value
                     }
                     dismiss()

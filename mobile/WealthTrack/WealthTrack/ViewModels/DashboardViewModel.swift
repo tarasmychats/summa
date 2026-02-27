@@ -10,9 +10,12 @@ class DashboardViewModel {
     var riskScore: RiskScore = RiskScore(value: 0, label: "No Assets")
     var projectionPreview: Projection?
     var isLoading = false
+    var priceError: String?
 
     func refresh(assets: [Asset]) async {
+        guard !assets.isEmpty else { return }
         isLoading = true
+        priceError = nil
 
         // Fetch prices from API
         do {
@@ -23,6 +26,13 @@ class DashboardViewModel {
 
             let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
 
+            let missingPrices = assets.filter { priceMap[$0.symbol] == nil }
+            if !missingPrices.isEmpty {
+                let symbols = missingPrices.map(\.symbol).joined(separator: ", ")
+                print("[WealthTrack] Missing prices for: \(symbols)")
+                priceError = "Couldn't load prices. Pull down to retry."
+            }
+
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,
@@ -32,6 +42,8 @@ class DashboardViewModel {
                 )
             }
         } catch {
+            print("[WealthTrack] Price fetch failed: \(error)")
+            priceError = "Couldn't load prices. Pull down to retry."
             // Use zero prices on error — user still sees their assets
             holdings = assets.map { asset in
                 PortfolioHolding(

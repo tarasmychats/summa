@@ -137,6 +137,15 @@ struct AddAssetView: View {
         }
     }
 
+    private var parsedAmount: Double? {
+        // Try period separator first (POSIX), then locale-aware parsing (handles comma)
+        if let value = Double(amount) { return value }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = .current
+        return formatter.number(from: amount)?.doubleValue
+    }
+
     private func amountInput(for asset: AssetDefinition) -> some View {
         VStack(spacing: 24) {
             Spacer()
@@ -159,7 +168,7 @@ struct AddAssetView: View {
                 saveAsset(asset)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(Double(amount) == nil || Double(amount)! <= 0)
+            .disabled(parsedAmount == nil || parsedAmount! <= 0)
 
             Button("Back") {
                 selectedAsset = nil
@@ -193,7 +202,7 @@ struct AddAssetView: View {
     }
 
     private func saveAsset(_ definition: AssetDefinition) {
-        guard let value = Double(amount), value > 0 else { return }
+        guard let value = parsedAmount, value > 0 else { return }
 
         let asset = Asset(
             name: definition.name,
