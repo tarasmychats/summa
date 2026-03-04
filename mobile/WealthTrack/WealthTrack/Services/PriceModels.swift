@@ -25,6 +25,18 @@ struct AssetPriceData: Codable {
     let updatedAt: String
 }
 
+struct HistoryResponseBody: Codable {
+    let history: [String: [HistoryDataPoint]]
+    let currency: String
+    let from: String
+    let to: String
+}
+
+struct HistoryDataPoint: Codable {
+    let date: String
+    let price: Double
+}
+
 struct SearchResponseBody: Codable {
     let results: [SearchResultItem]
 }

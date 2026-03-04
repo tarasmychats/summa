@@ -65,6 +65,40 @@ class PriceAPIClient {
         return decoded.results
     }
 
+    func fetchHistory(
+        assets: [(id: String, category: String)],
+        from: Date,
+        to: Date,
+        currency: String
+    ) async throws -> [String: [HistoryDataPoint]] {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
+
+        var components = URLComponents(string: "\(baseURL)/history")
+        components?.queryItems = [
+            URLQueryItem(name: "assets", value: assets.map(\.id).joined(separator: ",")),
+            URLQueryItem(name: "categories", value: assets.map(\.category).joined(separator: ",")),
+            URLQueryItem(name: "from", value: dateFormatter.string(from: from)),
+            URLQueryItem(name: "to", value: dateFormatter.string(from: to)),
+            URLQueryItem(name: "currency", value: currency.lowercased()),
+        ]
+
+        guard let url = components?.url else {
+            throw APIError.invalidURL
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw APIError.serverError
+        }
+
+        let decoded = try JSONDecoder().decode(HistoryResponseBody.self, from: data)
+        return decoded.history
+    }
+
     enum APIError: Error, LocalizedError {
         case invalidURL
         case serverError

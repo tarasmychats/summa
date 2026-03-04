@@ -303,9 +303,9 @@
 **Files:**
 - Modify: `mobile/WealthTrack/WealthTrack/Services/PriceAPIClient.swift`
 
-- [ ] Add `fetchHistory(assets: [(id: String, category: String)], from: Date, to: Date, currency: String) async throws -> [String: [(date: String, price: Double)]]`
-- [ ] Call `GET /api/history` with query parameters
-- [ ] Parse JSON response into typed result
+- [x] Add `fetchHistory(assets: [(id: String, category: String)], from: Date, to: Date, currency: String) async throws -> [String: [(date: String, price: Double)]]`
+- [x] Call `GET /api/history` with query parameters
+- [x] Parse JSON response into typed result
 
 ### Task 21: Create PortfolioChartView on DashboardView
 
