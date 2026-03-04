@@ -56,11 +56,11 @@
 **Files:**
 - Create: `backend/src/repositories/trackedAssets.ts`
 
-- [ ] Create `upsertTrackedAssets(assets: Array<{assetId: string, category: string}>)` — batch upsert into `tracked_assets` using `ON CONFLICT DO NOTHING`
-- [ ] Create `getAllTrackedAssets()` — returns all tracked assets grouped by category
-- [ ] Write tests for `upsertTrackedAssets` (insert new, ignore duplicate)
-- [ ] Write tests for `getAllTrackedAssets` (empty, with data, grouped correctly)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `upsertTrackedAssets(assets: Array<{assetId: string, category: string}>)` — batch upsert into `tracked_assets` using `ON CONFLICT DO NOTHING`
+- [x] Create `getAllTrackedAssets()` — returns all tracked assets grouped by category
+- [x] Write tests for `upsertTrackedAssets` (insert new, ignore duplicate)
+- [x] Write tests for `getAllTrackedAssets` (empty, with data, grouped correctly)
+- [x] Run `npm test` — must pass before next task
 
 ### Task 3: Create daily prices repository
 
