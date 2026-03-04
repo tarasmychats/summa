@@ -9,6 +9,7 @@ import { createPricesRouter } from "./routes/prices.js";
 import { createSearchRouter } from "./routes/search.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { logger } from "./logger.js";
+import { startDailyCron } from "./services/cronJob.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,6 +26,7 @@ app.use("/api", createSearchRouter());
 
 app.listen(PORT, () => {
   logger.info("server started", { port: Number(PORT) });
+  startDailyCron();
 });
 
 export default app;

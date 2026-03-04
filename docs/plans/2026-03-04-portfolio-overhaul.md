@@ -152,14 +152,14 @@
 - Create: `backend/src/services/cronJob.ts`
 - Modify: `backend/src/index.ts` (start cron on server boot)
 
-- [ ] Add `node-cron` and `@types/node-cron` dependencies
-- [ ] Create `startDailyCron()` — schedules job at `0 2 * * *` (02:00 UTC)
-- [ ] Job logic: get all `tracked_assets`, fetch today's price for each (reuse existing price services), convert to USD/EUR, insert into `daily_prices`
-- [ ] On first run for a new asset (no `backfill_status`), trigger `backfillAsset()`
-- [ ] Add structured logging (reuse existing pino logger)
-- [ ] Call `startDailyCron()` in `index.ts` server startup
-- [ ] Write tests for cron job logic (mock services, verify DB calls)
-- [ ] Run `npm test` — must pass before next task
+- [x] Add `node-cron` and `@types/node-cron` dependencies
+- [x] Create `startDailyCron()` — schedules job at `0 2 * * *` (02:00 UTC)
+- [x] Job logic: get all `tracked_assets`, fetch today's price for each (reuse existing price services), convert to USD/EUR, insert into `daily_prices`
+- [x] On first run for a new asset (no `backfill_status`), trigger `backfillAsset()`
+- [x] Add structured logging (reuse existing pino logger)
+- [x] Call `startDailyCron()` in `index.ts` server startup
+- [x] Write tests for cron job logic (mock services, verify DB calls)
+- [x] Run `npm test` — must pass before next task
 
 ---
 
