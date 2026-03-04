@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 
-// Placeholder — full implementation in Task 16
 struct AddTransactionView: View {
     let asset: Asset
     @Environment(\.modelContext) private var modelContext
@@ -12,22 +11,54 @@ struct AddTransactionView: View {
     @State private var date = Date()
     @State private var note = ""
 
+    private var parsedAmount: Double? {
+        if let value = Double(amount) { return value }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = .current
+        return formatter.number(from: amount)?.doubleValue
+    }
+
+    private var isValid: Bool {
+        guard let value = parsedAmount else { return false }
+        switch type {
+        case .delta:
+            return value != 0
+        case .snapshot:
+            return value > 0
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                DatePicker("Date", selection: $date, displayedComponents: .date)
-
-                Picker("Type", selection: $type) {
-                    Text("Add/Subtract").tag(TransactionType.delta)
-                    Text("Set Total").tag(TransactionType.snapshot)
+                Section {
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
                 }
-                .pickerStyle(.segmented)
+                .listRowBackground(Theme.bgCard)
 
-                TextField("Amount", text: $amount)
-                    .keyboardType(.decimalPad)
+                Section {
+                    Picker("Type", selection: $type) {
+                        Text("Add/Subtract").tag(TransactionType.delta)
+                        Text("Set Total").tag(TransactionType.snapshot)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .listRowBackground(Theme.bgCard)
 
-                TextField("Note (optional)", text: $note)
+                Section {
+                    TextField(type == .delta ? "Amount (+/-)" : "New total", text: $amount)
+                        .keyboardType(.decimalPad)
+                }
+                .listRowBackground(Theme.bgCard)
+
+                Section {
+                    TextField("Note (optional)", text: $note)
+                }
+                .listRowBackground(Theme.bgCard)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.bgPrimary)
             .navigationTitle("Add Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -35,22 +66,24 @@ struct AddTransactionView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        guard let value = Double(amount), value != 0 else { return }
-                        let txn = Transaction(
-                            date: date,
-                            type: type,
-                            amount: type == .delta ? value : value,
-                            note: note.isEmpty ? nil : note
-                        )
-                        txn.asset = asset
-                        modelContext.insert(txn)
-                        asset.amount = asset.currentAmount
-                        dismiss()
-                    }
-                    .disabled(Double(amount) == nil || Double(amount) == 0)
+                    Button("Save") { save() }
+                        .disabled(!isValid)
                 }
             }
         }
+    }
+
+    private func save() {
+        guard let value = parsedAmount, isValid else { return }
+        let txn = Transaction(
+            date: date,
+            type: type,
+            amount: value,
+            note: note.isEmpty ? nil : note
+        )
+        txn.asset = asset
+        modelContext.insert(txn)
+        asset.amount = asset.currentAmount
+        dismiss()
     }
 }

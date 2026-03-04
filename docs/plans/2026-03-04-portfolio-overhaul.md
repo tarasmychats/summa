@@ -251,12 +251,12 @@
 **Files:**
 - Create: `mobile/WealthTrack/WealthTrack/Views/AddTransactionView.swift`
 
-- [ ] Date picker (default: today)
-- [ ] Segmented picker for type: "Add/Subtract Amount" (delta) vs "Set New Total" (snapshot)
-- [ ] Amount text field with decimal keyboard
-- [ ] Optional note text field
-- [ ] Save button — creates Transaction, updates `asset.amount` to new computed value
-- [ ] Validation: amount must be > 0 for snapshot, non-zero for delta
+- [x] Date picker (default: today)
+- [x] Segmented picker for type: "Add/Subtract Amount" (delta) vs "Set New Total" (snapshot)
+- [x] Amount text field with decimal keyboard
+- [x] Optional note text field
+- [x] Save button — creates Transaction, updates `asset.amount` to new computed value
+- [x] Validation: amount must be > 0 for snapshot, non-zero for delta
 
 ### Task 17: Integrate transactions into AssetListView
 
