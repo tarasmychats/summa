@@ -229,11 +229,11 @@
 - Create: `mobile/WealthTrack/WealthTrack/Models/Transaction.swift`
 - Modify: `mobile/WealthTrack/WealthTrack/Models/Asset.swift` (add relationship)
 
-- [ ] Create `Transaction` model with fields: `id` (UUID), `date` (Date), `type` (TransactionType enum: `.delta`, `.snapshot`), `amount` (Double), `note` (String?), `createdAt` (Date)
-- [ ] Add `@Relationship` from Asset to Transaction (cascade delete)
-- [ ] Create `TransactionType` enum (String raw value, Codable)
-- [ ] Add computed property on Asset: `currentAmount` — replays transactions to compute current balance (if transactions exist, use them; otherwise fall back to `asset.amount`)
-- [ ] Verify SwiftData migration works (existing assets without transactions still load)
+- [x] Create `Transaction` model with fields: `id` (UUID), `date` (Date), `type` (TransactionType enum: `.delta`, `.snapshot`), `amount` (Double), `note` (String?), `createdAt` (Date)
+- [x] Add `@Relationship` from Asset to Transaction (cascade delete)
+- [x] Create `TransactionType` enum (String raw value, Codable)
+- [x] Add computed property on Asset: `currentAmount` — replays transactions to compute current balance (if transactions exist, use them; otherwise fall back to `asset.amount`)
+- [x] Verify SwiftData migration works (existing assets without transactions still load)
 
 ### Task 15: Create TransactionListView
 

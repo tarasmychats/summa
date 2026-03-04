@@ -11,6 +11,28 @@ final class Asset {
     var amount: Double      // how much user owns (e.g., 1.5 BTC, 5000 USD)
     var createdAt: Date
 
+    @Relationship(deleteRule: .cascade, inverse: \Transaction.asset)
+    var transactions: [Transaction]? = []
+
+    /// Replays transactions to compute current balance.
+    /// Falls back to `amount` for assets without transactions.
+    var currentAmount: Double {
+        guard let txns = transactions, !txns.isEmpty else {
+            return amount
+        }
+        let sorted = txns.sorted { $0.date < $1.date }
+        var balance = 0.0
+        for txn in sorted {
+            switch txn.type {
+            case .delta:
+                balance += txn.amount
+            case .snapshot:
+                balance = txn.amount
+            }
+        }
+        return balance
+    }
+
     var assetCategory: AssetCategory {
         AssetCategory(rawValue: category) ?? .fiat
     }
