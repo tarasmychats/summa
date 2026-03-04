@@ -239,6 +239,48 @@ describe("GET /api/history", () => {
       expect(response.status).toBe(400);
       expect(response.body.error).toContain("currency must be");
     });
+
+    it("returns 400 for invalid category", async () => {
+      const response = await request(app).get("/api/history").query({
+        assets: "gold",
+        categories: "commodity",
+        from: "2024-01-01",
+        to: "2024-01-31",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain("Invalid category");
+    });
+
+    it("returns 400 when from date is after to date", async () => {
+      const response = await request(app).get("/api/history").query({
+        assets: "bitcoin",
+        categories: "crypto",
+        from: "2024-12-31",
+        to: "2024-01-01",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain("before or equal");
+    });
+
+    it("returns 400 when requesting more than 50 assets", async () => {
+      const manyAssets = Array.from({ length: 51 }, (_, i) => `asset${i}`).join(",");
+      const manyCategories = Array.from({ length: 51 }, () => "crypto").join(",");
+
+      const response = await request(app).get("/api/history").query({
+        assets: manyAssets,
+        categories: manyCategories,
+        from: "2024-01-01",
+        to: "2024-01-31",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain("Maximum 50");
+    });
   });
 
   describe("empty history and backfill", () => {

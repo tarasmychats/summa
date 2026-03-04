@@ -71,7 +71,7 @@ struct PortfolioChartView: View {
             }
         }
         .themeCard()
-        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id.uuidString).joined())-\(currency)") {
+        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id.uuidString).joined())-\(currency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
             await loadHistory()
         }
     }

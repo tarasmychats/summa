@@ -28,7 +28,7 @@ vi.mock("../services/stocks.js", () => ({
 }));
 
 vi.mock("../services/fiat.js", () => ({
-  fetchFiatRates: vi.fn().mockResolvedValue([]),
+  fetchExchangeRates: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../repositories/trackedAssets.js", () => ({
@@ -43,11 +43,12 @@ vi.mock("../services/backfill.js", () => ({
   backfillAsset: vi.fn().mockResolvedValue(undefined),
 }));
 
-import app, { isDbReady, startServer } from "../index.js";
+import app from "../index.js";
 
 describe("server", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDbReady = false;
   });
 
   describe("health endpoint", () => {
@@ -62,13 +63,12 @@ describe("server", () => {
 
   describe("graceful degradation", () => {
     it("serves POST /api/prices without a real database", async () => {
-      // Verify the server accepts the request (doesn't refuse connections or crash)
       const res = await request(app)
         .post("/api/prices")
         .send({ assets: [{ id: "bitcoin", category: "crypto" }], baseCurrency: "usd" });
-      // Status may be 200 or 500 depending on mocked services, but the server handles it
-      expect(res.status).toBeDefined();
-      expect(res.body).toBeDefined();
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("prices");
+      expect(res.body).toHaveProperty("baseCurrency");
     });
 
     it("serves GET /api/search without a real database", async () => {
@@ -76,22 +76,13 @@ describe("server", () => {
       expect(res.status).toBe(200);
     });
 
-    it("serves GET /api/history without a real database", async () => {
+    it("serves GET /api/history with empty results when DB is not ready", async () => {
       const res = await request(app).get(
         "/api/history?assets=bitcoin&categories=crypto&from=2025-01-01&to=2025-06-01&currency=usd"
       );
       expect(res.status).toBe(200);
-    });
-  });
-
-  describe("exports", () => {
-    it("exports isDbReady function", () => {
-      expect(typeof isDbReady).toBe("function");
-      expect(typeof isDbReady()).toBe("boolean");
-    });
-
-    it("exports startServer async function", () => {
-      expect(typeof startServer).toBe("function");
+      expect(res.body.history).toHaveProperty("bitcoin");
+      expect(res.body.history.bitcoin).toEqual([]);
     });
   });
 });

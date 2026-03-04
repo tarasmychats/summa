@@ -67,11 +67,15 @@ export function createPricesRouter(): Router {
     res.json(response);
 
     // Fire-and-forget: track requested assets for the daily cron job
-    upsertTrackedAssets(
-      body.assets.map((a) => ({ assetId: a.id, category: a.category }))
-    ).catch(() => {
-      // Silently ignore DB errors — tracking is best-effort
-    });
+    const validCategories = new Set(["crypto", "stock", "fiat"]);
+    const trackableAssets = body.assets
+      .filter((a) => validCategories.has(a.category))
+      .map((a) => ({ assetId: a.id, category: a.category }));
+    if (trackableAssets.length > 0) {
+      upsertTrackedAssets(trackableAssets).catch(() => {
+        // Silently ignore DB errors — tracking is best-effort
+      });
+    }
   });
 
   return router;

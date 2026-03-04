@@ -54,5 +54,4 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(currentFile)) {
   startServer();
 }
 
-export { isDbReady };
 export default app;

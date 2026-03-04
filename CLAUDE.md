@@ -15,6 +15,13 @@ Multi-asset wealth tracking app — monorepo with Node.js backend and iOS app.
 - `backend/src/services/` — business logic (backfill orchestrator, cron job, per-provider history fetchers)
 - `backend/src/db.ts` — PostgreSQL connection pool and schema initialization
 
+## iOS architecture
+
+- `mobile/WealthTrack/WealthTrack/Models/` — SwiftData models (Asset, Transaction, UserSettings, AssetCategory)
+- `mobile/WealthTrack/WealthTrack/Views/` — SwiftUI views (Dashboard, AssetList, AssetDetail, AssetChart, PortfolioChart, Settings, Transactions)
+- `mobile/WealthTrack/WealthTrack/ViewModels/` — view models (DashboardViewModel)
+- `mobile/WealthTrack/WealthTrack/Services/` — API client and response models (PriceAPIClient, PriceModels)
+
 ## Backend commands
 
 - `cd backend && npm run dev` — start dev server (requires Docker + PostgreSQL)
@@ -47,3 +54,6 @@ Prerequisites: Node.js, Docker (for PostgreSQL)
 - User portfolio data lives in CloudKit (via SwiftData)
 - All business logic (projections, risk, insights) runs on-device in the iOS app
 - Dependencies: `pg` (PostgreSQL driver), `node-cron` (scheduled jobs), `yahoo-finance2`, CoinGecko API, Frankfurter API
+- Transactions use a replay model: `delta` (add/subtract) and `snapshot` (set total) types, replayed chronologically to compute `currentAmount`
+- Portfolio chart: iOS fetches price history from backend, then locally computes daily portfolio total as sum(price x amount) per day
+- UserSettings singleton auto-created on first launch; stores `displayCurrency` (USD or EUR)

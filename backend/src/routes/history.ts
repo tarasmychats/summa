@@ -36,10 +36,17 @@ export function createHistoryRouter(): Router {
     const fromStr = from as string;
     const toStr = to as string;
 
-    // Validate arrays have same length
+    // Validate arrays have same length and reasonable size
     if (assetList.length === 0 || assetList.length !== categoryList.length) {
       res.status(400).json({
         error: "assets and categories must be non-empty and have the same length",
+      });
+      return;
+    }
+
+    if (assetList.length > 50) {
+      res.status(400).json({
+        error: "Maximum 50 assets per request",
       });
       return;
     }
@@ -57,6 +64,13 @@ export function createHistoryRouter(): Router {
     if (!isValidDate(fromStr) || !isValidDate(toStr)) {
       res.status(400).json({
         error: "from and to must be valid dates in YYYY-MM-DD format",
+      });
+      return;
+    }
+
+    if (fromStr > toStr) {
+      res.status(400).json({
+        error: "'from' date must be before or equal to 'to' date",
       });
       return;
     }

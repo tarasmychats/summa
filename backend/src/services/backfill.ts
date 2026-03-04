@@ -32,7 +32,7 @@ const FIAT_YEARS = 5;
  * - Checks backfill_status to determine if/what to fetch
  * - New asset: full history fetch
  * - Already backfilled today: skip
- * - Partial backfill: fill gap from last update to today
+ * - Not yet updated today: re-fetches full history (ON CONFLICT DO UPDATE keeps data fresh)
  */
 export async function backfillAsset(
   assetId: string,

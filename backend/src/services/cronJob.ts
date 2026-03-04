@@ -37,13 +37,16 @@ export async function runDailyPriceUpdate(): Promise<void> {
     count: allAssets.length,
   });
 
-  // Pre-fetch today's EUR rate once for all assets to avoid redundant API calls
+  // Pre-fetch EUR rate for all assets. Try today first, fall back to yesterday
+  // since ECB publishes rates around 16:00 CET and this cron runs at 02:00 UTC.
   const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
   let eurPerUsd: number | null = null;
   try {
-    const rates = await fetchFiatHistory("EUR", today, today);
+    const rates = await fetchFiatHistory("EUR", yesterday, today);
     if (Array.isArray(rates) && rates.length > 0) {
-      eurPerUsd = 1 / rates[0].priceUsd;
+      // Use the most recent available rate
+      eurPerUsd = 1 / rates[rates.length - 1].priceUsd;
     }
   } catch (err) {
     logger.warn("could not pre-fetch EUR rate for daily update", { error: String(err) });

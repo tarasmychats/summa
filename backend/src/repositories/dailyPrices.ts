@@ -13,6 +13,8 @@ export interface DailyPriceInput {
   priceEur: number | null;
 }
 
+const PRICE_COLUMNS: Record<string, string> = { usd: "price_usd", eur: "price_eur" };
+
 /**
  * Batch insert daily prices. Uses ON CONFLICT DO UPDATE so newer fetches
  * overwrite stale prices for the same (asset_id, category, date).
@@ -51,37 +53,6 @@ export async function insertDailyPrices(
 }
 
 /**
- * Get daily prices for a single asset within a date range.
- * Currency selects which price column to return.
- */
-export async function getDailyPrices(
-  assetId: string,
-  category: string,
-  from: string,
-  to: string,
-  currency: "usd" | "eur"
-): Promise<DailyPrice[]> {
-  const pool = getPool();
-  const PRICE_COLUMNS: Record<string, string> = { usd: "price_usd", eur: "price_eur" };
-  const priceColumn = PRICE_COLUMNS[currency];
-  if (!priceColumn) throw new Error(`Invalid currency: ${currency}`);
-
-  const result = await pool.query(
-    `SELECT date, ${priceColumn} AS price
-     FROM daily_prices
-     WHERE asset_id = $1 AND category = $2 AND date >= $3 AND date <= $4
-       AND ${priceColumn} IS NOT NULL
-     ORDER BY date`,
-    [assetId, category, from, to]
-  );
-
-  return result.rows.map((row: { date: Date | string; price: string }) => ({
-    date: typeof row.date === "string" ? row.date : row.date.toISOString().split("T")[0],
-    price: Number(row.price),
-  }));
-}
-
-/**
  * Get daily prices for multiple assets at once, grouped by asset ID.
  */
 export async function getMultiAssetPrices(
@@ -93,7 +64,6 @@ export async function getMultiAssetPrices(
   if (assets.length === 0) return {};
 
   const pool = getPool();
-  const PRICE_COLUMNS: Record<string, string> = { usd: "price_usd", eur: "price_eur" };
   const priceColumn = PRICE_COLUMNS[currency];
   if (!priceColumn) throw new Error(`Invalid currency: ${currency}`);
 

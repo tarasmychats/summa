@@ -11,7 +11,6 @@ vi.mock("pg", () => ({ default: { Pool: MockPool } }));
 import { resetPool } from "../../db.js";
 import {
   insertDailyPrices,
-  getDailyPrices,
   getMultiAssetPrices,
 } from "../dailyPrices.js";
 
@@ -94,78 +93,6 @@ describe("dailyPrices repository", () => {
           { assetId: "x", category: "crypto", date: "2025-01-01", priceUsd: 1, priceEur: 1 },
         ])
       ).rejects.toThrow("connection refused");
-    });
-  });
-
-  describe("getDailyPrices", () => {
-    it("returns prices for a date range in USD", async () => {
-      mockQuery.mockResolvedValue({
-        rows: [
-          { date: "2025-01-01", price: "42000.00" },
-          { date: "2025-01-02", price: "43000.00" },
-        ],
-      });
-
-      const result = await getDailyPrices("bitcoin", "crypto", "2025-01-01", "2025-01-31", "usd");
-
-      expect(result).toEqual([
-        { date: "2025-01-01", price: 42000 },
-        { date: "2025-01-02", price: 43000 },
-      ]);
-
-      const [sql, params] = mockQuery.mock.calls[0];
-      expect(sql).toContain("price_usd AS price");
-      expect(sql).toContain("WHERE asset_id = $1 AND category = $2 AND date >= $3 AND date <= $4");
-      expect(sql).toContain("ORDER BY date");
-      expect(params).toEqual(["bitcoin", "crypto", "2025-01-01", "2025-01-31"]);
-    });
-
-    it("selects price_eur when currency is eur", async () => {
-      mockQuery.mockResolvedValue({ rows: [] });
-
-      await getDailyPrices("AAPL", "stock", "2025-01-01", "2025-01-31", "eur");
-
-      const [sql] = mockQuery.mock.calls[0];
-      expect(sql).toContain("price_eur AS price");
-    });
-
-    it("returns empty array when no data exists", async () => {
-      mockQuery.mockResolvedValue({ rows: [] });
-
-      const result = await getDailyPrices("unknown", "crypto", "2025-01-01", "2025-01-31", "usd");
-
-      expect(result).toEqual([]);
-    });
-
-    it("converts Date objects to string dates", async () => {
-      mockQuery.mockResolvedValue({
-        rows: [
-          { date: new Date("2025-06-15T00:00:00Z"), price: "100.50" },
-        ],
-      });
-
-      const result = await getDailyPrices("AAPL", "stock", "2025-06-01", "2025-06-30", "usd");
-
-      expect(result[0].date).toBe("2025-06-15");
-      expect(result[0].price).toBe(100.5);
-    });
-
-    it("converts string price to number", async () => {
-      mockQuery.mockResolvedValue({
-        rows: [{ date: "2025-01-01", price: "0.00000123" }],
-      });
-
-      const result = await getDailyPrices("shib", "crypto", "2025-01-01", "2025-01-01", "usd");
-
-      expect(result[0].price).toBe(0.00000123);
-    });
-
-    it("propagates database errors", async () => {
-      mockQuery.mockRejectedValue(new Error("timeout"));
-
-      await expect(
-        getDailyPrices("x", "crypto", "2025-01-01", "2025-01-31", "usd")
-      ).rejects.toThrow("timeout");
     });
   });
 
