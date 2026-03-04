@@ -73,7 +73,7 @@ struct DashboardView: View {
             .sheet(isPresented: $showingAddAsset) {
                 AddAssetView()
             }
-            .task(id: "\(assets.map(\.name).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.reduce(0, +))") {
+            .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
                 await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
             }
         }
