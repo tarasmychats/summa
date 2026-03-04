@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const mockConfig = vi.hoisted(() => ({
+  exchangerateApiKey: "test-key" as string | undefined,
+}));
+
+vi.mock("../../config.js", () => ({ config: mockConfig }));
+
 import { searchFiat } from "../fiatSearch.js";
 
 const mockFetch = vi.fn();
@@ -7,7 +14,7 @@ vi.stubGlobal("fetch", mockFetch);
 describe("searchFiat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.EXCHANGERATE_API_KEY = "test-key";
+    mockConfig.exchangerateApiKey = "test-key";
   });
 
   it("returns currencies matching query", async () => {

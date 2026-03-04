@@ -1,12 +1,13 @@
 import type { SearchResult } from "../types.js";
 import { logger } from "../logger.js";
+import { config } from "../config.js";
 
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 
 export async function searchCrypto(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return [];
 
-  const apiKey = process.env.COINGECKO_API_KEY;
+  const apiKey = config.coingeckoApiKey;
   const params = new URLSearchParams({ query });
   if (apiKey) {
     params.set("x_cg_demo_api_key", apiKey);

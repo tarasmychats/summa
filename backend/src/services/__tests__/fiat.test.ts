@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const mockConfig = vi.hoisted(() => ({
+  exchangerateApiKey: "test-key" as string | undefined,
+}));
+
+vi.mock("../../config.js", () => ({ config: mockConfig }));
+
 import { fetchExchangeRates } from "../fiat.js";
 
 const mockFetch = vi.fn();
@@ -7,7 +14,7 @@ vi.stubGlobal("fetch", mockFetch);
 describe("fetchExchangeRates", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.EXCHANGERATE_API_KEY = "test-key";
+    mockConfig.exchangerateApiKey = "test-key";
   });
 
   it("returns exchange rates relative to base currency", async () => {

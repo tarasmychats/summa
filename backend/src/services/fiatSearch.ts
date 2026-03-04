@@ -1,5 +1,6 @@
 import type { SearchResult } from "../types.js";
 import { logger } from "../logger.js";
+import { config } from "../config.js";
 
 const EXCHANGERATE_BASE = "https://v6.exchangerate-api.com/v6";
 
@@ -36,7 +37,7 @@ function searchOffline(query: string): SearchResult[] {
 }
 
 export async function searchFiat(query: string): Promise<SearchResult[]> {
-  const apiKey = process.env.EXCHANGERATE_API_KEY;
+  const apiKey = config.exchangerateApiKey;
   if (!apiKey) {
     // Fall back to built-in currency list when API key is not configured
     return searchOffline(query);

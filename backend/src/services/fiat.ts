@@ -1,5 +1,6 @@
 import type { AssetPrice } from "../types.js";
 import { logger } from "../logger.js";
+import { config } from "../config.js";
 
 const EXCHANGERATE_BASE = "https://v6.exchangerate-api.com/v6";
 
@@ -27,7 +28,7 @@ export async function fetchExchangeRates(
 
   if (needsLookup.length === 0) return sameResults;
 
-  const apiKey = process.env.EXCHANGERATE_API_KEY;
+  const apiKey = config.exchangerateApiKey;
   if (!apiKey) {
     logger.warn("fiat fetch skipped: EXCHANGERATE_API_KEY not set");
     return sameResults;

@@ -1,4 +1,5 @@
 import { logger } from "../logger.js";
+import { config } from "../config.js";
 
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 
@@ -15,7 +16,7 @@ export async function fetchCryptoHistory(
   coinId: string,
   days: number
 ): Promise<CryptoHistoryPoint[]> {
-  const apiKey = process.env.COINGECKO_API_KEY;
+  const apiKey = config.coingeckoApiKey;
   const params = new URLSearchParams({
     vs_currency: "usd",
     days: String(days),

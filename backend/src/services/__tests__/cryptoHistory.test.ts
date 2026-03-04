@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const mockConfig = vi.hoisted(() => ({
+  coingeckoApiKey: "test-key" as string | undefined,
+}));
+
+vi.mock("../../config.js", () => ({ config: mockConfig }));
+
 import { fetchCryptoHistory, rateLimitDelay } from "../cryptoHistory.js";
 
 const mockFetch = vi.fn();
@@ -7,7 +14,7 @@ vi.stubGlobal("fetch", mockFetch);
 describe("fetchCryptoHistory", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.COINGECKO_API_KEY = "test-key";
+    mockConfig.coingeckoApiKey = "test-key";
   });
 
   it("returns daily prices for a valid coin", async () => {
@@ -48,7 +55,7 @@ describe("fetchCryptoHistory", () => {
   });
 
   it("omits API key when not set", async () => {
-    delete process.env.COINGECKO_API_KEY;
+    mockConfig.coingeckoApiKey = undefined;
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ prices: [] }),

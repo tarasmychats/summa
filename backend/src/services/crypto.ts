@@ -1,5 +1,6 @@
 import type { AssetPrice } from "../types.js";
 import { logger } from "../logger.js";
+import { config } from "../config.js";
 
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 
@@ -9,7 +10,7 @@ export async function fetchCryptoPrices(
 ): Promise<AssetPrice[]> {
   if (coinIds.length === 0) return [];
 
-  const apiKey = process.env.COINGECKO_API_KEY;
+  const apiKey = config.coingeckoApiKey;
   const params = new URLSearchParams({
     ids: coinIds.join(","),
     vs_currencies: baseCurrency,
