@@ -28,7 +28,7 @@ struct AddTransactionView: View {
         case .delta:
             return value != 0
         case .snapshot:
-            return value > 0
+            return value >= 0
         }
     }
 
@@ -90,6 +90,22 @@ struct AddTransactionView: View {
 
     private func save() {
         guard let value = parsedAmount, isValid else { return }
+
+        // When adding the first delta transaction, create a baseline snapshot
+        // to preserve the asset's existing amount. Without this, the transaction
+        // replay (which starts from 0) would lose the original balance.
+        let existingTxns = asset.transactions ?? []
+        if existingTxns.isEmpty && type == .delta && asset.amount != 0 {
+            let baseline = Transaction(
+                date: date.addingTimeInterval(-1),
+                type: .snapshot,
+                amount: asset.amount,
+                note: "Starting balance"
+            )
+            baseline.asset = asset
+            modelContext.insert(baseline)
+        }
+
         let txn = Transaction(
             date: date,
             type: type,

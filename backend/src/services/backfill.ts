@@ -114,24 +114,63 @@ export async function backfillAsset(
 
 async function fetchAndMapCrypto(coinId: string): Promise<DailyPriceInput[]> {
   const history = await fetchCryptoHistory(coinId, CRYPTO_MAX_DAYS);
-  return history.map((point) => ({
+  const usdPrices = history.map((point) => ({
     assetId: coinId,
     category: "crypto",
     date: point.date,
     priceUsd: point.price,
-    priceEur: null,
+    priceEur: null as number | null,
   }));
+  return applyEurConversion(usdPrices);
 }
 
 async function fetchAndMapStock(symbol: string): Promise<DailyPriceInput[]> {
   const history = await fetchStockHistory(symbol, STOCK_YEARS);
-  return history.map((point) => ({
+  const usdPrices = history.map((point) => ({
     assetId: symbol,
     category: "stock",
     date: point.date,
     priceUsd: point.price,
-    priceEur: null,
+    priceEur: null as number | null,
   }));
+  return applyEurConversion(usdPrices);
+}
+
+/**
+ * Fetches USD/EUR rates from Frankfurter and computes priceEur for each price point.
+ * Falls back gracefully: if EUR rates can't be fetched, prices remain with priceEur: null.
+ */
+async function applyEurConversion(prices: DailyPriceInput[]): Promise<DailyPriceInput[]> {
+  if (prices.length === 0) return prices;
+
+  const dates = prices.map((p) => p.date).sort();
+  const from = dates[0];
+  const to = dates[dates.length - 1];
+
+  try {
+    const eurRates = await fetchFiatHistory("EUR", from, to);
+    if (!Array.isArray(eurRates) || eurRates.length === 0) return prices;
+    // Build lookup: date -> EUR per 1 USD (eurRates gives priceUsd = 1/eurRate, so eurPerUsd = 1/priceUsd = eurRate)
+    const eurRateByDate: Record<string, number> = {};
+    for (const point of eurRates) {
+      // priceEur for EUR is 1, priceUsd is 1/eurRate → eurPerUsd = 1/priceUsd
+      eurRateByDate[point.date] = 1 / point.priceUsd;
+    }
+
+    for (const price of prices) {
+      const eurRate = eurRateByDate[price.date];
+      if (eurRate != null && price.priceUsd != null) {
+        price.priceEur = price.priceUsd * eurRate;
+      }
+    }
+  } catch (err) {
+    logger.warn("could not fetch EUR conversion rates for backfill", {
+      error: String(err),
+    });
+    // Prices remain with priceEur: null — EUR queries will return no data for these dates
+  }
+
+  return prices;
 }
 
 async function fetchAndMapFiat(currency: string): Promise<DailyPriceInput[]> {

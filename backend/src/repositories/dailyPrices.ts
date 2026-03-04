@@ -70,6 +70,7 @@ export async function getDailyPrices(
     `SELECT date, ${priceColumn} AS price
      FROM daily_prices
      WHERE asset_id = $1 AND category = $2 AND date >= $3 AND date <= $4
+       AND ${priceColumn} IS NOT NULL
      ORDER BY date`,
     [assetId, category, from, to]
   );
@@ -115,6 +116,7 @@ export async function getMultiAssetPrices(
     `SELECT asset_id, date, ${priceColumn} AS price
      FROM daily_prices
      WHERE (${conditions.join(" OR ")}) AND date >= $${dateFromIdx} AND date <= $${dateToIdx}
+       AND ${priceColumn} IS NOT NULL
      ORDER BY asset_id, date`,
     params
   );

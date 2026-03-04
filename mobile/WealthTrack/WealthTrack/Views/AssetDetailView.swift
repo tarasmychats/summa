@@ -58,6 +58,9 @@ struct AssetDetailView: View {
                             let txn = sortedTransactions[index]
                             modelContext.delete(txn)
                         }
+                        // Persist deletion before recomputing to ensure currentAmount
+                        // doesn't include the deleted transaction
+                        try? modelContext.save()
                         asset.amount = asset.currentAmount
                     }
                 }

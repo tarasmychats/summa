@@ -235,7 +235,8 @@ struct PortfolioChartView: View {
         // Only consider transactions on or before this date
         let relevant = transactions.filter { Calendar.current.startOfDay(for: $0.date) <= Calendar.current.startOfDay(for: date) }
 
-        guard !relevant.isEmpty else { return fallbackAmount }
+        // Transactions exist but none before this date — user didn't hold this asset yet
+        guard !relevant.isEmpty else { return 0.0 }
 
         var balance = 0.0
         for txn in relevant {
