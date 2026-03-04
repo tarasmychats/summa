@@ -1,8 +1,5 @@
-import { config } from "dotenv";
 import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
-
-config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../.env") });
+import { resolve } from "path";
 
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
@@ -11,11 +8,12 @@ import { createSearchRouter } from "./routes/search.js";
 import { createHistoryRouter } from "./routes/history.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { logger } from "./logger.js";
+import { config } from "./config.js";
 import { initDb, isDbReady, setDbReady, closePool } from "./db.js";
 import { startDailyCron } from "./services/cronJob.js";
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.port;
 
 app.use(express.json());
 app.use(requestLogger);

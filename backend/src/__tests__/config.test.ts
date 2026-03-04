@@ -12,16 +12,18 @@ describe("config", () => {
   });
 
   it("exports config with defaults when no env vars set", async () => {
-    delete process.env.PORT;
-    delete process.env.LOG_LEVEL;
-    delete process.env.DATABASE_URL;
-    delete process.env.PGHOST;
-    delete process.env.PGPORT;
-    delete process.env.PGUSER;
-    delete process.env.PGPASSWORD;
-    delete process.env.PGDATABASE;
-    delete process.env.COINGECKO_API_KEY;
-    delete process.env.EXCHANGERATE_API_KEY;
+    // Use empty strings instead of delete — dotenv re-injects from .env on
+    // re-import, but `|| undefined` in config.ts normalises blanks to undefined.
+    process.env.PORT = "";
+    process.env.LOG_LEVEL = "";
+    process.env.DATABASE_URL = "";
+    process.env.PGHOST = "";
+    process.env.PGPORT = "";
+    process.env.PGUSER = "";
+    process.env.PGPASSWORD = "";
+    process.env.PGDATABASE = "";
+    process.env.COINGECKO_API_KEY = "";
+    process.env.EXCHANGERATE_API_KEY = "";
 
     const { config } = await import("../config.js");
 

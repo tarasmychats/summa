@@ -1,3 +1,9 @@
+import { config as loadDotenv } from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+loadDotenv({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../.env") });
+
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 const VALID_LOG_LEVELS: ReadonlySet<string> = new Set(["debug", "info", "warn", "error"]);
@@ -14,7 +20,7 @@ export const config = {
   logLevel: parseLogLevel(process.env.LOG_LEVEL),
 
   db: {
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL || undefined,
     host: process.env.PGHOST || "localhost",
     port: Number(process.env.PGPORT) || 5432,
     user: process.env.PGUSER || "wealthtrack",
@@ -22,6 +28,6 @@ export const config = {
     database: process.env.PGDATABASE || "wealthtrack",
   },
 
-  coingeckoApiKey: process.env.COINGECKO_API_KEY,
-  exchangerateApiKey: process.env.EXCHANGERATE_API_KEY,
+  coingeckoApiKey: process.env.COINGECKO_API_KEY || undefined,
+  exchangerateApiKey: process.env.EXCHANGERATE_API_KEY || undefined,
 };
