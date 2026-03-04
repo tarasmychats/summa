@@ -240,11 +240,11 @@
 **Files:**
 - Create: `mobile/WealthTrack/WealthTrack/Views/TransactionListView.swift`
 
-- [ ] List all transactions for a given asset, sorted by date descending
-- [ ] Show date, type badge (delta/snapshot), amount, and optional note
-- [ ] Swipe-to-delete on each row
-- [ ] "Add Transaction" button in toolbar
-- [ ] Empty state: "No transactions yet"
+- [x] List all transactions for a given asset, sorted by date descending
+- [x] Show date, type badge (delta/snapshot), amount, and optional note
+- [x] Swipe-to-delete on each row
+- [x] "Add Transaction" button in toolbar
+- [x] Empty state: "No transactions yet"
 
 ### Task 16: Create AddTransactionView
 
