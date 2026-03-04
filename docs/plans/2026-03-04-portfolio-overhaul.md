@@ -94,13 +94,13 @@
 **Files:**
 - Create: `backend/src/services/cryptoHistory.ts`
 
-- [ ] Create `fetchCryptoHistory(coinId: string, days: number)` — calls CoinGecko `/coins/{id}/market_chart?vs_currency=usd&days={days}&interval=daily`
-- [ ] Parse response: extract daily prices from `prices` array (timestamp + price pairs)
-- [ ] Handle API key (optional, same pattern as existing `crypto.ts`)
-- [ ] Add rate limiting delay (2s between calls) when called in batch
-- [ ] Write tests for successful fetch (mock HTTP response)
-- [ ] Write tests for error handling (API error, rate limit, invalid coin ID)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `fetchCryptoHistory(coinId: string, days: number)` — calls CoinGecko `/coins/{id}/market_chart?vs_currency=usd&days={days}&interval=daily`
+- [x] Parse response: extract daily prices from `prices` array (timestamp + price pairs)
+- [x] Handle API key (optional, same pattern as existing `crypto.ts`)
+- [x] Add rate limiting delay (2s between calls) when called in batch
+- [x] Write tests for successful fetch (mock HTTP response)
+- [x] Write tests for error handling (API error, rate limit, invalid coin ID)
+- [x] Run `npm test` — must pass before next task
 
 ### Task 6: Add historical stock price service
 
