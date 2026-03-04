@@ -3,6 +3,7 @@ import { fetchCryptoPrices } from "../services/crypto.js";
 import { fetchStockPrices } from "../services/stocks.js";
 import { fetchExchangeRates } from "../services/fiat.js";
 import { PriceCache } from "../cache.js";
+import { upsertTrackedAssets } from "../repositories/trackedAssets.js";
 import type { PriceRequest, AssetPrice, PriceResponse } from "../types.js";
 
 const cache = new PriceCache(60_000); // 1 minute cache
@@ -59,6 +60,13 @@ export function createPricesRouter(): Router {
     };
 
     res.json(response);
+
+    // Fire-and-forget: track requested assets for the daily cron job
+    upsertTrackedAssets(
+      body.assets.map((a) => ({ assetId: a.id, category: a.category }))
+    ).catch(() => {
+      // Silently ignore DB errors — tracking is best-effort
+    });
   });
 
   return router;

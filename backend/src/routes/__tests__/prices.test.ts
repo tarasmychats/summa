@@ -3,6 +3,12 @@ import express from "express";
 import request from "supertest";
 import { createPricesRouter } from "../prices.js";
 
+const mockUpsertTrackedAssets = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+
+vi.mock("../../repositories/trackedAssets.js", () => ({
+  upsertTrackedAssets: mockUpsertTrackedAssets,
+}));
+
 // We'll test the router with mocked services
 vi.mock("../../services/crypto.js", () => ({
   fetchCryptoPrices: vi.fn().mockResolvedValue([
@@ -76,5 +82,51 @@ describe("POST /api/prices", () => {
       .send({ invalid: true });
 
     expect(response.status).toBe(400);
+  });
+
+  it("calls upsertTrackedAssets with requested assets after fetching prices", async () => {
+    mockUpsertTrackedAssets.mockClear();
+
+    await request(app)
+      .post("/api/prices")
+      .send({
+        assets: [
+          { id: "bitcoin", category: "crypto" },
+          { id: "VOO", category: "stock" },
+        ],
+        baseCurrency: "USD",
+      });
+
+    // Allow fire-and-forget promise to resolve
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(mockUpsertTrackedAssets).toHaveBeenCalledWith([
+      { assetId: "bitcoin", category: "crypto" },
+      { assetId: "VOO", category: "stock" },
+    ]);
+  });
+
+  it("does not block response when upsertTrackedAssets fails", async () => {
+    mockUpsertTrackedAssets.mockRejectedValueOnce(new Error("DB down"));
+
+    const response = await request(app)
+      .post("/api/prices")
+      .send({
+        assets: [{ id: "bitcoin", category: "crypto" }],
+        baseCurrency: "EUR",
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.prices).toBeDefined();
+  });
+
+  it("does not call upsertTrackedAssets for invalid requests", async () => {
+    mockUpsertTrackedAssets.mockClear();
+
+    await request(app)
+      .post("/api/prices")
+      .send({ invalid: true });
+
+    expect(mockUpsertTrackedAssets).not.toHaveBeenCalled();
   });
 });

@@ -185,10 +185,10 @@
 **Files:**
 - Modify: `backend/src/index.ts`
 
-- [ ] After fetching prices, call `upsertTrackedAssets()` with the requested assets
-- [ ] This is fire-and-forget — don't block the response on DB write
-- [ ] Write tests verifying tracked assets are upserted on price request
-- [ ] Run `npm test` — must pass before next task
+- [x] After fetching prices, call `upsertTrackedAssets()` with the requested assets
+- [x] This is fire-and-forget — don't block the response on DB write
+- [x] Write tests verifying tracked assets are upserted on price request
+- [x] Run `npm test` — must pass before next task
 
 ---
 
