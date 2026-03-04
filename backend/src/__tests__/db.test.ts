@@ -13,8 +13,8 @@ import { getPool, initDb, closePool, resetPool } from "../db.js";
 
 describe("db", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     resetPool();
+    vi.clearAllMocks();
   });
 
   describe("getPool", () => {

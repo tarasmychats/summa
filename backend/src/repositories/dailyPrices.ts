@@ -62,7 +62,9 @@ export async function getDailyPrices(
   currency: "usd" | "eur"
 ): Promise<DailyPrice[]> {
   const pool = getPool();
-  const priceColumn = currency === "eur" ? "price_eur" : "price_usd";
+  const PRICE_COLUMNS: Record<string, string> = { usd: "price_usd", eur: "price_eur" };
+  const priceColumn = PRICE_COLUMNS[currency];
+  if (!priceColumn) throw new Error(`Invalid currency: ${currency}`);
 
   const result = await pool.query(
     `SELECT date, ${priceColumn} AS price
@@ -90,7 +92,9 @@ export async function getMultiAssetPrices(
   if (assets.length === 0) return {};
 
   const pool = getPool();
-  const priceColumn = currency === "eur" ? "price_eur" : "price_usd";
+  const PRICE_COLUMNS: Record<string, string> = { usd: "price_usd", eur: "price_eur" };
+  const priceColumn = PRICE_COLUMNS[currency];
+  if (!priceColumn) throw new Error(`Invalid currency: ${currency}`);
 
   // Build WHERE clause: (asset_id = $1 AND category = $2) OR (asset_id = $3 AND category = $4) ...
   const conditions: string[] = [];
@@ -123,10 +127,7 @@ export async function getMultiAssetPrices(
 
   for (const row of result.rows) {
     const assetId = row.asset_id;
-    if (!grouped[assetId]) {
-      grouped[assetId] = [];
-    }
-    grouped[assetId].push({
+    grouped[assetId]?.push({
       date: typeof row.date === "string" ? row.date : row.date.toISOString().split("T")[0],
       price: Number(row.price),
     });

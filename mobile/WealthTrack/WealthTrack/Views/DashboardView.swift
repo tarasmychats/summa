@@ -5,18 +5,12 @@ import Charts
 struct DashboardView: View {
     @Query private var assets: [Asset]
     @Query private var allSettings: [UserSettings]
-    @Environment(\.modelContext) private var modelContext
     @State private var viewModel = DashboardViewModel()
     @State private var showingAddAsset = false
     @State private var cardsAppeared = false
 
     private var displayCurrency: String {
-        if let existing = allSettings.first {
-            return existing.displayCurrency
-        }
-        let newSettings = UserSettings()
-        modelContext.insert(newSettings)
-        return newSettings.displayCurrency
+        allSettings.first?.displayCurrency ?? "USD"
     }
 
     var body: some View {

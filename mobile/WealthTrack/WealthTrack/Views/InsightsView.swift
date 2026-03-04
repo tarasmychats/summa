@@ -4,16 +4,10 @@ import SwiftData
 struct InsightsView: View {
     @Query private var assets: [Asset]
     @Query private var allSettings: [UserSettings]
-    @Environment(\.modelContext) private var modelContext
     @State private var holdings: [PortfolioHolding] = []
 
     private var displayCurrency: String {
-        if let existing = allSettings.first {
-            return existing.displayCurrency
-        }
-        let newSettings = UserSettings()
-        modelContext.insert(newSettings)
-        return newSettings.displayCurrency
+        allSettings.first?.displayCurrency ?? "USD"
     }
 
     private var insights: [Insight] {

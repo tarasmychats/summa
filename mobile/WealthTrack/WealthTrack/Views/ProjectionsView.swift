@@ -5,18 +5,12 @@ import Charts
 struct ProjectionsView: View {
     @Query private var assets: [Asset]
     @Query private var allSettings: [UserSettings]
-    @Environment(\.modelContext) private var modelContext
     @State private var selectedYears = 10
     @State private var holdings: [PortfolioHolding] = []
     @State private var currencyCode: String = "USD"
 
     private var displayCurrency: String {
-        if let existing = allSettings.first {
-            return existing.displayCurrency
-        }
-        let newSettings = UserSettings()
-        modelContext.insert(newSettings)
-        return newSettings.displayCurrency
+        allSettings.first?.displayCurrency ?? "USD"
     }
 
     private let yearOptions = [10, 20, 50]

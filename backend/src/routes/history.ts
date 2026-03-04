@@ -41,6 +41,15 @@ export function createHistoryRouter(): Router {
       return;
     }
 
+    // Validate categories
+    const validCategories = new Set(["crypto", "stock", "fiat"]);
+    if (categoryList.some((c) => !validCategories.has(c))) {
+      res.status(400).json({
+        error: "Invalid category. Must be one of: crypto, stock, fiat",
+      });
+      return;
+    }
+
     // Validate dates
     if (!isValidDate(fromStr) || !isValidDate(toStr)) {
       res.status(400).json({

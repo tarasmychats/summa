@@ -58,10 +58,7 @@ struct AssetDetailView: View {
                             let txn = sortedTransactions[index]
                             modelContext.delete(txn)
                         }
-                        // Sync amount after deletion
-                        DispatchQueue.main.async {
-                            asset.amount = asset.currentAmount
-                        }
+                        asset.amount = asset.currentAmount
                     }
                 }
             } header: {

@@ -71,7 +71,7 @@ struct PortfolioChartView: View {
             }
         }
         .themeCard()
-        .task(id: "\(selectedRange.rawValue)-\(assets.count)-\(currency)") {
+        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id.uuidString).joined())-\(currency)") {
             await loadHistory()
         }
     }
@@ -235,7 +235,7 @@ struct PortfolioChartView: View {
         // Only consider transactions on or before this date
         let relevant = transactions.filter { Calendar.current.startOfDay(for: $0.date) <= Calendar.current.startOfDay(for: date) }
 
-        guard !relevant.isEmpty else { return 0.0 }
+        guard !relevant.isEmpty else { return fallbackAmount }
 
         var balance = 0.0
         for txn in relevant {

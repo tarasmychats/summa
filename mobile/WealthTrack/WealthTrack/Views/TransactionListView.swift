@@ -27,6 +27,7 @@ struct TransactionListView: View {
                         for index in indexSet {
                             modelContext.delete(sortedTransactions[index])
                         }
+                        asset.amount = asset.currentAmount
                     }
                 }
                 .scrollContentBackground(.hidden)

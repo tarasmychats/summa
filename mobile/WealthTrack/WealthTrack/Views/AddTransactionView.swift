@@ -8,15 +8,18 @@ struct AddTransactionView: View {
 
     @State private var amount = ""
     @State private var type: TransactionType = .delta
+    @State private var isSubtract = false
     @State private var date = Date()
     @State private var note = ""
 
     private var parsedAmount: Double? {
-        if let value = Double(amount) { return value }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = .current
-        return formatter.number(from: amount)?.doubleValue
+        guard let raw = Double(amount) ?? {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.locale = .current
+            return formatter.number(from: amount)?.doubleValue
+        }() else { return nil }
+        return type == .delta && isSubtract ? -raw : raw
     }
 
     private var isValid: Bool {
@@ -47,8 +50,20 @@ struct AddTransactionView: View {
                 .listRowBackground(Theme.bgCard)
 
                 Section {
-                    TextField(type == .delta ? "Amount (+/-)" : "New total", text: $amount)
-                        .keyboardType(.decimalPad)
+                    HStack {
+                        if type == .delta {
+                            Button {
+                                isSubtract.toggle()
+                            } label: {
+                                Image(systemName: isSubtract ? "minus.circle.fill" : "plus.circle.fill")
+                                    .foregroundStyle(isSubtract ? Theme.coral : Theme.sage)
+                                    .font(.title2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        TextField(type == .delta ? "Amount" : "New total", text: $amount)
+                            .keyboardType(.decimalPad)
+                    }
                 }
                 .listRowBackground(Theme.bgCard)
 

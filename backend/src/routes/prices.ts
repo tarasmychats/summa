@@ -44,13 +44,18 @@ export function createPricesRouter(): Router {
       return;
     }
 
-    const [cryptoPrices, stockPrices, fiatPrices] = await Promise.all([
-      fetchCryptoPrices(cryptoIds, base.toLowerCase()),
-      fetchStockPrices(stockIds),
-      fetchExchangeRates(base, fiatIds),
-    ]);
-
-    const allPrices = [...cryptoPrices, ...stockPrices, ...fiatPrices];
+    let allPrices: AssetPrice[];
+    try {
+      const [cryptoPrices, stockPrices, fiatPrices] = await Promise.all([
+        fetchCryptoPrices(cryptoIds, base.toLowerCase()),
+        fetchStockPrices(stockIds),
+        fetchExchangeRates(base, fiatIds),
+      ]);
+      allPrices = [...cryptoPrices, ...stockPrices, ...fiatPrices];
+    } catch {
+      res.status(500).json({ error: "Failed to fetch prices" });
+      return;
+    }
     cache.set(cacheKey, allPrices);
 
     const response: PriceResponse = {

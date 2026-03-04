@@ -74,5 +74,15 @@ export async function closePool(): Promise<void> {
 }
 
 export function resetPool(): void {
+  if (pool) {
+    try {
+      const result = pool.end();
+      if (result && typeof result.catch === "function") {
+        result.catch(() => {}); // best-effort cleanup
+      }
+    } catch {
+      // ignore cleanup errors
+    }
+  }
   pool = null;
 }
