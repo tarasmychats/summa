@@ -107,12 +107,12 @@
 **Files:**
 - Create: `backend/src/services/stockHistory.ts`
 
-- [ ] Create `fetchStockHistory(symbol: string, years: number)` — uses yahoo-finance2 `.historical(symbol, { period1: fiveYearsAgo, period2: today, interval: '1d' })`
-- [ ] Parse response: extract daily `{date, close}` prices
-- [ ] Handle yahoo-finance2 errors (invalid symbol, no data)
-- [ ] Write tests for successful fetch (mock yahoo-finance2)
-- [ ] Write tests for error handling (invalid symbol, empty result)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `fetchStockHistory(symbol: string, years: number)` — uses yahoo-finance2 `.historical(symbol, { period1: fiveYearsAgo, period2: today, interval: '1d' })`
+- [x] Parse response: extract daily `{date, close}` prices
+- [x] Handle yahoo-finance2 errors (invalid symbol, no data)
+- [x] Write tests for successful fetch (mock yahoo-finance2)
+- [x] Write tests for error handling (invalid symbol, empty result)
+- [x] Run `npm test` — must pass before next task
 
 ### Task 7: Add historical fiat rate service (Frankfurter)
 
