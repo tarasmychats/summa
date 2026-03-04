@@ -350,9 +350,9 @@
 
 ### Task 24: [Final] Update documentation
 
-- [ ] Update `CLAUDE.md` with new backend commands (docker-compose, migrations)
-- [ ] Update `backend/README.md` or create one with PostgreSQL setup instructions
-- [ ] Document new API endpoints in existing Postman collection or README
+- [x] Update `CLAUDE.md` with new backend commands (docker-compose, migrations)
+- [x] Update `backend/README.md` or create one with PostgreSQL setup instructions
+- [x] Document new API endpoints in existing Postman collection or README
 
 ---
 
