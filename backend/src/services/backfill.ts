@@ -13,12 +13,14 @@ import {
 } from "./cryptoHistory.js";
 import {
   fetchStockHistory,
+  getStockCurrency,
   rateLimitDelay as stockRateLimit,
 } from "./stockHistory.js";
 import {
   fetchFiatHistory,
   rateLimitDelay as fiatRateLimit,
 } from "./fiatHistory.js";
+import { normalizeCurrency } from "../currency.js";
 
 /** Maximum days for CoinGecko free tier */
 const CRYPTO_MAX_DAYS = 365;
@@ -128,15 +130,97 @@ async function fetchAndMapCrypto(coinId: string): Promise<DailyPriceInput[]> {
 }
 
 async function fetchAndMapStock(symbol: string): Promise<DailyPriceInput[]> {
-  const history = await fetchStockHistory(symbol, STOCK_YEARS);
-  const usdPrices = history.map((point) => ({
-    assetId: symbol,
-    category: "stock",
-    date: point.date,
-    priceUsd: point.price,
-    priceEur: null as number | null,
-  }));
-  return applyEurConversion(usdPrices);
+  const [history, nativeCurrency] = await Promise.all([
+    fetchStockHistory(symbol, STOCK_YEARS),
+    getStockCurrency(symbol),
+  ]);
+
+  if (history.length === 0) return [];
+
+  // Normalize minor-unit currencies (e.g., GBp → GBP with price / 100)
+  const { iso: isoCurrency, divisor } = normalizeCurrency(nativeCurrency);
+  const normalizedHistory = divisor === 1
+    ? history
+    : history.map((p) => ({ ...p, price: p.price / divisor }));
+
+  let prices: DailyPriceInput[];
+
+  if (isoCurrency === "USD") {
+    // Stock trades in USD — prices are already in USD
+    prices = normalizedHistory.map((point) => ({
+      assetId: symbol,
+      category: "stock",
+      date: point.date,
+      priceUsd: point.price,
+      priceEur: null as number | null,
+    }));
+  } else {
+    // Stock trades in a non-USD currency — convert to USD using historical FX rates
+    const dates = normalizedHistory.map((p) => p.date).sort();
+    const from = dates[0];
+    const to = dates[dates.length - 1];
+
+    let fxRates: Awaited<ReturnType<typeof fetchFiatHistory>>;
+    try {
+      fxRates = await fetchFiatHistory(isoCurrency, from, to);
+    } catch (err) {
+      logger.error("FX rate fetch failed for non-USD stock backfill, aborting to prevent null prices", {
+        symbol,
+        nativeCurrency: isoCurrency,
+        error: String(err),
+      });
+      throw err;
+    }
+
+    if (fxRates.length === 0) {
+      throw new Error(
+        `No FX rates returned for ${isoCurrency} (${from} to ${to}), aborting non-USD stock backfill for ${symbol}`
+      );
+    }
+
+    // Build lookup: date -> priceUsd (how many USD per 1 unit of native currency)
+    const fxByDate: Record<string, { priceUsd: number; priceEur: number }> = {};
+    for (const rate of fxRates) {
+      fxByDate[rate.date] = { priceUsd: rate.priceUsd, priceEur: rate.priceEur };
+    }
+
+    // Forward-fill FX rates for weekends/holidays
+    let lastFx: { priceUsd: number; priceEur: number } | null = null;
+    for (const date of dates) {
+      if (fxByDate[date]) {
+        lastFx = fxByDate[date];
+      } else if (lastFx) {
+        fxByDate[date] = lastFx;
+      }
+    }
+
+    prices = normalizedHistory.map((point) => {
+      const fx = fxByDate[point.date];
+      if (fx) {
+        return {
+          assetId: symbol,
+          category: "stock",
+          date: point.date,
+          priceUsd: point.price * fx.priceUsd,
+          priceEur: point.price * fx.priceEur,
+        };
+      }
+      // No FX rate available — store as null (will be filled on next backfill)
+      return {
+        assetId: symbol,
+        category: "stock",
+        date: point.date,
+        priceUsd: null as number | null,
+        priceEur: null as number | null,
+      };
+    });
+
+    // If we already computed EUR via FX conversion, no need for applyEurConversion
+    // Filter out entries where both prices are null (dates before first available FX rate)
+    return prices.filter((p) => p.priceUsd != null || p.priceEur != null);
+  }
+
+  return applyEurConversion(prices);
 }
 
 /**

@@ -8,6 +8,7 @@ const mockBackfillAsset = vi.fn();
 
 vi.mock("../../repositories/dailyPrices.js", () => ({
   getMultiAssetPrices: (...args: unknown[]) => mockGetMultiAssetPrices(...args),
+  assetKey: (assetId: string, category: string) => `${assetId}:${category}`,
 }));
 
 vi.mock("../../services/backfill.js", () => ({
@@ -39,7 +40,7 @@ describe("GET /api/history", () => {
   describe("valid requests", () => {
     it("returns history for a single asset", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        bitcoin: [
+        "bitcoin:crypto": [
           { date: "2024-01-01", price: 42000 },
           { date: "2024-01-02", price: 43000 },
         ],
@@ -54,7 +55,7 @@ describe("GET /api/history", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.history.bitcoin).toHaveLength(2);
+      expect(response.body.history["bitcoin:crypto"]).toHaveLength(2);
       expect(response.body.currency).toBe("usd");
       expect(response.body.from).toBe("2024-01-01");
       expect(response.body.to).toBe("2024-01-31");
@@ -68,8 +69,8 @@ describe("GET /api/history", () => {
 
     it("returns history for multiple assets", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        bitcoin: [{ date: "2024-01-01", price: 42000 }],
-        AAPL: [{ date: "2024-01-01", price: 185 }],
+        "bitcoin:crypto": [{ date: "2024-01-01", price: 42000 }],
+        "AAPL:stock": [{ date: "2024-01-01", price: 185 }],
       });
 
       const response = await request(app).get("/api/history").query({
@@ -81,8 +82,8 @@ describe("GET /api/history", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.history.bitcoin).toHaveLength(1);
-      expect(response.body.history.AAPL).toHaveLength(1);
+      expect(response.body.history["bitcoin:crypto"]).toHaveLength(1);
+      expect(response.body.history["AAPL:stock"]).toHaveLength(1);
       expect(mockGetMultiAssetPrices).toHaveBeenCalledWith(
         [
           { assetId: "bitcoin", category: "crypto" },
@@ -96,7 +97,7 @@ describe("GET /api/history", () => {
 
     it("accepts EUR currency", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        AAPL: [{ date: "2024-01-01", price: 170 }],
+        "AAPL:stock": [{ date: "2024-01-01", price: 170 }],
       });
 
       const response = await request(app).get("/api/history").query({
@@ -118,7 +119,7 @@ describe("GET /api/history", () => {
 
     it("handles case-insensitive currency", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        AAPL: [],
+        "AAPL:stock": [],
       });
 
       const response = await request(app).get("/api/history").query({
@@ -286,7 +287,7 @@ describe("GET /api/history", () => {
   describe("empty history and backfill", () => {
     it("returns empty array for asset with no history and triggers backfill", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        bitcoin: [],
+        "bitcoin:crypto": [],
       });
 
       const response = await request(app).get("/api/history").query({
@@ -298,14 +299,14 @@ describe("GET /api/history", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.history.bitcoin).toEqual([]);
+      expect(response.body.history["bitcoin:crypto"]).toEqual([]);
       // Backfill should be triggered asynchronously
       expect(mockBackfillAsset).toHaveBeenCalledWith("bitcoin", "crypto");
     });
 
     it("does not trigger backfill for assets with existing history", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        bitcoin: [{ date: "2024-01-01", price: 42000 }],
+        "bitcoin:crypto": [{ date: "2024-01-01", price: 42000 }],
       });
 
       await request(app).get("/api/history").query({
@@ -321,8 +322,8 @@ describe("GET /api/history", () => {
 
     it("triggers backfill only for empty assets in a multi-asset request", async () => {
       mockGetMultiAssetPrices.mockResolvedValue({
-        bitcoin: [{ date: "2024-01-01", price: 42000 }],
-        AAPL: [],
+        "bitcoin:crypto": [{ date: "2024-01-01", price: 42000 }],
+        "AAPL:stock": [],
       });
 
       await request(app).get("/api/history").query({

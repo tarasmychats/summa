@@ -8,6 +8,7 @@ import { backfillAsset, getRateLimitDelay } from "./backfill.js";
 import { fetchCryptoPrices } from "./crypto.js";
 import { fetchStockPrices } from "./stocks.js";
 import { fetchFiatHistory } from "./fiatHistory.js";
+import { normalizeCurrency } from "../currency.js";
 
 /**
  * Runs the daily price update for all tracked assets.
@@ -136,14 +137,47 @@ async function fetchAndStoreTodayPrice(
         logger.warn("no stock price returned for today", { assetId });
         return false;
       }
-      const priceUsd = result[0].price;
+
+      // Normalize minor-unit currencies (e.g., GBp → GBP with price / 100)
+      const { iso: isoCurrency, divisor } = normalizeCurrency(result[0].currency);
+      const nativePrice = result[0].price / divisor;
+
+      let priceUsd: number;
+      let priceEur: number | null = null;
+
+      if (isoCurrency === "USD") {
+        priceUsd = nativePrice;
+        priceEur = eurPerUsd != null ? priceUsd * eurPerUsd : null;
+      } else {
+        // Non-USD stock: convert native currency to USD and EUR
+        try {
+          const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
+          const fxRates = await fetchFiatHistory(isoCurrency, yesterday, today);
+          if (fxRates.length > 0) {
+            const fx = fxRates[fxRates.length - 1];
+            priceUsd = nativePrice * fx.priceUsd;
+            priceEur = nativePrice * fx.priceEur;
+          } else {
+            logger.warn("no FX rate for non-USD stock, skipping", { assetId, nativeCurrency: isoCurrency });
+            return false;
+          }
+        } catch (err) {
+          logger.warn("FX conversion failed for non-USD stock", {
+            assetId,
+            nativeCurrency: isoCurrency,
+            error: String(err),
+          });
+          return false;
+        }
+      }
+
       prices = [
         {
           assetId,
           category: "stock",
           date: today,
           priceUsd,
-          priceEur: eurPerUsd != null ? priceUsd * eurPerUsd : null,
+          priceEur,
         },
       ];
       break;

@@ -181,14 +181,14 @@ struct PortfolioChartView: View {
         from: Date,
         to: Date
     ) -> [PortfolioDataPoint] {
-        // Build price lookup: assetId -> date string -> price
+        // Build price lookup: compositeKey (assetId:category) -> date string -> price
         var priceLookup: [String: [String: Double]] = [:]
-        for (assetId, points) in history {
+        for (key, points) in history {
             var dateMap: [String: Double] = [:]
             for point in points {
                 dateMap[point.date] = point.price
             }
-            priceLookup[assetId] = dateMap
+            priceLookup[key] = dateMap
         }
 
         // Collect all unique dates across all assets, sorted
@@ -216,7 +216,8 @@ struct PortfolioChartView: View {
             var dayTotal = 0.0
 
             for (asset, sortedTxns) in assetTransactions {
-                guard let price = priceLookup[asset.symbol]?[dateString] else { continue }
+                let compositeKey = "\(asset.symbol):\(asset.category)"
+                guard let price = priceLookup[compositeKey]?[dateString] else { continue }
 
                 let amount = amountAtDate(date: date, transactions: sortedTxns, fallbackAmount: asset.amount)
                 dayTotal += price * amount
@@ -228,12 +229,20 @@ struct PortfolioChartView: View {
         return results
     }
 
+    /// UTC calendar used for date comparisons to match the UTC date strings from the API
+    private static let utcCalendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }()
+
     /// Replay transactions up to a given date to determine asset amount at that point in time
     private func amountAtDate(date: Date, transactions: [Transaction], fallbackAmount: Double) -> Double {
         guard !transactions.isEmpty else { return fallbackAmount }
 
         // Only consider transactions on or before this date
-        let relevant = transactions.filter { Calendar.current.startOfDay(for: $0.date) <= Calendar.current.startOfDay(for: date) }
+        // Use UTC calendar to match the UTC date strings from the price history API
+        let relevant = transactions.filter { Self.utcCalendar.startOfDay(for: $0.date) <= Self.utcCalendar.startOfDay(for: date) }
 
         // Transactions exist but none before this date — user didn't hold this asset yet
         guard !relevant.isEmpty else { return 0.0 }

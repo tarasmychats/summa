@@ -21,6 +21,7 @@ export interface PriceResponse {
   prices: AssetPrice[];
   baseCurrency: string;
   timestamp: string;
+  warnings?: string[];
 }
 
 export interface ErrorResponse {

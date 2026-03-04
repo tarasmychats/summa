@@ -119,15 +119,17 @@ Fetch historical daily prices for one or more assets.
 
 The `assets` and `categories` arrays must have the same length.
 
+Response keys use the composite format `assetId:category` to disambiguate assets that may share an ID across categories.
+
 **Response:**
 ```json
 {
   "history": {
-    "bitcoin": [
+    "bitcoin:crypto": [
       { "date": "2024-01-01", "price": 42000 },
       { "date": "2024-01-02", "price": 42500 }
     ],
-    "AAPL": [
+    "AAPL:stock": [
       { "date": "2024-01-01", "price": 185.2 },
       { "date": "2024-01-02", "price": 186.1 }
     ]

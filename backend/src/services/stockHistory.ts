@@ -56,6 +56,24 @@ export async function fetchStockHistory(
 }
 
 /**
+ * Gets the trading currency for a stock symbol via Yahoo Finance quote.
+ * Throws if the quote has no currency field — storing prices under the wrong
+ * currency would silently corrupt historical data, so we abort and let the
+ * backfill retry on the next run.
+ */
+export async function getStockCurrency(symbol: string): Promise<string> {
+  const result = await yahooFinance.quote(symbol, {}, { validateResult: false });
+  const quote = Array.isArray(result) ? result[0] : result;
+  const currency = (quote as any)?.currency;
+  if (!currency) {
+    throw new Error(
+      `Yahoo quote for ${symbol} missing currency field — aborting to avoid storing prices under wrong currency`
+    );
+  }
+  return currency;
+}
+
+/**
  * Delays execution for rate limiting between Yahoo Finance API calls.
  * Yahoo Finance is unofficial — 5s delay between symbols to be safe.
  */

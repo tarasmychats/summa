@@ -105,13 +105,13 @@ describe("dailyPrices repository", () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
-    it("returns prices grouped by asset ID", async () => {
+    it("returns prices grouped by composite key (assetId:category)", async () => {
       mockQuery.mockResolvedValue({
         rows: [
-          { asset_id: "AAPL", date: "2025-01-01", price: "180.00" },
-          { asset_id: "AAPL", date: "2025-01-02", price: "182.00" },
-          { asset_id: "bitcoin", date: "2025-01-01", price: "42000.00" },
-          { asset_id: "bitcoin", date: "2025-01-02", price: "43000.00" },
+          { asset_id: "AAPL", category: "stock", date: "2025-01-01", price: "180.00" },
+          { asset_id: "AAPL", category: "stock", date: "2025-01-02", price: "182.00" },
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-01", price: "42000.00" },
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-02", price: "43000.00" },
         ],
       });
 
@@ -126,11 +126,11 @@ describe("dailyPrices repository", () => {
       );
 
       expect(Object.keys(result)).toHaveLength(2);
-      expect(result["AAPL"]).toEqual([
+      expect(result["AAPL:stock"]).toEqual([
         { date: "2025-01-01", price: 180 },
         { date: "2025-01-02", price: 182 },
       ]);
-      expect(result["bitcoin"]).toEqual([
+      expect(result["bitcoin:crypto"]).toEqual([
         { date: "2025-01-01", price: 42000 },
         { date: "2025-01-02", price: 43000 },
       ]);
@@ -149,8 +149,8 @@ describe("dailyPrices repository", () => {
         "usd"
       );
 
-      expect(result["AAPL"]).toEqual([]);
-      expect(result["bitcoin"]).toEqual([]);
+      expect(result["AAPL:stock"]).toEqual([]);
+      expect(result["bitcoin:crypto"]).toEqual([]);
     });
 
     it("builds correct OR-based WHERE clause for multiple assets", async () => {
@@ -170,7 +170,7 @@ describe("dailyPrices repository", () => {
       expect(sql).toContain("(asset_id = $1 AND category = $2)");
       expect(sql).toContain("(asset_id = $3 AND category = $4)");
       expect(sql).toContain("date >= $5 AND date <= $6");
-      expect(sql).toContain("ORDER BY asset_id, date");
+      expect(sql).toContain("ORDER BY asset_id, category, date");
       expect(params).toEqual(["AAPL", "stock", "bitcoin", "crypto", "2025-01-01", "2025-01-31"]);
     });
 
@@ -190,7 +190,7 @@ describe("dailyPrices repository", () => {
 
     it("handles single asset correctly", async () => {
       mockQuery.mockResolvedValue({
-        rows: [{ asset_id: "EUR", date: "2025-01-01", price: "1.08" }],
+        rows: [{ asset_id: "EUR", category: "fiat", date: "2025-01-01", price: "1.08" }],
       });
 
       const result = await getMultiAssetPrices(
@@ -200,7 +200,7 @@ describe("dailyPrices repository", () => {
         "usd"
       );
 
-      expect(result["EUR"]).toEqual([{ date: "2025-01-01", price: 1.08 }]);
+      expect(result["EUR:fiat"]).toEqual([{ date: "2025-01-01", price: 1.08 }]);
     });
 
     it("propagates database errors", async () => {

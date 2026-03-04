@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMultiAssetPrices } from "../repositories/dailyPrices.js";
+import { getMultiAssetPrices, assetKey } from "../repositories/dailyPrices.js";
 import { backfillAsset } from "../services/backfill.js";
 import { logger } from "../logger.js";
 import { isDbReady } from "../db.js";
@@ -89,8 +89,8 @@ export function createHistoryRouter(): Router {
     // If DB is not available, return empty history (graceful degradation)
     if (!isDbReady()) {
       const emptyHistory: Record<string, Array<{ date: string; price: number }>> = {};
-      for (const id of assetList) {
-        emptyHistory[id] = [];
+      for (let i = 0; i < assetList.length; i++) {
+        emptyHistory[assetKey(assetList[i], categoryList[i])] = [];
       }
       res.json({
         history: emptyHistory,
@@ -117,7 +117,8 @@ export function createHistoryRouter(): Router {
       // For assets with no history, trigger async backfill (fire-and-forget)
       // Uses in-flight set to prevent duplicate concurrent backfills
       for (const pair of assetPairs) {
-        if (history[pair.assetId] && history[pair.assetId].length === 0) {
+        const compositeKey = assetKey(pair.assetId, pair.category);
+        if (history[compositeKey] && history[compositeKey].length === 0) {
           const key = `${pair.assetId}:${pair.category}`;
           if (!inFlightBackfills.has(key)) {
             inFlightBackfills.add(key);

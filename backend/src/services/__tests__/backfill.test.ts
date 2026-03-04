@@ -18,6 +18,7 @@ vi.mock("../../repositories/dailyPrices.js", () => ({
 // Mock history services
 const mockFetchCryptoHistory = vi.fn();
 const mockFetchStockHistory = vi.fn();
+const mockGetStockCurrency = vi.fn();
 const mockFetchFiatHistory = vi.fn();
 
 vi.mock("../cryptoHistory.js", () => ({
@@ -28,6 +29,7 @@ vi.mock("../cryptoHistory.js", () => ({
 
 vi.mock("../stockHistory.js", () => ({
   fetchStockHistory: (...args: unknown[]) => mockFetchStockHistory(...args),
+  getStockCurrency: (...args: unknown[]) => mockGetStockCurrency(...args),
   rateLimitDelay: () => Promise.resolve(),
 }));
 
@@ -43,6 +45,8 @@ describe("backfillAsset", () => {
     vi.clearAllMocks();
     mockInsertDailyPrices.mockResolvedValue(undefined);
     mockUpsertBackfillStatus.mockResolvedValue(undefined);
+    // Default: stocks trade in USD
+    mockGetStockCurrency.mockResolvedValue("USD");
   });
 
   describe("skip logic", () => {
@@ -114,30 +118,37 @@ describe("backfillAsset", () => {
 
     it("fetches stock history (5 years) for new stock asset", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("USD");
       mockFetchStockHistory.mockResolvedValueOnce([
         { date: "2021-01-04", price: 129.41 },
         { date: "2021-01-05", price: 131.01 },
+      ]);
+      // applyEurConversion calls fetchFiatHistory for EUR rates
+      mockFetchFiatHistory.mockResolvedValueOnce([
+        { date: "2021-01-04", priceUsd: 1.22, priceEur: 1.0 },
+        { date: "2021-01-05", priceUsd: 1.23, priceEur: 1.0 },
       ]);
 
       await backfillAsset("AAPL", "stock");
 
       expect(mockFetchStockHistory).toHaveBeenCalledWith("AAPL", 5);
-      expect(mockInsertDailyPrices).toHaveBeenCalledWith([
-        {
-          assetId: "AAPL",
-          category: "stock",
-          date: "2021-01-04",
-          priceUsd: 129.41,
-          priceEur: null,
-        },
-        {
-          assetId: "AAPL",
-          category: "stock",
-          date: "2021-01-05",
-          priceUsd: 131.01,
-          priceEur: null,
-        },
-      ]);
+      expect(mockGetStockCurrency).toHaveBeenCalledWith("AAPL");
+      expect(mockInsertDailyPrices).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            assetId: "AAPL",
+            category: "stock",
+            date: "2021-01-04",
+            priceUsd: 129.41,
+          }),
+          expect.objectContaining({
+            assetId: "AAPL",
+            category: "stock",
+            date: "2021-01-05",
+            priceUsd: 131.01,
+          }),
+        ])
+      );
       expect(mockUpsertBackfillStatus).toHaveBeenCalledWith(
         "AAPL",
         "stock",
@@ -175,6 +186,110 @@ describe("backfillAsset", () => {
           priceEur: 0.99,
         },
       ]);
+    });
+  });
+
+  describe("non-USD stock backfill", () => {
+    it("converts non-USD stock prices using FX rates", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("GBP");
+      mockFetchStockHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", price: 100 },
+      ]);
+      // FX rates for GBP
+      mockFetchFiatHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", priceUsd: 1.27, priceEur: 1.16 },
+      ]);
+
+      await backfillAsset("TSCO.L", "stock");
+
+      const insertedPrices = mockInsertDailyPrices.mock.calls[0][0];
+      expect(insertedPrices).toHaveLength(1);
+      expect(insertedPrices[0].assetId).toBe("TSCO.L");
+      expect(insertedPrices[0].category).toBe("stock");
+      expect(insertedPrices[0].priceUsd).toBeCloseTo(127, 2);
+      expect(insertedPrices[0].priceEur).toBeCloseTo(116, 2);
+    });
+
+    it("normalizes minor-unit currencies (GBp pence) before conversion", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("GBp"); // pence
+      mockFetchStockHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", price: 15000 }, // 15000 pence = £150
+      ]);
+      // FX rates for GBP (not GBp)
+      mockFetchFiatHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", priceUsd: 1.27, priceEur: 1.16 },
+      ]);
+
+      await backfillAsset("VOD.L", "stock");
+
+      const insertedPrices = mockInsertDailyPrices.mock.calls[0][0];
+      expect(insertedPrices).toHaveLength(1);
+      // 15000 pence / 100 = £150, then £150 * 1.27 = $190.50
+      expect(insertedPrices[0].priceUsd).toBeCloseTo(190.5, 1);
+      expect(insertedPrices[0].priceEur).toBeCloseTo(174, 1);
+    });
+
+    it("normalizes GBX (pence) before conversion", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("GBX");
+      mockFetchStockHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", price: 5000 }, // 5000 pence = £50
+      ]);
+      mockFetchFiatHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", priceUsd: 1.27, priceEur: 1.16 },
+      ]);
+
+      await backfillAsset("BARC.L", "stock");
+
+      const insertedPrices = mockInsertDailyPrices.mock.calls[0][0];
+      // 5000 GBX / 100 = £50, then £50 * 1.27 = $63.50
+      expect(insertedPrices[0].priceUsd).toBeCloseTo(63.5, 1);
+      expect(insertedPrices[0].priceEur).toBeCloseTo(58, 1);
+    });
+
+    it("throws when FX rates return empty for non-USD stock (prevents marking complete with no data)", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("GBP");
+      mockFetchStockHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", price: 100 },
+      ]);
+      mockFetchFiatHistory.mockResolvedValueOnce([]); // empty FX rates
+
+      await expect(backfillAsset("TSCO.L", "stock")).rejects.toThrow(
+        "No FX rates returned for GBP"
+      );
+
+      expect(mockInsertDailyPrices).not.toHaveBeenCalled();
+      expect(mockUpsertBackfillStatus).not.toHaveBeenCalled();
+    });
+
+    it("throws when FX rate fetch fails for non-USD stock (prevents null prices)", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("GBP");
+      mockFetchStockHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", price: 100 },
+      ]);
+      mockFetchFiatHistory.mockRejectedValueOnce(new Error("FX API down"));
+
+      await expect(backfillAsset("TSCO.L", "stock")).rejects.toThrow("FX API down");
+
+      expect(mockInsertDailyPrices).not.toHaveBeenCalled();
+      expect(mockUpsertBackfillStatus).not.toHaveBeenCalled();
+    });
+
+    it("throws when getStockCurrency fails (prevents wrong currency assumption)", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockRejectedValueOnce(new Error("Yahoo rate limited"));
+      mockFetchStockHistory.mockResolvedValueOnce([
+        { date: "2024-01-02", price: 100 },
+      ]);
+
+      await expect(backfillAsset("TSCO.L", "stock")).rejects.toThrow("Yahoo rate limited");
+
+      expect(mockInsertDailyPrices).not.toHaveBeenCalled();
+      expect(mockUpsertBackfillStatus).not.toHaveBeenCalled();
     });
   });
 
@@ -241,9 +356,12 @@ describe("backfillAsset", () => {
 
     it("does not update backfill status if insert fails", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetStockCurrency.mockResolvedValueOnce("USD");
       mockFetchStockHistory.mockResolvedValueOnce([
         { date: "2024-01-01", price: 150 },
       ]);
+      // applyEurConversion calls fetchFiatHistory
+      mockFetchFiatHistory.mockResolvedValueOnce([]);
       mockInsertDailyPrices.mockRejectedValueOnce(new Error("DB error"));
 
       await expect(backfillAsset("AAPL", "stock")).rejects.toThrow("DB error");

@@ -54,7 +54,16 @@ export async function insertDailyPrices(
 }
 
 /**
- * Get daily prices for multiple assets at once, grouped by asset ID.
+ * Builds a composite key for uniquely identifying an asset across categories.
+ * Prevents data merging when the same ID exists in different categories.
+ */
+export function assetKey(assetId: string, category: string): string {
+  return `${assetId}:${category}`;
+}
+
+/**
+ * Get daily prices for multiple assets at once, grouped by composite key (assetId:category).
+ * Uses composite keys to prevent data merging when the same ID exists across categories.
  */
 export async function getMultiAssetPrices(
   assets: Array<{ assetId: string; category: string }>,
@@ -84,23 +93,23 @@ export async function getMultiAssetPrices(
   params.push(from, to);
 
   const result = await pool.query(
-    `SELECT asset_id, date, ${priceColumn} AS price
+    `SELECT asset_id, category, date, ${priceColumn} AS price
      FROM daily_prices
      WHERE (${conditions.join(" OR ")}) AND date >= $${dateFromIdx} AND date <= $${dateToIdx}
        AND ${priceColumn} IS NOT NULL
-     ORDER BY asset_id, date`,
+     ORDER BY asset_id, category, date`,
     params
   );
 
-  // Initialize result with empty arrays for all requested assets
+  // Initialize result with empty arrays for all requested assets, keyed by assetId:category
   const grouped: Record<string, DailyPrice[]> = {};
   for (const asset of assets) {
-    grouped[asset.assetId] = [];
+    grouped[assetKey(asset.assetId, asset.category)] = [];
   }
 
   for (const row of result.rows) {
-    const assetId = row.asset_id;
-    grouped[assetId]?.push({
+    const key = assetKey(row.asset_id, row.category);
+    grouped[key]?.push({
       date: typeof row.date === "string" ? row.date : row.date.toISOString().split("T")[0],
       price: Number(row.price),
     });

@@ -37,6 +37,19 @@ vi.mock("../repositories/trackedAssets.js", () => ({
 
 vi.mock("../repositories/dailyPrices.js", () => ({
   getMultiAssetPrices: vi.fn().mockResolvedValue({}),
+  assetKey: (assetId: string, category: string) => `${assetId}:${category}`,
+}));
+
+vi.mock("../services/cryptoSearch.js", () => ({
+  searchCrypto: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../services/stockSearch.js", () => ({
+  searchStocks: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../services/fiatSearch.js", () => ({
+  searchFiat: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../services/backfill.js", () => ({
@@ -81,8 +94,8 @@ describe("server", () => {
         "/api/history?assets=bitcoin&categories=crypto&from=2025-01-01&to=2025-06-01&currency=usd"
       );
       expect(res.status).toBe(200);
-      expect(res.body.history).toHaveProperty("bitcoin");
-      expect(res.body.history.bitcoin).toEqual([]);
+      expect(res.body.history).toHaveProperty("bitcoin:crypto");
+      expect(res.body.history["bitcoin:crypto"]).toEqual([]);
     });
   });
 });

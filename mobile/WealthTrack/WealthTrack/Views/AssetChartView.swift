@@ -138,7 +138,8 @@ struct AssetChartView: View {
                 currency: currency.lowercased()
             )
 
-            if let points = history[asset.symbol] {
+            let compositeKey = "\(asset.symbol):\(asset.category)"
+            if let points = history[compositeKey] {
                 dataPoints = points.compactMap { point in
                     guard let date = Self.dateFormatter.date(from: point.date) else { return nil }
                     return AssetPricePoint(date: date, price: point.price)

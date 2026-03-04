@@ -4,6 +4,8 @@ import { fetchStockPrices } from "../services/stocks.js";
 import { fetchExchangeRates } from "../services/fiat.js";
 import { PriceCache } from "../cache.js";
 import { upsertTrackedAssets } from "../repositories/trackedAssets.js";
+import { logger } from "../logger.js";
+import { normalizeCurrency } from "../currency.js";
 import type { PriceRequest, AssetPrice, PriceResponse } from "../types.js";
 
 const cache = new PriceCache(60_000); // 1 minute cache
@@ -45,6 +47,7 @@ export function createPricesRouter(): Router {
         baseCurrency: base,
         timestamp: new Date().toISOString(),
       };
+      addUnconvertedWarnings(response, base);
       res.json(response);
       return;
     }
@@ -56,7 +59,13 @@ export function createPricesRouter(): Router {
         fetchStockPrices(stockIds),
         fetchExchangeRates(base, fiatIds),
       ]);
-      allPrices = [...cryptoPrices, ...stockPrices, ...fiatPrices];
+
+      // Convert stock prices to the requested base currency.
+      // Yahoo Finance returns prices in the stock's native currency (usually USD).
+      // When base != stock currency, we need to convert.
+      const convertedStockPrices = await convertStockPricesToBase(stockPrices, base);
+
+      allPrices = [...cryptoPrices, ...convertedStockPrices, ...fiatPrices];
     } catch {
       res.status(500).json({ error: "Failed to fetch prices" });
       return;
@@ -68,6 +77,7 @@ export function createPricesRouter(): Router {
       baseCurrency: base,
       timestamp: new Date().toISOString(),
     };
+    addUnconvertedWarnings(response, base);
 
     res.json(response);
 
@@ -84,4 +94,84 @@ export function createPricesRouter(): Router {
   });
 
   return router;
+}
+
+/**
+ * Adds warnings about unconverted stocks to the response.
+ * Used for both cache hits and misses.
+ */
+function addUnconvertedWarnings(response: PriceResponse, base: string): void {
+  const unconvertedStocks = response.prices.filter(
+    (p) => p.category === "stock" && p.currency.toUpperCase() !== base
+  );
+  if (unconvertedStocks.length > 0) {
+    response.warnings = [
+      `FX conversion unavailable for ${unconvertedStocks.map((s) => s.id).join(", ")}; prices returned in native currency (check each price's currency field)`,
+    ];
+  }
+}
+
+/**
+ * Converts stock prices from their native currency to the requested base currency.
+ * Groups stocks by native currency to minimize exchange rate API calls.
+ * Handles minor-unit currencies (e.g., GBp/GBX pence → GBP pounds).
+ */
+async function convertStockPricesToBase(
+  stockPrices: AssetPrice[],
+  base: string
+): Promise<AssetPrice[]> {
+  if (stockPrices.length === 0) return stockPrices;
+
+  // Normalize minor-unit currencies first (e.g., GBp → GBP with price / 100)
+  const normalizedPrices = stockPrices.map((stock) => {
+    const { iso, divisor } = normalizeCurrency(stock.currency);
+    if (divisor === 1 && iso === stock.currency.toUpperCase()) return stock;
+    return {
+      ...stock,
+      price: stock.price / divisor,
+      currency: iso,
+    };
+  });
+
+  // Find unique native currencies that differ from the base
+  const currenciesToConvert = [
+    ...new Set(
+      normalizedPrices
+        .map((s) => s.currency.toUpperCase())
+        .filter((c) => c !== base)
+    ),
+  ];
+
+  if (currenciesToConvert.length === 0) return normalizedPrices;
+
+  // Fetch conversion rates: how many units of each native currency per 1 unit of base
+  // e.g., fetchExchangeRates("EUR", ["USD"]) → rate = 1.10 means 1 EUR = 1.10 USD
+  let rateMap: Map<string, number>;
+  try {
+    const rates = await fetchExchangeRates(base, currenciesToConvert);
+    rateMap = new Map(rates.map((r) => [r.id.toUpperCase(), r.price]));
+  } catch (err) {
+    logger.warn("could not fetch FX rates for stock price conversion", {
+      base,
+      currencies: currenciesToConvert,
+      error: String(err),
+    });
+    // Return normalized (but unconverted) prices rather than failing the whole request
+    return normalizedPrices;
+  }
+
+  return normalizedPrices.map((stock) => {
+    const nativeCurrency = stock.currency.toUpperCase();
+    if (nativeCurrency === base) return stock;
+
+    const rateFromBaseToNative = rateMap.get(nativeCurrency);
+    if (rateFromBaseToNative == null || rateFromBaseToNative === 0) return stock;
+
+    // price_in_base = price_in_native / rate_from_base_to_native
+    return {
+      ...stock,
+      price: stock.price / rateFromBaseToNative,
+      currency: base,
+    };
+  });
 }
