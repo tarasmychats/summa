@@ -170,15 +170,15 @@
 **Files:**
 - Modify: `backend/src/index.ts`
 
-- [ ] Add `GET /api/history` route with query params: `assets` (comma-separated), `categories` (comma-separated), `from` (date), `to` (date), `currency` (usd|eur)
-- [ ] Validate query params (assets and categories arrays must be same length, dates valid, currency is usd or eur)
-- [ ] Call `getMultiAssetPrices()` from daily prices repository
-- [ ] Return `{ history: { [assetId]: [{date, price}] }, currency, from, to }`
-- [ ] Handle case where asset has no history yet — return empty array, trigger async backfill
-- [ ] Write tests for valid request (mock repository)
-- [ ] Write tests for validation errors (missing params, invalid dates, invalid currency)
-- [ ] Write tests for empty history response
-- [ ] Run `npm test` — must pass before next task
+- [x] Add `GET /api/history` route with query params: `assets` (comma-separated), `categories` (comma-separated), `from` (date), `to` (date), `currency` (usd|eur)
+- [x] Validate query params (assets and categories arrays must be same length, dates valid, currency is usd or eur)
+- [x] Call `getMultiAssetPrices()` from daily prices repository
+- [x] Return `{ history: { [assetId]: [{date, price}] }, currency, from, to }`
+- [x] Handle case where asset has no history yet — return empty array, trigger async backfill
+- [x] Write tests for valid request (mock repository)
+- [x] Write tests for validation errors (missing params, invalid dates, invalid currency)
+- [x] Write tests for empty history response
+- [x] Run `npm test` — must pass before next task
 
 ### Task 11: Modify POST /api/prices to track assets
 

@@ -7,6 +7,7 @@ config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../.env") });
 import express from "express";
 import { createPricesRouter } from "./routes/prices.js";
 import { createSearchRouter } from "./routes/search.js";
+import { createHistoryRouter } from "./routes/history.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { logger } from "./logger.js";
 import { startDailyCron } from "./services/cronJob.js";
@@ -23,6 +24,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api", createPricesRouter());
 app.use("/api", createSearchRouter());
+app.use("/api", createHistoryRouter());
 
 app.listen(PORT, () => {
   logger.info("server started", { port: Number(PORT) });
