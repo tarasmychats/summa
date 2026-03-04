@@ -51,10 +51,15 @@ struct DashboardView: View {
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddAsset = true
-                    } label: {
-                        Image(systemName: "plus")
+                    HStack(spacing: 12) {
+                        NavigationLink(destination: SettingsView()) {
+                            Image(systemName: "gearshape")
+                        }
+                        Button {
+                            showingAddAsset = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
             }

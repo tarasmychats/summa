@@ -278,10 +278,10 @@
 - Create: `mobile/WealthTrack/WealthTrack/Views/SettingsView.swift`
 - Modify: `mobile/WealthTrack/WealthTrack/Models/UserSettings.swift`
 
-- [ ] Create SettingsView with a Picker for base currency: USD, EUR
-- [ ] Read/write `UserSettings.displayCurrency` via SwiftData
-- [ ] Ensure `UserSettings` singleton is created on first launch if not exists
-- [ ] Add Settings tab or navigation link from DashboardView
+- [x] Create SettingsView with a Picker for base currency: USD, EUR
+- [x] Read/write `UserSettings.displayCurrency` via SwiftData
+- [x] Ensure `UserSettings` singleton is created on first launch if not exists
+- [x] Add Settings tab or navigation link from DashboardView
 
 ### Task 19: Pass base currency through price fetching
 
