@@ -1,4 +1,5 @@
 import pg from "pg";
+import { config } from "./config.js";
 import { logger } from "./logger.js";
 
 const { Pool } = pg;
@@ -16,16 +17,15 @@ export function setDbReady(ready: boolean): void {
 
 export function getPool(): pg.Pool {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
     pool = new Pool(
-      connectionString
-        ? { connectionString }
+      config.db.connectionString
+        ? { connectionString: config.db.connectionString }
         : {
-            host: process.env.PGHOST || "localhost",
-            port: Number(process.env.PGPORT) || 5432,
-            user: process.env.PGUSER || "wealthtrack",
-            password: process.env.PGPASSWORD || "wealthtrack",
-            database: process.env.PGDATABASE || "wealthtrack",
+            host: config.db.host,
+            port: config.db.port,
+            user: config.db.user,
+            password: config.db.password,
+            database: config.db.database,
           }
     );
   }

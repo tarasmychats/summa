@@ -9,32 +9,51 @@ const { mockQuery, mockEnd, MockPool } = vi.hoisted(() => {
 
 vi.mock("pg", () => ({ default: { Pool: MockPool } }));
 
+const mockConfig = vi.hoisted(() => ({
+  db: {
+    connectionString: undefined as string | undefined,
+    host: "localhost",
+    port: 5432,
+    user: "wealthtrack",
+    password: "wealthtrack",
+    database: "wealthtrack",
+  },
+}));
+
+vi.mock("../config.js", () => ({ config: mockConfig }));
+
 import { getPool, initDb, closePool, resetPool } from "../db.js";
 
 describe("db", () => {
   beforeEach(() => {
     resetPool();
     vi.clearAllMocks();
+    mockConfig.db = {
+      connectionString: undefined,
+      host: "localhost",
+      port: 5432,
+      user: "wealthtrack",
+      password: "wealthtrack",
+      database: "wealthtrack",
+    };
   });
 
   describe("getPool", () => {
-    it("creates a pool with DATABASE_URL when set", () => {
-      process.env.DATABASE_URL = "postgresql://user:pass@host:5432/db";
+    it("creates a pool with connectionString when set", () => {
+      mockConfig.db.connectionString = "postgresql://user:pass@host:5432/db";
       const pool = getPool();
       expect(MockPool).toHaveBeenCalledWith({
         connectionString: "postgresql://user:pass@host:5432/db",
       });
       expect(pool).toBeDefined();
-      delete process.env.DATABASE_URL;
     });
 
-    it("creates a pool with individual PG vars when DATABASE_URL is not set", () => {
-      delete process.env.DATABASE_URL;
-      process.env.PGHOST = "myhost";
-      process.env.PGPORT = "5433";
-      process.env.PGUSER = "myuser";
-      process.env.PGPASSWORD = "mypass";
-      process.env.PGDATABASE = "mydb";
+    it("creates a pool with individual config when connectionString not set", () => {
+      mockConfig.db.host = "myhost";
+      mockConfig.db.port = 5433;
+      mockConfig.db.user = "myuser";
+      mockConfig.db.password = "mypass";
+      mockConfig.db.database = "mydb";
 
       getPool();
 
@@ -45,12 +64,6 @@ describe("db", () => {
         password: "mypass",
         database: "mydb",
       });
-
-      delete process.env.PGHOST;
-      delete process.env.PGPORT;
-      delete process.env.PGUSER;
-      delete process.env.PGPASSWORD;
-      delete process.env.PGDATABASE;
     });
 
     it("returns the same pool on subsequent calls", () => {
@@ -65,9 +78,7 @@ describe("db", () => {
     it("creates all three tables", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
-
       expect(mockQuery).toHaveBeenCalledTimes(3);
-
       const calls = mockQuery.mock.calls.map((c: string[][]) => c[0]);
       expect(calls[0]).toContain("tracked_assets");
       expect(calls[1]).toContain("daily_prices");
@@ -78,14 +89,11 @@ describe("db", () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
       await initDb();
-
-      // All queries use IF NOT EXISTS, so calling twice works without error
       expect(mockQuery).toHaveBeenCalledTimes(6);
     });
 
     it("propagates database errors", async () => {
       mockQuery.mockRejectedValueOnce(new Error("connection refused"));
-
       await expect(initDb()).rejects.toThrow("connection refused");
     });
   });
