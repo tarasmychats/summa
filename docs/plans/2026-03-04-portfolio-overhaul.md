@@ -42,14 +42,14 @@
 - Create: `backend/docker-compose.yml`
 - Modify: `backend/.env.example` (or create if not exists)
 
-- [ ] Add `pg` and `@types/pg` dependencies to `backend/package.json`
-- [ ] Create `backend/docker-compose.yml` with PostgreSQL 16 service (port 5432, db: `wealthtrack`, user: `wealthtrack`, password from env)
-- [ ] Create `backend/src/db.ts` — Pool singleton with connection config from env vars (`DATABASE_URL` or individual `PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE`)
-- [ ] Add `initDb()` function that creates tables if not exist (`tracked_assets`, `daily_prices`, `backfill_status`) using the schema from design doc
-- [ ] Add env vars to `.env.example`: `DATABASE_URL=postgresql://wealthtrack:wealthtrack@localhost:5432/wealthtrack`
-- [ ] Write tests for `initDb()` (table creation is idempotent)
-- [ ] Write tests for pool connection error handling
-- [ ] Run `npm test` — must pass before next task
+- [x] Add `pg` and `@types/pg` dependencies to `backend/package.json`
+- [x] Create `backend/docker-compose.yml` with PostgreSQL 16 service (port 5432, db: `wealthtrack`, user: `wealthtrack`, password from env)
+- [x] Create `backend/src/db.ts` — Pool singleton with connection config from env vars (`DATABASE_URL` or individual `PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE`)
+- [x] Add `initDb()` function that creates tables if not exist (`tracked_assets`, `daily_prices`, `backfill_status`) using the schema from design doc
+- [x] Add env vars to `.env.example`: `DATABASE_URL=postgresql://wealthtrack:wealthtrack@localhost:5432/wealthtrack`
+- [x] Write tests for `initDb()` (table creation is idempotent)
+- [x] Write tests for pool connection error handling
+- [x] Run `npm test` — must pass before next task
 
 ### Task 2: Create tracked assets repository
 
