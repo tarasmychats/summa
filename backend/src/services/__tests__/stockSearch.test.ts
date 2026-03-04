@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { searchStocks } from "../stockSearch.js";
 
-vi.mock("yahoo-finance2", () => ({
-  default: {
-    search: vi.fn(),
-  },
+const { mockSearch } = vi.hoisted(() => ({
+  mockSearch: vi.fn(),
 }));
 
-import yahooFinance from "yahoo-finance2";
+vi.mock("yahoo-finance2", () => ({
+  default: class {
+    search = mockSearch;
+  },
+}));
 
 describe("searchStocks", () => {
   beforeEach(() => {
@@ -15,7 +17,7 @@ describe("searchStocks", () => {
   });
 
   it("returns matching stocks from Yahoo Finance", async () => {
-    vi.mocked(yahooFinance.search).mockResolvedValueOnce({
+    mockSearch.mockResolvedValueOnce({
       quotes: [
         {
           symbol: "AAPL",
@@ -67,7 +69,7 @@ describe("searchStocks", () => {
   });
 
   it("filters out non-Yahoo results", async () => {
-    vi.mocked(yahooFinance.search).mockResolvedValueOnce({
+    mockSearch.mockResolvedValueOnce({
       quotes: [
         {
           name: "Some Startup",
@@ -100,7 +102,7 @@ describe("searchStocks", () => {
   });
 
   it("returns empty array on error", async () => {
-    vi.mocked(yahooFinance.search).mockRejectedValueOnce(new Error("API down"));
+    mockSearch.mockRejectedValueOnce(new Error("API down"));
 
     const result = await searchStocks("apple");
     expect(result).toEqual([]);

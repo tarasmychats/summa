@@ -15,7 +15,7 @@ struct AssetListView: View {
                     VStack(alignment: .leading) {
                         Text(asset.name)
                             .font(Theme.headlineFont)
-                        Text("\(asset.amount, specifier: "%.4g") \(asset.displayTicker)")
+                        Text("\(asset.amount.formatted(.number.precision(.fractionLength(0...8)))) \(asset.displayTicker)")
                             .font(Theme.bodyFont)
                             .foregroundStyle(Theme.textMuted)
                     }

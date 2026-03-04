@@ -13,3 +13,6 @@ ios/**/*.xcuserdata/
 # General
 .DS_Store
 *.log
+
+# ralphex progress logs
+progress*.txt

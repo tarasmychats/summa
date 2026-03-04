@@ -61,11 +61,6 @@ struct DashboardView: View {
             .sheet(isPresented: $showingAddAsset) {
                 AddAssetView()
             }
-            .onChange(of: showingAddAsset) { _, isShowing in
-                if !isShowing {
-                    Task { await viewModel.refresh(assets: assets) }
-                }
-            }
             .task(id: assets.count) {
                 await viewModel.refresh(assets: assets)
             }

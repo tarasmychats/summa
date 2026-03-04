@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fetchStockPrices } from "../stocks.js";
 
-vi.mock("yahoo-finance2", () => ({
-  default: {
-    quote: vi.fn(),
-  },
+const { mockQuote } = vi.hoisted(() => ({
+  mockQuote: vi.fn(),
 }));
 
-import yahooFinance from "yahoo-finance2";
+vi.mock("yahoo-finance2", () => ({
+  default: class {
+    quote = mockQuote;
+  },
+}));
 
 describe("fetchStockPrices", () => {
   beforeEach(() => {
@@ -15,7 +17,7 @@ describe("fetchStockPrices", () => {
   });
 
   it("returns prices for requested stock tickers", async () => {
-    vi.mocked(yahooFinance.quote).mockResolvedValueOnce([
+    mockQuote.mockResolvedValueOnce([
       {
         symbol: "VOO",
         regularMarketPrice: 520.5,
@@ -38,7 +40,7 @@ describe("fetchStockPrices", () => {
   });
 
   it("returns empty array on error", async () => {
-    vi.mocked(yahooFinance.quote).mockRejectedValueOnce(new Error("API down"));
+    mockQuote.mockRejectedValueOnce(new Error("API down"));
 
     const result = await fetchStockPrices(["VOO"]);
     expect(result).toEqual([]);

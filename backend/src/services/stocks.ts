@@ -1,6 +1,8 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 import type { AssetPrice } from "../types.js";
 import { logger } from "../logger.js";
+
+const yahooFinance = new YahooFinance();
 
 export async function fetchStockPrices(
   tickers: string[]
@@ -8,7 +10,7 @@ export async function fetchStockPrices(
   if (tickers.length === 0) return [];
 
   try {
-    const results = await yahooFinance.quote(tickers);
+    const results = await yahooFinance.quote(tickers, {}, { validateResult: false });
     const quotes = Array.isArray(results) ? results : [results];
     const now = new Date().toISOString();
 
