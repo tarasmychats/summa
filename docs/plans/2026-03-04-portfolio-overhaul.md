@@ -326,10 +326,10 @@
 **Files:**
 - Create: `mobile/WealthTrack/WealthTrack/Views/AssetChartView.swift`
 
-- [ ] Line chart showing single asset price over time
-- [ ] Time range selector: 1M, 3M, 6M, 1Y, 5Y
-- [ ] Show in asset detail view (from Task 17)
-- [ ] Display price in user's base currency
+- [x] Line chart showing single asset price over time
+- [x] Time range selector: 1M, 3M, 6M, 1Y, 5Y
+- [x] Show in asset detail view (from Task 17)
+- [x] Display price in user's base currency
 
 ---
 

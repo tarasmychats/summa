@@ -4,11 +4,23 @@ import SwiftData
 struct AssetDetailView: View {
     let asset: Asset
     @Environment(\.modelContext) private var modelContext
+    @Query private var allSettings: [UserSettings]
     @State private var showingEditSheet = false
     @State private var showingAddTransaction = false
 
+    private var displayCurrency: String {
+        allSettings.first?.displayCurrency ?? "USD"
+    }
+
     var body: some View {
         List {
+            // Price chart section
+            Section {
+                AssetChartView(asset: asset, currency: displayCurrency)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+
             // Header section: asset info + current amount
             Section {
                 VStack(spacing: 12) {
