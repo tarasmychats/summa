@@ -11,7 +11,7 @@ import { createSearchRouter } from "./routes/search.js";
 import { createHistoryRouter } from "./routes/history.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { logger } from "./logger.js";
-import { initDb, isDbReady, setDbReady } from "./db.js";
+import { initDb, isDbReady, setDbReady, closePool } from "./db.js";
 import { startDailyCron } from "./services/cronJob.js";
 
 const app = express();
@@ -50,7 +50,7 @@ export async function startServer(): Promise<void> {
     });
   }
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     logger.info("server started", { port: Number(PORT) });
     if (isDbReady()) {
       startDailyCron();
@@ -58,6 +58,18 @@ export async function startServer(): Promise<void> {
       logger.warn("cron job skipped — database not available");
     }
   });
+
+  function shutdown(signal: string) {
+    logger.info("shutdown signal received", { signal });
+    server.close(async () => {
+      await closePool();
+      logger.info("server stopped");
+      process.exit(0);
+    });
+  }
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 // Only auto-start when running as main module (not in tests)
