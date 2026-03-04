@@ -136,14 +136,14 @@
 **Files:**
 - Create: `backend/src/services/backfill.ts`
 
-- [ ] Create `backfillAsset(assetId, category)` — checks `backfill_status`, fetches missing history using appropriate service (crypto/stock/fiat), inserts into `daily_prices`, updates `backfill_status`
-- [ ] For crypto: fetch 365 days max (CoinGecko free limit)
-- [ ] For stocks: fetch 5 years
-- [ ] For fiat: fetch 5 years via Frankfurter
-- [ ] Add rate limit awareness — respect per-provider delays
-- [ ] Write tests for backfill logic (already backfilled → skip, new asset → fetch, partial backfill → fill gap)
-- [ ] Write tests for error recovery (API fails mid-backfill)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `backfillAsset(assetId, category)` — checks `backfill_status`, fetches missing history using appropriate service (crypto/stock/fiat), inserts into `daily_prices`, updates `backfill_status`
+- [x] For crypto: fetch 365 days max (CoinGecko free limit)
+- [x] For stocks: fetch 5 years
+- [x] For fiat: fetch 5 years via Frankfurter
+- [x] Add rate limit awareness — respect per-provider delays
+- [x] Write tests for backfill logic (already backfilled → skip, new asset → fetch, partial backfill → fill gap)
+- [x] Write tests for error recovery (API fails mid-backfill)
+- [x] Run `npm test` — must pass before next task
 
 ### Task 9: Create daily cron job
 
