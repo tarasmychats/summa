@@ -213,11 +213,11 @@
 **Files:**
 - Modify: `backend/src/index.ts`
 
-- [ ] Call `initDb()` on server startup (before listening)
-- [ ] Handle DB connection failure gracefully — log error, still serve current-price endpoints (degrade gracefully)
-- [ ] Update `npm run dev` script or add instructions for starting PostgreSQL via docker-compose
-- [ ] Write integration test: server starts, DB tables exist
-- [ ] Run `npm test` — must pass before next task
+- [x] Call `initDb()` on server startup (before listening)
+- [x] Handle DB connection failure gracefully — log error, still serve current-price endpoints (degrade gracefully)
+- [x] Update `npm run dev` script or add instructions for starting PostgreSQL via docker-compose
+- [x] Write integration test: server starts, DB tables exist
+- [x] Run `npm test` — must pass before next task
 
 ---
 
