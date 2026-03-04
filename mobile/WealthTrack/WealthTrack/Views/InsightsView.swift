@@ -51,7 +51,7 @@ struct InsightsView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.bgPrimary)
             .navigationTitle("Insights")
-            .task(id: "\(assets.count)-\(displayCurrency)") {
+            .task(id: "\(assets.count)-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.reduce(0, +))") {
                 await refreshHoldings()
             }
         }

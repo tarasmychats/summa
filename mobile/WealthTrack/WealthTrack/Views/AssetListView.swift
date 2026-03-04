@@ -127,10 +127,12 @@ struct EditAssetView: View {
                 }
             }
             .onAppear {
-                // Format without trailing zeros (350.0 → "350", 1.5 → "1.5")
-                amountText = asset.amount.truncatingRemainder(dividingBy: 1) == 0
-                    ? String(format: "%.0f", asset.amount)
-                    : String(asset.amount)
+                // Use currentAmount (transaction-replayed value) so the edit form
+                // reflects the actual balance, not the potentially stale stored amount.
+                let current = asset.currentAmount
+                amountText = current.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(format: "%.0f", current)
+                    : String(current)
             }
         }
     }
