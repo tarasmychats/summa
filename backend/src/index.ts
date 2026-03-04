@@ -10,23 +10,17 @@ import { createSearchRouter } from "./routes/search.js";
 import { createHistoryRouter } from "./routes/history.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { logger } from "./logger.js";
-import { initDb } from "./db.js";
+import { initDb, isDbReady, setDbReady } from "./db.js";
 import { startDailyCron } from "./services/cronJob.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-let dbReady = false;
-
-export function isDbReady(): boolean {
-  return dbReady;
-}
-
 app.use(express.json());
 app.use(requestLogger);
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", db: dbReady });
+  res.json({ status: "ok", db: isDbReady() });
 });
 
 app.use("/api", createPricesRouter());
@@ -36,7 +30,7 @@ app.use("/api", createHistoryRouter());
 export async function startServer(): Promise<void> {
   try {
     await initDb();
-    dbReady = true;
+    setDbReady(true);
     logger.info("database initialized");
   } catch (err) {
     logger.error("database initialization failed, running without DB", {
@@ -46,7 +40,7 @@ export async function startServer(): Promise<void> {
 
   app.listen(PORT, () => {
     logger.info("server started", { port: Number(PORT) });
-    if (dbReady) {
+    if (isDbReady()) {
       startDailyCron();
     } else {
       logger.warn("cron job skipped — database not available");
@@ -60,4 +54,5 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(currentFile)) {
   startServer();
 }
 
+export { isDbReady };
 export default app;

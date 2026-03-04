@@ -52,7 +52,10 @@ export function createSearchRouter(): Router {
       searches.push(searchCrypto(q));
     }
 
-    const results = (await Promise.all(searches)).flat();
+    const settled = await Promise.allSettled(searches);
+    const results = settled
+      .filter((r): r is PromiseFulfilledResult<SearchResult[]> => r.status === "fulfilled")
+      .flatMap((r) => r.value);
     searchCache.set(cacheKey, results);
 
     const response: SearchResponse = { results };

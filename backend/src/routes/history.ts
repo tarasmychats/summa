@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getMultiAssetPrices } from "../repositories/dailyPrices.js";
 import { backfillAsset } from "../services/backfill.js";
 import { logger } from "../logger.js";
+import { isDbReady } from "../db.js";
 
 /**
  * Validates a date string is in YYYY-MM-DD format and represents a real date.
@@ -9,7 +10,9 @@ import { logger } from "../logger.js";
 function isValidDate(dateStr: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
   const d = new Date(dateStr + "T00:00:00Z");
-  return !isNaN(d.getTime());
+  if (isNaN(d.getTime())) return false;
+  // Verify round-trip to catch silently rolled-over dates like Feb 31 → Mar 3
+  return d.toISOString().split("T")[0] === dateStr;
 }
 
 export function createHistoryRouter(): Router {
@@ -62,6 +65,21 @@ export function createHistoryRouter(): Router {
     if (currencyStr !== "usd" && currencyStr !== "eur") {
       res.status(400).json({
         error: "currency must be 'usd' or 'eur'",
+      });
+      return;
+    }
+
+    // If DB is not available, return empty history (graceful degradation)
+    if (!isDbReady()) {
+      const emptyHistory: Record<string, Array<{ date: string; price: number }>> = {};
+      for (const id of assetList) {
+        emptyHistory[id] = [];
+      }
+      res.json({
+        history: emptyHistory,
+        currency: currencyStr,
+        from: fromStr,
+        to: toStr,
       });
       return;
     }

@@ -62,17 +62,16 @@ describe("db", () => {
   });
 
   describe("initDb", () => {
-    it("creates all three tables and the index", async () => {
+    it("creates all three tables", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
 
-      expect(mockQuery).toHaveBeenCalledTimes(4);
+      expect(mockQuery).toHaveBeenCalledTimes(3);
 
       const calls = mockQuery.mock.calls.map((c: string[][]) => c[0]);
       expect(calls[0]).toContain("tracked_assets");
       expect(calls[1]).toContain("daily_prices");
-      expect(calls[2]).toContain("idx_daily_prices_lookup");
-      expect(calls[3]).toContain("backfill_status");
+      expect(calls[2]).toContain("backfill_status");
     });
 
     it("is idempotent (uses IF NOT EXISTS)", async () => {
@@ -81,7 +80,7 @@ describe("db", () => {
       await initDb();
 
       // All queries use IF NOT EXISTS, so calling twice works without error
-      expect(mockQuery).toHaveBeenCalledTimes(8);
+      expect(mockQuery).toHaveBeenCalledTimes(6);
     });
 
     it("propagates database errors", async () => {

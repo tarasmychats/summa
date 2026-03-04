@@ -179,14 +179,19 @@ describe("backfillAsset", () => {
   });
 
   describe("empty results", () => {
-    it("does not insert or update status when fetch returns empty", async () => {
+    it("does not insert prices but still updates backfill status when fetch returns empty", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
       mockFetchCryptoHistory.mockResolvedValueOnce([]);
 
       await backfillAsset("unknown-coin", "crypto");
 
       expect(mockInsertDailyPrices).not.toHaveBeenCalled();
-      expect(mockUpsertBackfillStatus).not.toHaveBeenCalled();
+      // Should still update status to prevent infinite retry for invalid assets
+      expect(mockUpsertBackfillStatus).toHaveBeenCalledWith(
+        "unknown-coin",
+        "crypto",
+        expect.any(Date)
+      );
     });
   });
 

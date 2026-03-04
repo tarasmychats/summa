@@ -73,7 +73,7 @@ struct DashboardView: View {
             .sheet(isPresented: $showingAddAsset) {
                 AddAssetView()
             }
-            .task(id: "\(assets.count)-\(displayCurrency)") {
+            .task(id: "\(assets.map(\.name).sorted().joined(separator: ","))-\(displayCurrency)") {
                 await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
             }
         }

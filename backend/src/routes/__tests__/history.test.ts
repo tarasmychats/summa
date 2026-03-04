@@ -22,6 +22,10 @@ vi.mock("../../logger.js", () => ({
   },
 }));
 
+vi.mock("../../db.js", () => ({
+  isDbReady: () => true,
+}));
+
 describe("GET /api/history", () => {
   let app: express.Express;
 

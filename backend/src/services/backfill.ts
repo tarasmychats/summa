@@ -82,6 +82,9 @@ export async function backfillAsset(
 
   if (prices.length === 0) {
     logger.warn("backfill fetched no prices", { assetId, category });
+    // Still update backfill_status to prevent infinite retry loops for
+    // invalid/delisted assets that will never return data
+    await upsertBackfillStatus(assetId, category, new Date());
     return;
   }
 

@@ -77,6 +77,8 @@ describe("runDailyPriceUpdate", () => {
     mockGetAllTrackedAssets.mockResolvedValueOnce({
       crypto: [{ assetId: "bitcoin", category: "crypto" }],
     });
+    // Pre-fetch EUR rate
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
     mockGetBackfillStatus.mockResolvedValueOnce(null);
     mockBackfillAsset.mockResolvedValueOnce(undefined);
 
@@ -93,6 +95,8 @@ describe("runDailyPriceUpdate", () => {
     mockGetAllTrackedAssets.mockResolvedValueOnce({
       crypto: [{ assetId: "bitcoin", category: "crypto" }],
     });
+    // Pre-fetch EUR rate (returns empty = eurPerUsd stays null)
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
     mockGetBackfillStatus.mockResolvedValueOnce({
       oldestDate: new Date("2024-01-01"),
       lastUpdated: yesterday,
@@ -122,6 +126,8 @@ describe("runDailyPriceUpdate", () => {
     mockGetAllTrackedAssets.mockResolvedValueOnce({
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
+    // Pre-fetch EUR rate (returns empty = eurPerUsd stays null)
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
     mockGetBackfillStatus.mockResolvedValueOnce({
       oldestDate: new Date("2021-01-01"),
       lastUpdated: yesterday,
@@ -151,16 +157,23 @@ describe("runDailyPriceUpdate", () => {
     mockGetAllTrackedAssets.mockResolvedValueOnce({
       fiat: [{ assetId: "EUR", category: "fiat" }],
     });
+    // Pre-fetch EUR rate (first call)
+    mockFetchFiatHistory.mockResolvedValueOnce([
+      { date: today, priceUsd: 1.08, priceEur: 1.0 },
+    ]);
     mockGetBackfillStatus.mockResolvedValueOnce({
       oldestDate: new Date("2021-01-01"),
       lastUpdated: yesterday,
     });
+    // Fiat asset fetch (second call)
     mockFetchFiatHistory.mockResolvedValueOnce([
       { date: today, priceUsd: 1.08, priceEur: 1.0 },
     ]);
 
     await runDailyPriceUpdate();
 
+    // Called twice: once for EUR pre-fetch, once for the fiat asset
+    expect(mockFetchFiatHistory).toHaveBeenCalledTimes(2);
     expect(mockFetchFiatHistory).toHaveBeenCalledWith("EUR", today, today);
     expect(mockInsertDailyPrices).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -180,6 +193,8 @@ describe("runDailyPriceUpdate", () => {
       crypto: [{ assetId: "bitcoin", category: "crypto" }],
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
+    // Pre-fetch EUR rate
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
 
     // bitcoin: no status -> backfill
     mockGetBackfillStatus.mockResolvedValueOnce(null);
@@ -211,6 +226,8 @@ describe("runDailyPriceUpdate", () => {
         { assetId: "ethereum", category: "crypto" },
       ],
     });
+    // Pre-fetch EUR rate
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
 
     // bitcoin: fails
     mockGetBackfillStatus.mockResolvedValueOnce({
@@ -253,6 +270,8 @@ describe("runDailyPriceUpdate", () => {
       crypto: [{ assetId: "bad-coin", category: "crypto" }],
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
+    // Pre-fetch EUR rate
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
 
     // bad-coin: no status, backfill throws
     mockGetBackfillStatus.mockResolvedValueOnce(null);
@@ -282,6 +301,8 @@ describe("runDailyPriceUpdate", () => {
     mockGetAllTrackedAssets.mockResolvedValueOnce({
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
+    // Pre-fetch EUR rate
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
     mockGetBackfillStatus.mockResolvedValueOnce({
       oldestDate,
       lastUpdated: yesterday,
@@ -306,6 +327,8 @@ describe("runDailyPriceUpdate", () => {
     mockGetAllTrackedAssets.mockResolvedValueOnce({
       stock: [{ assetId: "INVALID", category: "stock" }],
     });
+    // Pre-fetch EUR rate
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
     mockGetBackfillStatus.mockResolvedValueOnce({
       oldestDate: new Date("2021-01-01"),
       lastUpdated: yesterday,
@@ -355,6 +378,7 @@ describe("startDailyCron", () => {
     );
 
     mockGetAllTrackedAssets.mockResolvedValueOnce({});
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
 
     startDailyCron();
     await scheduledCallback!();

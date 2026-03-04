@@ -27,6 +27,7 @@ struct TransactionListView: View {
                         for index in indexSet {
                             modelContext.delete(sortedTransactions[index])
                         }
+                        try? modelContext.save()
                         asset.amount = asset.currentAmount
                     }
                 }

@@ -37,6 +37,18 @@ export async function runDailyPriceUpdate(): Promise<void> {
     count: allAssets.length,
   });
 
+  // Pre-fetch today's EUR rate once for all assets to avoid redundant API calls
+  const today = new Date().toISOString().split("T")[0];
+  let eurPerUsd: number | null = null;
+  try {
+    const rates = await fetchFiatHistory("EUR", today, today);
+    if (Array.isArray(rates) && rates.length > 0) {
+      eurPerUsd = 1 / rates[0].priceUsd;
+    }
+  } catch (err) {
+    logger.warn("could not pre-fetch EUR rate for daily update", { error: String(err) });
+  }
+
   let processed = 0;
   let errors = 0;
 
@@ -53,7 +65,7 @@ export async function runDailyPriceUpdate(): Promise<void> {
         await backfillAsset(asset.assetId, asset.category);
       } else {
         // Existing asset — fetch today's price only
-        const stored = await fetchAndStoreTodayPrice(asset.assetId, asset.category);
+        const stored = await fetchAndStoreTodayPrice(asset.assetId, asset.category, eurPerUsd);
         if (stored) {
           await upsertBackfillStatus(
             asset.assetId,
@@ -89,7 +101,8 @@ export async function runDailyPriceUpdate(): Promise<void> {
  */
 async function fetchAndStoreTodayPrice(
   assetId: string,
-  category: string
+  category: string,
+  eurPerUsd: number | null = null
 ): Promise<boolean> {
   const today = new Date().toISOString().split("T")[0];
 
@@ -109,7 +122,7 @@ async function fetchAndStoreTodayPrice(
           category: "crypto",
           date: today,
           priceUsd,
-          priceEur: await convertToEur(priceUsd, today),
+          priceEur: eurPerUsd != null ? priceUsd * eurPerUsd : null,
         },
       ];
       break;
@@ -127,7 +140,7 @@ async function fetchAndStoreTodayPrice(
           category: "stock",
           date: today,
           priceUsd,
-          priceEur: await convertToEur(priceUsd, today),
+          priceEur: eurPerUsd != null ? priceUsd * eurPerUsd : null,
         },
       ];
       break;
@@ -156,24 +169,6 @@ async function fetchAndStoreTodayPrice(
 
   await insertDailyPrices(prices);
   return true;
-}
-
-/**
- * Converts a USD price to EUR using Frankfurter API for the given date.
- * Returns null if the conversion rate cannot be fetched.
- */
-async function convertToEur(priceUsd: number, date: string): Promise<number | null> {
-  try {
-    const rates = await fetchFiatHistory("EUR", date, date);
-    if (Array.isArray(rates) && rates.length > 0) {
-      // rates[0].priceUsd = 1/eurRate → eurPerUsd = 1/priceUsd
-      const eurPerUsd = 1 / rates[0].priceUsd;
-      return priceUsd * eurPerUsd;
-    }
-  } catch (err) {
-    logger.warn("could not fetch EUR conversion rate", { date, error: String(err) });
-  }
-  return null;
 }
 
 /**

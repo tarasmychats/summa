@@ -4,6 +4,15 @@ import { logger } from "./logger.js";
 const { Pool } = pg;
 
 let pool: pg.Pool | null = null;
+let dbReady = false;
+
+export function isDbReady(): boolean {
+  return dbReady;
+}
+
+export function setDbReady(ready: boolean): void {
+  dbReady = ready;
+}
 
 export function getPool(): pg.Pool {
   if (!pool) {
@@ -46,11 +55,6 @@ export async function initDb(): Promise<void> {
       price_eur DECIMAL(20, 8),
       UNIQUE(asset_id, category, date)
     )
-  `);
-
-  await db.query(`
-    CREATE INDEX IF NOT EXISTS idx_daily_prices_lookup
-    ON daily_prices(asset_id, category, date)
   `);
 
   await db.query(`

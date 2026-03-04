@@ -4,12 +4,15 @@ import request from "supertest";
 const mockInitDb = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 const mockStartDailyCron = vi.hoisted(() => vi.fn());
 
+let mockDbReady = false;
 vi.mock("../db.js", () => ({
   initDb: mockInitDb,
   getPool: vi.fn(() => ({
     query: vi.fn().mockResolvedValue({ rows: [] }),
   })),
   resetPool: vi.fn(),
+  isDbReady: () => mockDbReady,
+  setDbReady: (v: boolean) => { mockDbReady = v; },
 }));
 
 vi.mock("../services/cronJob.js", () => ({
