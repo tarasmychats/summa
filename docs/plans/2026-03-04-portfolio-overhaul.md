@@ -67,13 +67,13 @@
 **Files:**
 - Create: `backend/src/repositories/dailyPrices.ts`
 
-- [ ] Create `insertDailyPrices(prices: Array<{assetId, category, date, priceUsd, priceEur}>)` — batch insert with `ON CONFLICT DO UPDATE`
-- [ ] Create `getDailyPrices(assetId, category, from, to, currency)` — returns array of `{date, price}` sorted by date
-- [ ] Create `getMultiAssetPrices(assets: Array<{assetId, category}>, from, to, currency)` — returns `Record<assetId, Array<{date, price}>>`
-- [ ] Write tests for `insertDailyPrices` (insert, upsert/update existing)
-- [ ] Write tests for `getDailyPrices` (date range filtering, currency selection, empty results)
-- [ ] Write tests for `getMultiAssetPrices` (multiple assets, correct grouping)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `insertDailyPrices(prices: Array<{assetId, category, date, priceUsd, priceEur}>)` — batch insert with `ON CONFLICT DO UPDATE`
+- [x] Create `getDailyPrices(assetId, category, from, to, currency)` — returns array of `{date, price}` sorted by date
+- [x] Create `getMultiAssetPrices(assets: Array<{assetId, category}>, from, to, currency)` — returns `Record<assetId, Array<{date, price}>>`
+- [x] Write tests for `insertDailyPrices` (insert, upsert/update existing)
+- [x] Write tests for `getDailyPrices` (date range filtering, currency selection, empty results)
+- [x] Write tests for `getMultiAssetPrices` (multiple assets, correct grouping)
+- [x] Run `npm test` — must pass before next task
 
 ### Task 4: Create backfill status repository
 
