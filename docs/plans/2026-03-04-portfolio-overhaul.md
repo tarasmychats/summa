@@ -337,16 +337,16 @@
 
 ### Task 23: Verify acceptance criteria
 
-- [ ] Verify: assets can be added, removed, searched
-- [ ] Verify: transactions can be created (delta and snapshot), updated, deleted per asset
-- [ ] Verify: transaction list shows per asset
-- [ ] Verify: dashboard shows portfolio value chart over time
-- [ ] Verify: individual asset charts work on detail page
-- [ ] Verify: base currency can be changed in settings (USD/EUR)
-- [ ] Verify: search returns fiat first, then stocks, then crypto
-- [ ] Verify: historical prices populate via cron job
-- [ ] Run full backend test suite — all pass
-- [ ] Run linter — all issues fixed
+- [x] Verify: assets can be added, removed, searched
+- [x] Verify: transactions can be created (delta and snapshot), updated, deleted per asset
+- [x] Verify: transaction list shows per asset
+- [x] Verify: dashboard shows portfolio value chart over time
+- [x] Verify: individual asset charts work on detail page
+- [x] Verify: base currency can be changed in settings (USD/EUR)
+- [x] Verify: search returns fiat first, then stocks, then crypto
+- [x] Verify: historical prices populate via cron job
+- [x] Run full backend test suite — all pass
+- [x] Run linter — all issues fixed
 
 ### Task 24: [Final] Update documentation
 
