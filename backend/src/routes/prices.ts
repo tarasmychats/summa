@@ -19,6 +19,11 @@ export function createPricesRouter(): Router {
       return;
     }
 
+    if (body.assets.length > 50) {
+      res.status(400).json({ error: "Too many assets. Maximum 50 per request." });
+      return;
+    }
+
     const base = body.baseCurrency.toUpperCase();
 
     const cryptoIds = body.assets

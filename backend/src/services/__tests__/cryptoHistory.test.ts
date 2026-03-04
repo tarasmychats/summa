@@ -72,18 +72,20 @@ describe("fetchCryptoHistory", () => {
     expect(url).toContain("/coins/some%2Fweird%20coin/market_chart");
   });
 
-  it("returns empty array when API returns non-ok response", async () => {
+  it("throws when API returns non-ok response", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 429 });
 
-    const result = await fetchCryptoHistory("bitcoin", 365);
-    expect(result).toEqual([]);
+    await expect(fetchCryptoHistory("bitcoin", 365)).rejects.toThrow(
+      "CoinGecko API returned 429"
+    );
   });
 
-  it("returns empty array when API returns 404 for invalid coin", async () => {
+  it("throws when API returns 404 for invalid coin", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
 
-    const result = await fetchCryptoHistory("nonexistent-coin", 365);
-    expect(result).toEqual([]);
+    await expect(fetchCryptoHistory("nonexistent-coin", 365)).rejects.toThrow(
+      "CoinGecko API returned 404"
+    );
   });
 
   it("returns empty array when response has no prices array", async () => {
@@ -96,11 +98,12 @@ describe("fetchCryptoHistory", () => {
     expect(result).toEqual([]);
   });
 
-  it("returns empty array when fetch throws network error", async () => {
+  it("throws when fetch throws network error", async () => {
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-    const result = await fetchCryptoHistory("bitcoin", 365);
-    expect(result).toEqual([]);
+    await expect(fetchCryptoHistory("bitcoin", 365)).rejects.toThrow(
+      "Network error"
+    );
   });
 
   it("returns empty array for empty prices array", async () => {

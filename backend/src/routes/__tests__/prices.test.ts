@@ -120,6 +120,20 @@ describe("POST /api/prices", () => {
     expect(response.body.prices).toBeDefined();
   });
 
+  it("returns 400 when more than 50 assets are requested", async () => {
+    const assets = Array.from({ length: 51 }, (_, i) => ({
+      id: `asset-${i}`,
+      category: "crypto",
+    }));
+
+    const response = await request(app)
+      .post("/api/prices")
+      .send({ assets, baseCurrency: "USD" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toMatch(/too many assets/i);
+  });
+
   it("does not call upsertTrackedAssets for invalid requests", async () => {
     mockUpsertTrackedAssets.mockClear();
 

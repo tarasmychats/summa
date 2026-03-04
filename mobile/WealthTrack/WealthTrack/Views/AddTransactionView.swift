@@ -114,6 +114,7 @@ struct AddTransactionView: View {
         )
         txn.asset = asset
         modelContext.insert(txn)
+        try? modelContext.save()
         asset.amount = asset.currentAmount
         dismiss()
     }

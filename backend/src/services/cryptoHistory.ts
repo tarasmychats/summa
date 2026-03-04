@@ -30,12 +30,13 @@ export async function fetchCryptoHistory(
       `${COINGECKO_BASE}/coins/${encodeURIComponent(coinId)}/market_chart?${params}`
     );
     if (!response.ok) {
+      const msg = `CoinGecko API returned ${response.status}`;
       logger.warn("crypto history fetch failed", {
         status: response.status,
         coinId,
         days,
       });
-      return [];
+      throw new Error(msg);
     }
 
     const data = await response.json();
@@ -54,7 +55,7 @@ export async function fetchCryptoHistory(
       days,
       error: String(err),
     });
-    return [];
+    throw err;
   }
 }
 

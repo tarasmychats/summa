@@ -51,7 +51,7 @@ export async function fetchStockHistory(
       years,
       error: String(err),
     });
-    return [];
+    throw err;
   }
 }
 

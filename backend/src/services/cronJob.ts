@@ -149,18 +149,22 @@ async function fetchAndStoreTodayPrice(
       break;
     }
     case "fiat": {
-      const result = await fetchFiatHistory(assetId, today, today);
+      // ECB publishes rates around 16:00 CET; at 02:00 UTC today's rate
+      // won't exist yet. Fetch yesterday..today and use the most recent.
+      const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
+      const result = await fetchFiatHistory(assetId, yesterday, today);
       if (result.length === 0) {
         logger.warn("no fiat rate returned for today", { assetId });
         return false;
       }
+      const latest = result[result.length - 1];
       prices = [
         {
           assetId,
           category: "fiat",
           date: today,
-          priceUsd: result[0].priceUsd,
-          priceEur: result[0].priceEur,
+          priceUsd: latest.priceUsd,
+          priceEur: latest.priceEur,
         },
       ];
       break;

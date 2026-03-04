@@ -174,7 +174,12 @@ describe("runDailyPriceUpdate", () => {
 
     // Called twice: once for EUR pre-fetch, once for the fiat asset
     expect(mockFetchFiatHistory).toHaveBeenCalledTimes(2);
-    expect(mockFetchFiatHistory).toHaveBeenCalledWith("EUR", today, today);
+    // Fiat daily fetch now uses yesterday..today range (ECB publishes at 16:00 CET)
+    expect(mockFetchFiatHistory).toHaveBeenCalledWith(
+      "EUR",
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      today
+    );
     expect(mockInsertDailyPrices).toHaveBeenCalledWith([
       expect.objectContaining({
         assetId: "EUR",

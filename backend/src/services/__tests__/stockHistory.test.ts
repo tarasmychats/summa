@@ -72,13 +72,14 @@ describe("fetchStockHistory", () => {
     expect(result[1].date).toBe("2024-01-04");
   });
 
-  it("returns empty array for invalid symbol (error thrown)", async () => {
+  it("throws for invalid symbol (error thrown)", async () => {
     mockHistorical.mockRejectedValueOnce(
       new Error("Not Found: No data found for symbol INVALIDXYZ")
     );
 
-    const result = await fetchStockHistory("INVALIDXYZ", 5);
-    expect(result).toEqual([]);
+    await expect(fetchStockHistory("INVALIDXYZ", 5)).rejects.toThrow(
+      "Not Found: No data found for symbol INVALIDXYZ"
+    );
   });
 
   it("returns empty array when result is empty", async () => {

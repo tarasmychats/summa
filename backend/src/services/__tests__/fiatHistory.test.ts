@@ -120,18 +120,20 @@ describe("fetchFiatHistory", () => {
     expect(result[0].priceUsd).toBeCloseTo(1 / 0.79, 5);
   });
 
-  it("returns empty array when API returns non-ok response", async () => {
+  it("throws when API returns non-ok response", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
 
-    const result = await fetchFiatHistory("XYZ", "2024-01-01", "2024-01-03");
-    expect(result).toEqual([]);
+    await expect(
+      fetchFiatHistory("XYZ", "2024-01-01", "2024-01-03")
+    ).rejects.toThrow("Frankfurter API returned 404");
   });
 
-  it("returns empty array when API returns 422 for unsupported currency", async () => {
+  it("throws when API returns 422 for unsupported currency", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 422 });
 
-    const result = await fetchFiatHistory("INVALID", "2024-01-01", "2024-01-03");
-    expect(result).toEqual([]);
+    await expect(
+      fetchFiatHistory("INVALID", "2024-01-01", "2024-01-03")
+    ).rejects.toThrow("Frankfurter API returned 422");
   });
 
   it("returns empty array when response has no rates object", async () => {
@@ -144,11 +146,12 @@ describe("fetchFiatHistory", () => {
     expect(result).toEqual([]);
   });
 
-  it("returns empty array when fetch throws network error", async () => {
+  it("throws when fetch throws network error", async () => {
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-    const result = await fetchFiatHistory("GBP", "2024-01-01", "2024-01-03");
-    expect(result).toEqual([]);
+    await expect(
+      fetchFiatHistory("GBP", "2024-01-01", "2024-01-03")
+    ).rejects.toThrow("Network error");
   });
 
   it("skips dates where currency rate is zero", async () => {

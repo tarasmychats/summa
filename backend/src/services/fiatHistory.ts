@@ -27,13 +27,14 @@ export async function fetchFiatHistory(
     const response = await fetch(url);
 
     if (!response.ok) {
+      const msg = `Frankfurter API returned ${response.status}`;
       logger.warn("fiat history fetch failed", {
         status: response.status,
         currency,
         from,
         to,
       });
-      return [];
+      throw new Error(msg);
     }
 
     const data = await response.json();
@@ -77,7 +78,7 @@ export async function fetchFiatHistory(
       to,
       error: String(err),
     });
-    return [];
+    throw err;
   }
 }
 
