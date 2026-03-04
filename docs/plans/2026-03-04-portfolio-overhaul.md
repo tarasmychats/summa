@@ -80,10 +80,10 @@
 **Files:**
 - Create: `backend/src/repositories/backfillStatus.ts`
 
-- [ ] Create `getBackfillStatus(assetId, category)` — returns `{oldestDate, lastUpdated}` or null
-- [ ] Create `upsertBackfillStatus(assetId, category, oldestDate)` — insert or update backfill record
-- [ ] Write tests for both functions (new asset, existing asset, null case)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `getBackfillStatus(assetId, category)` — returns `{oldestDate, lastUpdated}` or null
+- [x] Create `upsertBackfillStatus(assetId, category, oldestDate)` — insert or update backfill record
+- [x] Write tests for both functions (new asset, existing asset, null case)
+- [x] Run `npm test` — must pass before next task
 
 ---
 
