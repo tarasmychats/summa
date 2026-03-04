@@ -263,10 +263,10 @@
 **Files:**
 - Modify: `mobile/WealthTrack/WealthTrack/Views/AssetListView.swift`
 
-- [ ] Tap on asset row → navigate to asset detail (new view or sheet)
-- [ ] Asset detail shows: current amount (from transactions), current value, transaction list
-- [ ] "Edit" button to modify asset name/ticker (existing functionality)
-- [ ] Display `asset.currentAmount` instead of `asset.amount` where applicable
+- [x] Tap on asset row → navigate to asset detail (new view or sheet)
+- [x] Asset detail shows: current amount (from transactions), current value, transaction list
+- [x] "Edit" button to modify asset name/ticker (existing functionality)
+- [x] Display `asset.currentAmount` instead of `asset.amount` where applicable
 
 ---
 

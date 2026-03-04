@@ -4,26 +4,23 @@ import SwiftData
 struct AssetListView: View {
     @Query private var assets: [Asset]
     @Environment(\.modelContext) private var modelContext
-    @State private var editingAsset: Asset?
 
     var body: some View {
         List {
             ForEach(assets) { asset in
-                HStack {
-                    Image(systemName: asset.assetCategory.iconName)
-                        .foregroundStyle(Theme.categoryColor(asset.assetCategory))
-                    VStack(alignment: .leading) {
-                        Text(asset.name)
-                            .font(Theme.headlineFont)
-                        Text("\(asset.amount.formatted(.number.precision(.fractionLength(0...8)))) \(asset.displayTicker)")
-                            .font(Theme.bodyFont)
-                            .foregroundStyle(Theme.textMuted)
+                NavigationLink(destination: AssetDetailView(asset: asset)) {
+                    HStack {
+                        Image(systemName: asset.assetCategory.iconName)
+                            .foregroundStyle(Theme.categoryColor(asset.assetCategory))
+                        VStack(alignment: .leading) {
+                            Text(asset.name)
+                                .font(Theme.headlineFont)
+                            Text("\(asset.currentAmount.formatted(.number.precision(.fractionLength(0...8)))) \(asset.displayTicker)")
+                                .font(Theme.bodyFont)
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    editingAsset = asset
                 }
                 .listRowBackground(Theme.bgCard)
             }
@@ -36,9 +33,6 @@ struct AssetListView: View {
         .scrollContentBackground(.hidden)
         .background(Theme.bgPrimary)
         .navigationTitle("My Assets")
-        .sheet(item: $editingAsset) { asset in
-            EditAssetView(asset: asset)
-        }
     }
 }
 

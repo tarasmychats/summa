@@ -36,7 +36,7 @@ class DashboardViewModel {
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,
-                    amount: asset.amount,
+                    amount: asset.currentAmount,
                     pricePerUnit: priceMap[asset.symbol] ?? 0,
                     category: asset.assetCategory
                 )
@@ -48,7 +48,7 @@ class DashboardViewModel {
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,
-                    amount: asset.amount,
+                    amount: asset.currentAmount,
                     pricePerUnit: 0,
                     category: asset.assetCategory
                 )

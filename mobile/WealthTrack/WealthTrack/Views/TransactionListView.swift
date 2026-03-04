@@ -22,7 +22,6 @@ struct TransactionListView: View {
                 List {
                     ForEach(sortedTransactions) { txn in
                         TransactionRow(transaction: txn, asset: asset)
-                            .listRowBackground(Theme.bgCard)
                     }
                     .onDelete { indexSet in
                         for index in indexSet {
@@ -47,61 +46,6 @@ struct TransactionListView: View {
         }
         .sheet(isPresented: $showingAddTransaction) {
             AddTransactionView(asset: asset)
-        }
-    }
-}
-
-// MARK: - Transaction Row
-
-private struct TransactionRow: View {
-    let transaction: Transaction
-    let asset: Asset
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Type badge
-            typeBadge
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(amountText)
-                    .font(Theme.headlineFont)
-
-                Text(transaction.date, style: .date)
-                    .font(Theme.captionFont)
-                    .foregroundStyle(Theme.textMuted)
-            }
-
-            Spacer()
-
-            if let note = transaction.note, !note.isEmpty {
-                Text(note)
-                    .font(Theme.captionFont)
-                    .foregroundStyle(Theme.textMuted)
-                    .lineLimit(1)
-                    .frame(maxWidth: 120, alignment: .trailing)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private var typeBadge: some View {
-        Text(transaction.type == .delta ? "Δ" : "S")
-            .font(.system(size: 13, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
-            .frame(width: 28, height: 28)
-            .background(
-                Circle().fill(transaction.type == .delta ? Theme.sage : Theme.lavender)
-            )
-    }
-
-    private var amountText: String {
-        let formatted = transaction.amount.formatted(.number.precision(.fractionLength(0...8)))
-        switch transaction.type {
-        case .delta:
-            let sign = transaction.amount >= 0 ? "+" : ""
-            return "\(sign)\(formatted) \(asset.displayTicker)"
-        case .snapshot:
-            return "→ \(formatted) \(asset.displayTicker)"
         }
     }
 }
