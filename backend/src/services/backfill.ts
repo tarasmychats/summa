@@ -160,6 +160,17 @@ async function applyEurConversion(prices: DailyPriceInput[]): Promise<DailyPrice
       eurRateByDate[point.date] = 1 / point.priceUsd;
     }
 
+    // Forward-fill EUR rates for weekends/holidays where ECB doesn't publish
+    let lastKnownRate: number | null = null;
+    const allDates = prices.map((p) => p.date).sort();
+    for (const date of allDates) {
+      if (eurRateByDate[date] != null) {
+        lastKnownRate = eurRateByDate[date];
+      } else if (lastKnownRate != null) {
+        eurRateByDate[date] = lastKnownRate;
+      }
+    }
+
     for (const price of prices) {
       const eurRate = eurRateByDate[price.date];
       if (eurRate != null && price.priceUsd != null) {

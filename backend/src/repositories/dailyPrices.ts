@@ -47,7 +47,8 @@ export async function insertDailyPrices(
     `INSERT INTO daily_prices (asset_id, category, date, price_usd, price_eur)
      VALUES ${values.join(", ")}
      ON CONFLICT (asset_id, category, date)
-     DO UPDATE SET price_usd = EXCLUDED.price_usd, price_eur = EXCLUDED.price_eur`,
+     DO UPDATE SET price_usd = COALESCE(EXCLUDED.price_usd, daily_prices.price_usd),
+                   price_eur = COALESCE(EXCLUDED.price_eur, daily_prices.price_eur)`,
     params
   );
 }

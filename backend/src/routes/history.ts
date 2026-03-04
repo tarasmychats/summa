@@ -15,6 +15,9 @@ function isValidDate(dateStr: string): boolean {
   return d.toISOString().split("T")[0] === dateStr;
 }
 
+// Tracks in-flight backfills to prevent duplicate concurrent requests
+const inFlightBackfills = new Set<string>();
+
 export function createHistoryRouter(): Router {
   const router = Router();
 
@@ -112,15 +115,22 @@ export function createHistoryRouter(): Router {
       );
 
       // For assets with no history, trigger async backfill (fire-and-forget)
+      // Uses in-flight set to prevent duplicate concurrent backfills
       for (const pair of assetPairs) {
         if (history[pair.assetId] && history[pair.assetId].length === 0) {
-          backfillAsset(pair.assetId, pair.category).catch((err) => {
-            logger.error("async backfill failed", {
-              assetId: pair.assetId,
-              category: pair.category,
-              error: String(err),
-            });
-          });
+          const key = `${pair.assetId}:${pair.category}`;
+          if (!inFlightBackfills.has(key)) {
+            inFlightBackfills.add(key);
+            backfillAsset(pair.assetId, pair.category)
+              .catch((err) => {
+                logger.error("async backfill failed", {
+                  assetId: pair.assetId,
+                  category: pair.category,
+                  error: String(err),
+                });
+              })
+              .finally(() => inFlightBackfills.delete(key));
+          }
         }
       }
 

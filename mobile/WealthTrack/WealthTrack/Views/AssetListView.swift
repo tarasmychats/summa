@@ -47,6 +47,7 @@ private func parseDecimal(_ text: String) -> Double? {
 struct EditAssetView: View {
     @Bindable var asset: Asset
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var amountText: String = ""
 
     private var isValid: Bool {
@@ -95,6 +96,13 @@ struct EditAssetView: View {
                 // Save button
                 Button {
                     if let value = parseDecimal(amountText), value > 0 {
+                        let hasTransactions = !(asset.transactions ?? []).isEmpty
+                        if hasTransactions {
+                            // Create a snapshot transaction so the replay reflects the new total
+                            let txn = Transaction(date: Date(), type: .snapshot, amount: value, note: "Manual edit")
+                            txn.asset = asset
+                            modelContext.insert(txn)
+                        }
                         asset.amount = value
                     }
                     dismiss()

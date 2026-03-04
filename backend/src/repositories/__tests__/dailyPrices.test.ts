@@ -71,7 +71,8 @@ describe("dailyPrices repository", () => {
 
       const [sql] = mockQuery.mock.calls[0];
       expect(sql).toContain("ON CONFLICT (asset_id, category, date)");
-      expect(sql).toContain("DO UPDATE SET price_usd = EXCLUDED.price_usd, price_eur = EXCLUDED.price_eur");
+      expect(sql).toContain("COALESCE(EXCLUDED.price_usd, daily_prices.price_usd)");
+      expect(sql).toContain("COALESCE(EXCLUDED.price_eur, daily_prices.price_eur)");
     });
 
     it("handles null prices", async () => {
