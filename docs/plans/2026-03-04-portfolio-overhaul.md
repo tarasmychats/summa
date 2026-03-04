@@ -313,13 +313,13 @@
 - Create: `mobile/WealthTrack/WealthTrack/Views/PortfolioChartView.swift`
 - Modify: `mobile/WealthTrack/WealthTrack/Views/DashboardView.swift`
 
-- [ ] Create `PortfolioChartView` using Swift Charts `LineMark`
-- [ ] On appear: fetch history for all held assets via `PriceAPIClient.fetchHistory()`
-- [ ] Compute daily portfolio total: for each day, `total = Σ(assetPrice[day] × amountAtDay[asset])`
-- [ ] `amountAtDay` = replay transactions up to that date for each asset
-- [ ] Show time range selector: 1M, 3M, 6M, 1Y, 5Y (filter displayed data range)
-- [ ] Add loading state and error handling
-- [ ] Embed `PortfolioChartView` at top of DashboardView (above asset list)
+- [x] Create `PortfolioChartView` using Swift Charts `LineMark`
+- [x] On appear: fetch history for all held assets via `PriceAPIClient.fetchHistory()`
+- [x] Compute daily portfolio total: for each day, `total = Σ(assetPrice[day] × amountAtDay[asset])`
+- [x] `amountAtDay` = replay transactions up to that date for each asset
+- [x] Show time range selector: 1M, 3M, 6M, 1Y, 5Y (filter displayed data range)
+- [x] Add loading state and error handling
+- [x] Embed `PortfolioChartView` at top of DashboardView (above asset list)
 
 ### Task 22: Create AssetChartView for individual assets
 

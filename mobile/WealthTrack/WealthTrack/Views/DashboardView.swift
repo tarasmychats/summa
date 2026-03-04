@@ -35,15 +35,17 @@ struct DashboardView: View {
                                 .background(Theme.coral.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
-                        totalValueCard
+                        PortfolioChartView(assets: assets, currency: displayCurrency)
                             .cardAppearance(index: 0, appeared: cardsAppeared)
-                        breakdownChart
+                        totalValueCard
                             .cardAppearance(index: 1, appeared: cardsAppeared)
-                        riskScoreCard
+                        breakdownChart
                             .cardAppearance(index: 2, appeared: cardsAppeared)
+                        riskScoreCard
+                            .cardAppearance(index: 3, appeared: cardsAppeared)
                         if let preview = viewModel.projectionPreview {
                             projectionPreviewCard(preview)
-                                .cardAppearance(index: 3, appeared: cardsAppeared)
+                                .cardAppearance(index: 4, appeared: cardsAppeared)
                         }
                     }
                     .padding()
