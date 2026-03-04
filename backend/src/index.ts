@@ -5,6 +5,7 @@ import { dirname, resolve } from "path";
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../.env") });
 
 import express from "express";
+import type { Request, Response, NextFunction } from "express";
 import { createPricesRouter } from "./routes/prices.js";
 import { createSearchRouter } from "./routes/search.js";
 import { createHistoryRouter } from "./routes/history.js";
@@ -26,6 +27,17 @@ app.get("/health", (_req, res) => {
 app.use("/api", createPricesRouter());
 app.use("/api", createSearchRouter());
 app.use("/api", createHistoryRouter());
+
+// Global error handler — safety net for unhandled errors
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  logger.error("unhandled route error", {
+    error: err.message,
+    stack: err.stack,
+  });
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export async function startServer(): Promise<void> {
   try {
