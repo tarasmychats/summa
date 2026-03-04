@@ -1,3 +1,5 @@
+import { config } from "./config.js";
+
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 const LEVEL_ORDER: Record<LogLevel, number> = {
@@ -7,7 +9,7 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
   error: 3,
 };
 
-const minLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) ?? "info";
+const minLevel: LogLevel = config.logLevel as LogLevel;
 
 function log(level: LogLevel, msg: string, data?: Record<string, unknown>) {
   if (LEVEL_ORDER[level] < LEVEL_ORDER[minLevel]) return;
