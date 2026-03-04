@@ -119,13 +119,13 @@
 **Files:**
 - Create: `backend/src/services/fiatHistory.ts`
 
-- [ ] Create `fetchFiatHistory(currency: string, from: string, to: string)` — calls Frankfurter `https://api.frankfurter.dev/{from}..{to}?base=USD&symbols={currency}`
-- [ ] Parse response: `rates` object keyed by date, each containing `{currency: rate}`
-- [ ] Also compute EUR→USD inverse for the `price_eur` column
-- [ ] Handle errors (unsupported currency, API down)
-- [ ] Write tests for successful fetch (mock HTTP response)
-- [ ] Write tests for error handling (invalid currency, empty range)
-- [ ] Run `npm test` — must pass before next task
+- [x] Create `fetchFiatHistory(currency: string, from: string, to: string)` — calls Frankfurter `https://api.frankfurter.dev/{from}..{to}?base=USD&symbols={currency}`
+- [x] Parse response: `rates` object keyed by date, each containing `{currency: rate}`
+- [x] Also compute EUR→USD inverse for the `price_eur` column
+- [x] Handle errors (unsupported currency, API down)
+- [x] Write tests for successful fetch (mock HTTP response)
+- [x] Write tests for error handling (invalid currency, empty range)
+- [x] Run `npm test` — must pass before next task
 
 ---
 
