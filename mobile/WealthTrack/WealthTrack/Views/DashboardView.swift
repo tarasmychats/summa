@@ -4,9 +4,20 @@ import Charts
 
 struct DashboardView: View {
     @Query private var assets: [Asset]
+    @Query private var allSettings: [UserSettings]
+    @Environment(\.modelContext) private var modelContext
     @State private var viewModel = DashboardViewModel()
     @State private var showingAddAsset = false
     @State private var cardsAppeared = false
+
+    private var displayCurrency: String {
+        if let existing = allSettings.first {
+            return existing.displayCurrency
+        }
+        let newSettings = UserSettings()
+        modelContext.insert(newSettings)
+        return newSettings.displayCurrency
+    }
 
     var body: some View {
         NavigationStack {
@@ -41,7 +52,7 @@ struct DashboardView: View {
             }
             .background(Theme.bgPrimary)
             .refreshable {
-                await viewModel.refresh(assets: assets)
+                await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
             }
             .navigationTitle("WealthTrack")
             .toolbar {
@@ -66,8 +77,8 @@ struct DashboardView: View {
             .sheet(isPresented: $showingAddAsset) {
                 AddAssetView()
             }
-            .task(id: assets.count) {
-                await viewModel.refresh(assets: assets)
+            .task(id: "\(assets.count)-\(displayCurrency)") {
+                await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
             }
         }
     }
@@ -97,7 +108,7 @@ struct DashboardView: View {
             Text("Total Portfolio Value")
                 .font(Theme.bodyFont)
                 .foregroundStyle(Theme.textMuted)
-            Text(viewModel.totalValue, format: .currency(code: "USD"))
+            Text(viewModel.totalValue, format: .currency(code: viewModel.currencyCode))
                 .font(Theme.largeValue)
                 .contentTransition(.numericText())
         }
@@ -175,7 +186,7 @@ struct DashboardView: View {
             Text(label)
                 .font(Theme.captionFont)
                 .foregroundStyle(Theme.textMuted)
-            Text(value, format: .currency(code: "USD"))
+            Text(value, format: .currency(code: viewModel.currencyCode))
                 .font(Theme.bodyFont.bold())
                 .foregroundStyle(color)
         }

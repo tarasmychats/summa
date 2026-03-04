@@ -11,8 +11,10 @@ class DashboardViewModel {
     var projectionPreview: Projection?
     var isLoading = false
     var priceError: String?
+    var currencyCode: String = "USD"
 
-    func refresh(assets: [Asset]) async {
+    func refresh(assets: [Asset], baseCurrency: String = "USD") async {
+        currencyCode = baseCurrency
         guard !assets.isEmpty else { return }
         isLoading = true
         priceError = nil
@@ -21,7 +23,7 @@ class DashboardViewModel {
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
-                baseCurrency: "USD" // TODO: use UserSettings
+                baseCurrency: baseCurrency
             )
 
             let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })

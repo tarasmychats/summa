@@ -4,8 +4,20 @@ import Charts
 
 struct ProjectionsView: View {
     @Query private var assets: [Asset]
+    @Query private var allSettings: [UserSettings]
+    @Environment(\.modelContext) private var modelContext
     @State private var selectedYears = 10
     @State private var holdings: [PortfolioHolding] = []
+    @State private var currencyCode: String = "USD"
+
+    private var displayCurrency: String {
+        if let existing = allSettings.first {
+            return existing.displayCurrency
+        }
+        let newSettings = UserSettings()
+        modelContext.insert(newSettings)
+        return newSettings.displayCurrency
+    }
 
     private let yearOptions = [10, 20, 50]
 
@@ -67,7 +79,7 @@ struct ProjectionsView: View {
             }
             .background(Theme.bgPrimary)
             .navigationTitle("Projections")
-            .task(id: assets.count) {
+            .task(id: "\(assets.count)-\(displayCurrency)") {
                 await refreshHoldings()
             }
         }
@@ -79,7 +91,7 @@ struct ProjectionsView: View {
             Text(label)
                 .font(Theme.bodyFont)
             Spacer()
-            Text(value, format: .currency(code: "USD"))
+            Text(value, format: .currency(code: currencyCode))
                 .font(Theme.headlineFont)
         }
     }
@@ -88,8 +100,9 @@ struct ProjectionsView: View {
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
-                baseCurrency: "USD"
+                baseCurrency: displayCurrency
             )
+            currencyCode = displayCurrency
             let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
             holdings = assets.map { asset in
                 PortfolioHolding(

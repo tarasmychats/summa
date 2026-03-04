@@ -289,10 +289,10 @@
 - Modify: `mobile/WealthTrack/WealthTrack/Services/PriceAPIClient.swift`
 - Modify views that call `fetchPrices`
 
-- [ ] Read `displayCurrency` from UserSettings
-- [ ] Pass it as `baseCurrency` parameter to `POST /api/prices`
-- [ ] Pass it as `currency` parameter to `GET /api/history`
-- [ ] Update DashboardView to display values with correct currency symbol
+- [x] Read `displayCurrency` from UserSettings
+- [x] Pass it as `baseCurrency` parameter to `POST /api/prices`
+- [x] Pass it as `currency` parameter to `GET /api/history`
+- [x] Update DashboardView to display values with correct currency symbol
 
 ---
 

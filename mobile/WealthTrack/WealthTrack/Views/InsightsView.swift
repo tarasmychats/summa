@@ -3,7 +3,18 @@ import SwiftData
 
 struct InsightsView: View {
     @Query private var assets: [Asset]
+    @Query private var allSettings: [UserSettings]
+    @Environment(\.modelContext) private var modelContext
     @State private var holdings: [PortfolioHolding] = []
+
+    private var displayCurrency: String {
+        if let existing = allSettings.first {
+            return existing.displayCurrency
+        }
+        let newSettings = UserSettings()
+        modelContext.insert(newSettings)
+        return newSettings.displayCurrency
+    }
 
     private var insights: [Insight] {
         InsightsEngine.generate(holdings: holdings)
@@ -46,7 +57,7 @@ struct InsightsView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.bgPrimary)
             .navigationTitle("Insights")
-            .task(id: assets.count) {
+            .task(id: "\(assets.count)-\(displayCurrency)") {
                 await refreshHoldings()
             }
         }
@@ -56,7 +67,7 @@ struct InsightsView: View {
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
-                baseCurrency: "USD"
+                baseCurrency: displayCurrency
             )
             let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
             holdings = assets.map { asset in
