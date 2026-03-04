@@ -29,14 +29,13 @@ describe("GET /api/search", () => {
     app.use("/api", createSearchRouter());
   });
 
-  it("returns results from all categories when no category specified", async () => {
+  it("returns results from all categories ordered fiat → stock → crypto", async () => {
     const response = await request(app).get("/api/search?q=bit");
 
     expect(response.status).toBe(200);
     expect(response.body.results).toHaveLength(3);
-    expect(response.body.results.map((r: any) => r.category)).toContain("crypto");
-    expect(response.body.results.map((r: any) => r.category)).toContain("stock");
-    expect(response.body.results.map((r: any) => r.category)).toContain("fiat");
+    const categories = response.body.results.map((r: any) => r.category);
+    expect(categories).toEqual(["fiat", "stock", "crypto"]);
   });
 
   it("filters by category when specified", async () => {
@@ -44,6 +43,16 @@ describe("GET /api/search", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.results.every((r: any) => r.category === "crypto")).toBe(true);
+  });
+
+  it("returns stock results before crypto for 'apple' query", async () => {
+    const response = await request(app).get("/api/search?q=apple");
+
+    expect(response.status).toBe(200);
+    const categories = response.body.results.map((r: any) => r.category);
+    const stockIndex = categories.indexOf("stock");
+    const cryptoIndex = categories.indexOf("crypto");
+    expect(stockIndex).toBeLessThan(cryptoIndex);
   });
 
   it("returns 400 when q param is missing", async () => {

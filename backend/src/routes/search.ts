@@ -31,12 +31,6 @@ export function createSearchRouter(): Router {
 
     const searches: Promise<SearchResult[]>[] = [];
 
-    if (!category || category === "crypto") {
-      searches.push(searchCrypto(q));
-    }
-    if (!category || category === "stock") {
-      searches.push(searchStocks(q));
-    }
     if (!category || category === "fiat") {
       const fiatCacheKey = `fiat_list_${q.toLowerCase()}`;
       const cachedFiat = fiatCache.get<SearchResult[]>(fiatCacheKey);
@@ -50,6 +44,12 @@ export function createSearchRouter(): Router {
           })
         );
       }
+    }
+    if (!category || category === "stock") {
+      searches.push(searchStocks(q));
+    }
+    if (!category || category === "crypto") {
+      searches.push(searchCrypto(q));
     }
 
     const results = (await Promise.all(searches)).flat();

@@ -199,10 +199,10 @@
 **Files:**
 - Modify: `backend/src/index.ts` (search handler)
 
-- [ ] Change result concatenation order from `[...crypto, ...stock, ...fiat]` to `[...fiat, ...stock, ...crypto]`
-- [ ] Update existing search tests to verify new ordering
-- [ ] Write test specifically checking that "apple" returns stock results before crypto
-- [ ] Run `npm test` — must pass before next task
+- [x] Change result concatenation order from `[...crypto, ...stock, ...fiat]` to `[...fiat, ...stock, ...crypto]`
+- [x] Update existing search tests to verify new ordering
+- [x] Write test specifically checking that "apple" returns stock results before crypto
+- [x] Run `npm test` — must pass before next task
 
 ---
 
