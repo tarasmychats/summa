@@ -130,8 +130,8 @@
 - [x] Write basic test that Theme font properties exist (sanity check)
 
 ### Task 14: Fix color contrast for textMuted
-- [ ] In `Theme.swift`, darken `textMuted` light mode value from `#8A857E` to at least `#6B6660` to meet WCAG AA 4.5:1 contrast ratio against `#FAF8F5` background
-- [ ] Verify dark mode `textMuted` also meets contrast requirements against dark background
+- [x] In `Theme.swift`, darken `textMuted` light mode value from `#8A857E` to at least `#6B6660` to meet WCAG AA 4.5:1 contrast ratio against `#FAF8F5` background
+- [x] Verify dark mode `textMuted` also meets contrast requirements against dark background
 
 ### Phase 4: Information Density & Polish
 
