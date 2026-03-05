@@ -164,11 +164,11 @@
 ### Verification
 
 ### Task 20: Verify acceptance criteria
-- [ ] Review all Phase 1 code: asset values in list, loading skeleton, refreshable on all tabs, delete confirmation, allocation percentages, haptics, duplicate detection
-- [ ] Review all Phase 2 code: chart interactivity on both charts, portfolio change indicator, top holdings navigation
-- [ ] Review all Phase 3 code: VoiceOver labels, Dynamic Type fonts, color contrast
-- [ ] Review all Phase 4 code: empty state suggestions, risk gauge, last updated, error messages, TransactionListView cleanup
-- [ ] Ensure all test files are written and follow existing test patterns
+- [x] Review all Phase 1 code: asset values in list, loading skeleton, refreshable on all tabs, delete confirmation, allocation percentages, haptics, duplicate detection
+- [x] Review all Phase 2 code: chart interactivity on both charts, portfolio change indicator, top holdings navigation
+- [x] Review all Phase 3 code: VoiceOver labels, Dynamic Type fonts, color contrast
+- [x] Review all Phase 4 code: empty state suggestions, risk gauge, last updated, error messages, TransactionListView cleanup
+- [x] Ensure all test files are written and follow existing test patterns
 
 ### Task 21: [Final] Update documentation
 - [ ] Update `docs/plans/2026-02-27-design-system.md` if Theme.swift changes (font strategy, colors)
