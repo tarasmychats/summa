@@ -14,6 +14,11 @@ struct AddAssetView: View {
     @State private var searchError: String?
     @State private var searchTask: Task<Void, Never>?
     @State private var savedTrigger = 0
+    @State private var duplicateAsset: AssetDefinition?
+
+    private var existingAssetIDs: Set<String> {
+        DuplicateAssetDetector.existingAssetIDs(from: allAssets)
+    }
 
     var body: some View {
         NavigationStack {
@@ -28,6 +33,26 @@ struct AddAssetView: View {
             }
             .background(Theme.bgPrimary)
             .sensoryFeedback(.success, trigger: savedTrigger)
+            .alert("Already Added",
+                   isPresented: Binding(
+                       get: { duplicateAsset != nil },
+                       set: { if !$0 { duplicateAsset = nil } }
+                   )
+            ) {
+                Button("Add Anyway") {
+                    if let asset = duplicateAsset {
+                        selectedAsset = asset
+                        duplicateAsset = nil
+                    }
+                }
+                Button("Cancel", role: .cancel) {
+                    duplicateAsset = nil
+                }
+            } message: {
+                if let asset = duplicateAsset {
+                    Text("\(asset.name) is already in your portfolio. Add another?")
+                }
+            }
             .navigationTitle("Add Asset")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -76,8 +101,13 @@ struct AddAssetView: View {
                     if !assets.isEmpty {
                         Section(category.displayName) {
                             ForEach(assets) { asset in
+                                let alreadyAdded = DuplicateAssetDetector.isAlreadyAdded(asset, existingIDs: existingAssetIDs)
                                 Button {
-                                    selectedAsset = asset
+                                    if alreadyAdded {
+                                        duplicateAsset = asset
+                                    } else {
+                                        selectedAsset = asset
+                                    }
                                 } label: {
                                     HStack(spacing: 12) {
                                         Image(systemName: category.iconName)
@@ -100,6 +130,16 @@ struct AddAssetView: View {
                                                     .padding(.vertical, 2)
                                                     .background(Theme.categoryTint(category))
                                                     .clipShape(Capsule())
+                                            }
+                                        }
+                                        if alreadyAdded {
+                                            Spacer()
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundStyle(Theme.sage)
+                                                Text("Added")
+                                                    .font(Theme.captionFont)
+                                                    .foregroundStyle(Theme.textMuted)
                                             }
                                         }
                                     }

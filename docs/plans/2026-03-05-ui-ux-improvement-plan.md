@@ -82,10 +82,10 @@
 - [x] Add `.sensoryFeedback(.impact(.light), trigger:)` on chart time range selector taps in `PortfolioChartView` and `AssetChartView`
 
 ### Task 7: Detect and mark already-added assets in AddAssetView
-- [ ] In `AddAssetView`, compare search results against `allAssets` by symbol
-- [ ] Show a checkmark badge or "Already added" label on matching search results
-- [ ] Disable or show confirmation when user taps an already-added asset
-- [ ] Write test for the duplicate detection logic (matching by symbol)
+- [x] In `AddAssetView`, compare search results against `allAssets` by symbol
+- [x] Show a checkmark badge or "Already added" label on matching search results
+- [x] Disable or show confirmation when user taps an already-added asset
+- [x] Write test for the duplicate detection logic (matching by symbol)
 
 ### Phase 2: Core UX
 
