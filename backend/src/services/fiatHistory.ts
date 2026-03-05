@@ -1,6 +1,6 @@
 import { logger } from "../logger.js";
 
-const FRANKFURTER_BASE = "https://api.frankfurter.dev";
+const FRANKFURTER_BASE = "https://api.frankfurter.dev/v1";
 
 export interface FiatHistoryPoint {
   date: string; // YYYY-MM-DD

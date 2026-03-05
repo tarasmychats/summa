@@ -24,22 +24,30 @@ export async function insertDailyPrices(
 ): Promise<void> {
   if (prices.length === 0) return;
 
+  // Deduplicate by (assetId, category, date) — keep the last entry for each key.
+  // PostgreSQL rejects INSERT...ON CONFLICT when the same key appears twice in one batch.
+  const seen = new Map<string, DailyPriceInput>();
+  for (const p of prices) {
+    seen.set(`${p.assetId}|${p.category}|${p.date}`, p);
+  }
+  const dedupedPrices = Array.from(seen.values());
+
   const pool = getPool();
 
   // Build parameterized VALUES: ($1,$2,$3,$4,$5), ($6,$7,$8,$9,$10), ...
   const values: string[] = [];
   const params: (string | number | null)[] = [];
-  for (let i = 0; i < prices.length; i++) {
+  for (let i = 0; i < dedupedPrices.length; i++) {
     const offset = i * 5;
     values.push(
       `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`
     );
     params.push(
-      prices[i].assetId,
-      prices[i].category,
-      prices[i].date,
-      prices[i].priceUsd,
-      prices[i].priceEur
+      dedupedPrices[i].assetId,
+      dedupedPrices[i].category,
+      dedupedPrices[i].date,
+      dedupedPrices[i].priceUsd,
+      dedupedPrices[i].priceEur
     );
   }
 

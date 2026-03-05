@@ -28,6 +28,8 @@ export const config = {
     database: process.env.PGDATABASE || "wealthtrack",
   },
 
+  runCronOnStartup: process.env.RUN_CRON_ON_STARTUP === "true",
+
   coingeckoApiKey: process.env.COINGECKO_API_KEY || undefined,
   exchangerateApiKey: process.env.EXCHANGERATE_API_KEY || undefined,
 };
