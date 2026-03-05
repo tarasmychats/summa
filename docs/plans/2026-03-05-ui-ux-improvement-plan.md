@@ -171,9 +171,9 @@
 - [x] Ensure all test files are written and follow existing test patterns
 
 ### Task 21: [Final] Update documentation
-- [ ] Update `docs/plans/2026-02-27-design-system.md` if Theme.swift changes (font strategy, colors)
-- [ ] Update `CLAUDE.md` if new patterns or conventions were established
-- [ ] Update README.md if needed
+- [x] Update `docs/plans/2026-02-27-design-system.md` if Theme.swift changes (font strategy, colors)
+- [x] Update `CLAUDE.md` if new patterns or conventions were established
+- [x] Update README.md if needed
 
 *Note: ralphex automatically moves completed plans to `docs/plans/completed/`*
 

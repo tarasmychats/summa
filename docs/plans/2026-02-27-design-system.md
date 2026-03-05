@@ -23,7 +23,7 @@
 | `coral` | `#E8836B` | `#F09580` | Warnings, risk, negative values |
 | `lavender` | `#9B8EC4` | `#B0A4D4` | Info, projections |
 | `amber` | `#E8B44C` | `#F0C460` | Highlights, badges |
-| `textMuted` | `#8A857E` | `#9E99A8` | Secondary labels |
+| `textMuted` | `#6B6660` | `#9E99A8` | Secondary labels (WCAG AA compliant) |
 
 ### Category Tints (card backgrounds)
 
@@ -37,15 +37,15 @@
 
 ## Typography
 
-All **SF Rounded** (`.rounded` design) for warmth.
+All **SF Rounded** (`.rounded` design) for warmth. Uses **Dynamic Type text styles** (not fixed sizes) so fonts scale with user accessibility settings.
 
-| Style | Size | Weight | Usage |
-|-------|------|--------|-------|
-| `largeValue` | 34pt | Bold | Portfolio total, risk score |
-| `title` | 22pt | Bold | Screen titles, asset names |
-| `headline` | 17pt | Semibold | Card titles, section headers |
-| `body` | 15pt | Regular | Body text |
-| `caption` | 13pt | Regular | Disclaimers, symbols |
+| Style | Text Style | Weight | Usage |
+|-------|-----------|--------|-------|
+| `largeValue` | `.largeTitle` | Bold | Portfolio total, risk score |
+| `titleFont` | `.title2` | Bold | Screen titles, asset names |
+| `headlineFont` | `.headline` | Semibold | Card titles, section headers |
+| `bodyFont` | `.body` | Regular | Body text |
+| `captionFont` | `.caption` | Regular | Disclaimers, symbols |
 
 ---
 
