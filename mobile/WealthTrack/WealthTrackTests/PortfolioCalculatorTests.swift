@@ -29,4 +29,39 @@ final class PortfolioCalculatorTests: XCTestCase {
         let breakdown = PortfolioCalculator.categoryBreakdown(holdings: [])
         XCTAssertTrue(breakdown.isEmpty)
     }
+
+    // MARK: - Category Percentages
+
+    func testCategoryPercentagesBasic() {
+        let breakdown: [AssetCategory: Double] = [
+            .crypto: 0.45,
+            .stock: 0.35,
+            .fiat: 0.20
+        ]
+        let percentages = PortfolioCalculator.categoryPercentages(breakdown: breakdown)
+        XCTAssertEqual(percentages[.crypto], 45)
+        XCTAssertEqual(percentages[.stock], 35)
+        XCTAssertEqual(percentages[.fiat], 20)
+    }
+
+    func testCategoryPercentagesRounding() {
+        let breakdown: [AssetCategory: Double] = [
+            .crypto: 0.333,
+            .stock: 0.667
+        ]
+        let percentages = PortfolioCalculator.categoryPercentages(breakdown: breakdown)
+        XCTAssertEqual(percentages[.crypto], 33)
+        XCTAssertEqual(percentages[.stock], 67)
+    }
+
+    func testCategoryPercentagesEmpty() {
+        let percentages = PortfolioCalculator.categoryPercentages(breakdown: [:])
+        XCTAssertTrue(percentages.isEmpty)
+    }
+
+    func testCategoryPercentagesSingleCategory() {
+        let breakdown: [AssetCategory: Double] = [.crypto: 1.0]
+        let percentages = PortfolioCalculator.categoryPercentages(breakdown: breakdown)
+        XCTAssertEqual(percentages[.crypto], 100)
+    }
 }

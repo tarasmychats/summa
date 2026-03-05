@@ -31,4 +31,12 @@ enum PortfolioCalculator {
         }
         return breakdown
     }
+
+    static func categoryPercentages(breakdown: [AssetCategory: Double]) -> [AssetCategory: Int] {
+        var percentages: [AssetCategory: Int] = [:]
+        for (category, fraction) in breakdown {
+            percentages[category] = Int((fraction * 100).rounded())
+        }
+        return percentages
+    }
 }

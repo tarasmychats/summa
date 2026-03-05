@@ -180,13 +180,14 @@ struct DashboardView: View {
             }
             .frame(height: 200)
 
+            let percentages = PortfolioCalculator.categoryPercentages(breakdown: viewModel.breakdown)
             HStack(spacing: 16) {
                 ForEach(Array(viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })), id: \.self) { category in
                     HStack(spacing: 6) {
                         Circle()
                             .fill(Theme.categoryColor(category))
                             .frame(width: 10, height: 10)
-                        Text(category.displayName)
+                        Text("\(category.displayName) \(percentages[category] ?? 0)%")
                             .font(Theme.captionFont)
                             .foregroundStyle(Theme.textMuted)
                     }

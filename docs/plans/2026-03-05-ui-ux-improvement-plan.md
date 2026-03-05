@@ -72,9 +72,9 @@
 - [x] Keep swipe-to-delete gesture but show alert before actually deleting
 
 ### Task 5: Add percentage labels to allocation chart
-- [ ] In `DashboardView.breakdownChart`, compute percentage for each category from `viewModel.breakdown`
-- [ ] Display percentage next to category name in the legend (e.g., "Crypto 45%")
-- [ ] Write test for percentage calculation logic (extract to testable function)
+- [x] In `DashboardView.breakdownChart`, compute percentage for each category from `viewModel.breakdown`
+- [x] Display percentage next to category name in the legend (e.g., "Crypto 45%")
+- [x] Write test for percentage calculation logic (extract to testable function)
 
 ### Task 6: Add haptic feedback to key interactions
 - [ ] Add `.sensoryFeedback(.success, trigger:)` when an asset is successfully added in `AddAssetView`
