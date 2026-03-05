@@ -1,5 +1,6 @@
 import { logger } from "../logger.js";
 import { config } from "../config.js";
+import { coingeckoCircuit } from "./circuitBreaker.js";
 
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 
@@ -27,7 +28,7 @@ export async function fetchCryptoHistory(
   }
 
   try {
-    const response = await fetch(
+    const response = await coingeckoCircuit.fetch(
       `${COINGECKO_BASE}/coins/${encodeURIComponent(coinId)}/market_chart?${params}`
     );
     if (!response.ok) {

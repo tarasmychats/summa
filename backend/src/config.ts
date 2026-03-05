@@ -16,6 +16,7 @@ function parseLogLevel(value: string | undefined): LogLevel {
 }
 
 export const config = {
+  nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT) || 3001,
   logLevel: parseLogLevel(process.env.LOG_LEVEL),
 

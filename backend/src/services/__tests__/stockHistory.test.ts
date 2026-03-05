@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fetchStockHistory, rateLimitDelay } from "../stockHistory.js";
 
-const { mockHistorical } = vi.hoisted(() => ({
-  mockHistorical: vi.fn(),
+const { mockChart } = vi.hoisted(() => ({
+  mockChart: vi.fn(),
 }));
 
 vi.mock("yahoo-finance2", () => ({
   default: class {
-    historical = mockHistorical;
+    chart = mockChart;
   },
 }));
 
@@ -17,11 +17,13 @@ describe("fetchStockHistory", () => {
   });
 
   it("returns daily prices for a valid symbol", async () => {
-    mockHistorical.mockResolvedValueOnce([
-      { date: new Date("2024-01-02"), close: 375.5 },
-      { date: new Date("2024-01-03"), close: 378.25 },
-      { date: new Date("2024-01-04"), close: 373.0 },
-    ]);
+    mockChart.mockResolvedValueOnce({
+      quotes: [
+        { date: new Date("2024-01-02"), close: 375.5 },
+        { date: new Date("2024-01-03"), close: 378.25 },
+        { date: new Date("2024-01-04"), close: 373.0 },
+      ],
+    });
 
     const result = await fetchStockHistory("AAPL", 5);
 
@@ -31,13 +33,13 @@ describe("fetchStockHistory", () => {
     expect(result[2]).toEqual({ date: "2024-01-04", price: 373.0 });
   });
 
-  it("calls yahoo-finance2 with correct parameters", async () => {
-    mockHistorical.mockResolvedValueOnce([]);
+  it("calls yahoo-finance2 chart with correct parameters", async () => {
+    mockChart.mockResolvedValueOnce({ quotes: [] });
 
     await fetchStockHistory("VOO", 3);
 
-    expect(mockHistorical).toHaveBeenCalledOnce();
-    const [symbol, queryOpts, moduleOpts] = mockHistorical.mock.calls[0];
+    expect(mockChart).toHaveBeenCalledOnce();
+    const [symbol, queryOpts, moduleOpts] = mockChart.mock.calls[0];
     expect(symbol).toBe("VOO");
     expect(queryOpts.interval).toBe("1d");
     expect(queryOpts.period1).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -46,11 +48,11 @@ describe("fetchStockHistory", () => {
   });
 
   it("uses correct date range based on years parameter", async () => {
-    mockHistorical.mockResolvedValueOnce([]);
+    mockChart.mockResolvedValueOnce({ quotes: [] });
 
     await fetchStockHistory("MSFT", 5);
 
-    const [, queryOpts] = mockHistorical.mock.calls[0];
+    const [, queryOpts] = mockChart.mock.calls[0];
     const period1 = new Date(queryOpts.period1);
     const period2 = new Date(queryOpts.period2);
     const diffYears =
@@ -59,11 +61,13 @@ describe("fetchStockHistory", () => {
   });
 
   it("filters out rows with missing close price", async () => {
-    mockHistorical.mockResolvedValueOnce([
-      { date: new Date("2024-01-02"), close: 375.5 },
-      { date: new Date("2024-01-03"), close: null },
-      { date: new Date("2024-01-04"), close: 373.0 },
-    ]);
+    mockChart.mockResolvedValueOnce({
+      quotes: [
+        { date: new Date("2024-01-02"), close: 375.5 },
+        { date: new Date("2024-01-03"), close: null },
+        { date: new Date("2024-01-04"), close: 373.0 },
+      ],
+    });
 
     const result = await fetchStockHistory("AAPL", 1);
 
@@ -73,7 +77,7 @@ describe("fetchStockHistory", () => {
   });
 
   it("throws for invalid symbol (error thrown)", async () => {
-    mockHistorical.mockRejectedValueOnce(
+    mockChart.mockRejectedValueOnce(
       new Error("Not Found: No data found for symbol INVALIDXYZ")
     );
 
@@ -82,24 +86,24 @@ describe("fetchStockHistory", () => {
     );
   });
 
-  it("returns empty array when result is empty", async () => {
-    mockHistorical.mockResolvedValueOnce([]);
+  it("returns empty array when quotes is empty", async () => {
+    mockChart.mockResolvedValueOnce({ quotes: [] });
 
     const result = await fetchStockHistory("DELISTED", 5);
     expect(result).toEqual([]);
   });
 
-  it("returns empty array when result is not an array", async () => {
-    mockHistorical.mockResolvedValueOnce(null);
+  it("returns empty array when quotes is missing", async () => {
+    mockChart.mockResolvedValueOnce({});
 
     const result = await fetchStockHistory("WEIRD", 5);
     expect(result).toEqual([]);
   });
 
   it("handles date as string instead of Date object", async () => {
-    mockHistorical.mockResolvedValueOnce([
-      { date: "2024-01-02T00:00:00.000Z", close: 375.5 },
-    ]);
+    mockChart.mockResolvedValueOnce({
+      quotes: [{ date: "2024-01-02T00:00:00.000Z", close: 375.5 }],
+    });
 
     const result = await fetchStockHistory("AAPL", 1);
 

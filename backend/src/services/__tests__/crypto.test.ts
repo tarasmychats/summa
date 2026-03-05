@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fetchCryptoPrices } from "../crypto.js";
+import { coingeckoCircuit } from "../circuitBreaker.js";
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -8,6 +9,7 @@ vi.stubGlobal("fetch", mockFetch);
 describe("fetchCryptoPrices", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    coingeckoCircuit.reset();
     process.env.COINGECKO_API_KEY = "test-key";
   });
 
@@ -35,7 +37,11 @@ describe("fetchCryptoPrices", () => {
   });
 
   it("returns empty array when API fails", async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 429 });
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      headers: new Headers(),
+    });
 
     const result = await fetchCryptoPrices(["bitcoin"], "usd");
     expect(result).toEqual([]);

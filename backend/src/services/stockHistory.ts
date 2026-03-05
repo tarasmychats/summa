@@ -1,7 +1,9 @@
 import YahooFinance from "yahoo-finance2";
 import { logger } from "../logger.js";
 
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({
+  suppressNotices: ["ripHistorical", "yahooSurvey"],
+});
 
 export interface StockHistoryPoint {
   date: string; // YYYY-MM-DD
@@ -21,7 +23,7 @@ export async function fetchStockHistory(
   period1.setFullYear(period1.getFullYear() - years);
 
   try {
-    const result = await yahooFinance.historical(
+    const result = await yahooFinance.chart(
       symbol,
       {
         period1: period1.toISOString().split("T")[0],
@@ -31,12 +33,13 @@ export async function fetchStockHistory(
       { validateResult: false }
     );
 
-    if (!Array.isArray(result) || result.length === 0) {
+    const quotes = (result as any)?.quotes;
+    if (!Array.isArray(quotes) || quotes.length === 0) {
       logger.warn("stock history returned no data", { symbol, years });
       return [];
     }
 
-    return result
+    return quotes
       .filter((row: any) => row.date && row.close != null)
       .map((row: any) => ({
         date:

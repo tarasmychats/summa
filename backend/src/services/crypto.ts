@@ -1,6 +1,7 @@
 import type { AssetPrice } from "../types.js";
 import { logger } from "../logger.js";
 import { config } from "../config.js";
+import { coingeckoCircuit } from "./circuitBreaker.js";
 
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 
@@ -21,7 +22,9 @@ export async function fetchCryptoPrices(
   }
 
   try {
-    const response = await fetch(`${COINGECKO_BASE}/simple/price?${params}`);
+    const response = await coingeckoCircuit.fetch(
+      `${COINGECKO_BASE}/simple/price?${params}`
+    );
     if (!response.ok) {
       logger.warn("crypto price fetch failed", { status: response.status, coinIds });
       return [];

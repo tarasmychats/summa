@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { coingeckoCircuit } from "../circuitBreaker.js";
 
 const mockConfig = vi.hoisted(() => ({
   coingeckoApiKey: "test-key" as string | undefined,
@@ -14,6 +15,7 @@ vi.stubGlobal("fetch", mockFetch);
 describe("fetchCryptoHistory", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    coingeckoCircuit.reset();
     mockConfig.coingeckoApiKey = "test-key";
   });
 
@@ -80,7 +82,11 @@ describe("fetchCryptoHistory", () => {
   });
 
   it("throws when API returns non-ok response", async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 429 });
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      headers: new Headers(),
+    });
 
     await expect(fetchCryptoHistory("bitcoin", 365)).rejects.toThrow(
       "CoinGecko API returned 429"
@@ -88,7 +94,11 @@ describe("fetchCryptoHistory", () => {
   });
 
   it("throws when API returns 404 for invalid coin", async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: new Headers(),
+    });
 
     await expect(fetchCryptoHistory("nonexistent-coin", 365)).rejects.toThrow(
       "CoinGecko API returned 404"

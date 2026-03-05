@@ -2,7 +2,9 @@ import YahooFinance from "yahoo-finance2";
 import type { AssetPrice } from "../types.js";
 import { logger } from "../logger.js";
 
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({
+  suppressNotices: ["ripHistorical", "yahooSurvey"],
+});
 
 export async function fetchStockPrices(
   tickers: string[]
