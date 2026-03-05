@@ -152,10 +152,10 @@
 - [x] Write test for the lastUpdated property being set after refresh
 
 ### Task 18: Improve error messages with specificity
-- [ ] In `DashboardViewModel.refresh`, differentiate between `URLError` (network) and other errors
-- [ ] Show "No internet connection" for `.notConnectedToInternet`, "Server unavailable" for server errors, "Some prices could not be loaded" for partial failures
-- [ ] Apply same error differentiation to `ProjectionsView` and `InsightsView`
-- [ ] Write tests for error message mapping logic (extract to testable helper)
+- [x] In `DashboardViewModel.refresh`, differentiate between `URLError` (network) and other errors
+- [x] Show "No internet connection" for `.notConnectedToInternet`, "Server unavailable" for server errors, "Some prices could not be loaded" for partial failures
+- [x] Apply same error differentiation to `ProjectionsView` and `InsightsView`
+- [x] Write tests for error message mapping logic (extract to testable helper)
 
 ### Task 19: Wire up or remove unused TransactionListView
 - [ ] Decide: either add a navigation link to `TransactionListView` from `AssetDetailView` (e.g., "View All Transactions" row) or delete the unused file

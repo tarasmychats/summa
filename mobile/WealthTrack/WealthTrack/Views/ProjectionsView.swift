@@ -8,6 +8,7 @@ struct ProjectionsView: View {
     @State private var selectedYears = 10
     @State private var holdings: [PortfolioHolding] = []
     @State private var currencyCode: String = "USD"
+    @State private var priceError: String?
 
     private var displayCurrency: String {
         allSettings.first?.displayCurrency ?? "USD"
@@ -69,6 +70,14 @@ struct ProjectionsView: View {
                         .foregroundStyle(Theme.textMuted)
                         .multilineTextAlignment(.center)
                         .padding()
+
+                    if let priceError {
+                        Text(priceError)
+                            .font(Theme.captionFont)
+                            .foregroundStyle(Theme.coral)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
                 }
             }
             .background(Theme.bgPrimary)
@@ -94,6 +103,7 @@ struct ProjectionsView: View {
     }
 
     private func refreshHoldings() async {
+        priceError = nil
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
@@ -109,7 +119,12 @@ struct ProjectionsView: View {
                     category: asset.assetCategory
                 )
             }
+            let missingPrices = assets.filter { priceMap[$0.symbol] == nil }
+            if !missingPrices.isEmpty {
+                priceError = PriceErrorMessage.partialFailureMessage
+            }
         } catch {
+            priceError = PriceErrorMessage.userMessage(from: error)
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,

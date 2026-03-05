@@ -44,7 +44,7 @@ class DashboardViewModel {
             if !missingPrices.isEmpty {
                 let symbols = missingPrices.map(\.symbol).joined(separator: ", ")
                 print("[WealthTrack] Missing prices for: \(symbols)")
-                priceError = "Couldn't load prices. Pull down to retry."
+                priceError = PriceErrorMessage.partialFailureMessage
             }
 
             holdings = assets.map { asset in
@@ -57,7 +57,7 @@ class DashboardViewModel {
             }
         } catch {
             print("[WealthTrack] Price fetch failed: \(error)")
-            priceError = "Couldn't load prices. Pull down to retry."
+            priceError = PriceErrorMessage.userMessage(from: error)
             // Use zero prices on error — user still sees their assets
             holdings = assets.map { asset in
                 PortfolioHolding(

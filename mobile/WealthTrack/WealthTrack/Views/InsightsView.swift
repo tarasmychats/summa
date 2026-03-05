@@ -5,6 +5,7 @@ struct InsightsView: View {
     @Query private var assets: [Asset]
     @Query private var allSettings: [UserSettings]
     @State private var holdings: [PortfolioHolding] = []
+    @State private var priceError: String?
 
     private var displayCurrency: String {
         allSettings.first?.displayCurrency ?? "USD"
@@ -17,6 +18,12 @@ struct InsightsView: View {
     var body: some View {
         NavigationStack {
             List {
+                if let priceError {
+                    Text(priceError)
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.coral)
+                        .listRowBackground(Theme.bgCard)
+                }
                 if insights.isEmpty && !holdings.isEmpty {
                     ContentUnavailableView(
                         "Portfolio Looks Good",
@@ -61,6 +68,7 @@ struct InsightsView: View {
     }
 
     private func refreshHoldings() async {
+        priceError = nil
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
@@ -75,7 +83,12 @@ struct InsightsView: View {
                     category: asset.assetCategory
                 )
             }
+            let missingPrices = assets.filter { priceMap[$0.symbol] == nil }
+            if !missingPrices.isEmpty {
+                priceError = PriceErrorMessage.partialFailureMessage
+            }
         } catch {
+            priceError = PriceErrorMessage.userMessage(from: error)
             holdings = []
         }
     }
