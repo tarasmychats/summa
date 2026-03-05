@@ -146,10 +146,10 @@
 - [x] Keep the numeric value and label visible alongside the gauge
 
 ### Task 17: Add "Last Updated" timestamp
-- [ ] Add a `lastUpdated: Date?` property to `DashboardViewModel`, set it when prices are fetched
-- [ ] Display a "Last updated: X min ago" label below the total value card (using `RelativeDateTimeFormatter` or `.relative` date style)
-- [ ] Update the label reactively as time passes
-- [ ] Write test for the lastUpdated property being set after refresh
+- [x] Add a `lastUpdated: Date?` property to `DashboardViewModel`, set it when prices are fetched
+- [x] Display a "Last updated: X min ago" label below the total value card (using `RelativeDateTimeFormatter` or `.relative` date style)
+- [x] Update the label reactively as time passes
+- [x] Write test for the lastUpdated property being set after refresh
 
 ### Task 18: Improve error messages with specificity
 - [ ] In `DashboardViewModel.refresh`, differentiate between `URLError` (network) and other errors

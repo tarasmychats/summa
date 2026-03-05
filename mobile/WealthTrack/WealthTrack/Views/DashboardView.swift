@@ -42,6 +42,7 @@ struct DashboardView: View {
                             .cardAppearance(index: 0, appeared: cardsAppeared)
                         totalValueCard
                             .cardAppearance(index: 1, appeared: cardsAppeared)
+                        lastUpdatedLabel
                         holdingsSection
                             .cardAppearance(index: 2, appeared: cardsAppeared)
                         breakdownChart
@@ -212,6 +213,18 @@ struct DashboardView: View {
         }
         .frame(maxWidth: .infinity)
         .themeCard()
+    }
+
+    @ViewBuilder
+    private var lastUpdatedLabel: some View {
+        if let lastUpdated = viewModel.lastUpdated {
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                Text("Updated \(lastUpdated, format: .relative(presentation: .named))")
+                    .font(Theme.captionFont)
+                    .foregroundStyle(Theme.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
     }
 
     private var holdingsSection: some View {

@@ -14,6 +14,7 @@ class DashboardViewModel {
     var isLoading = false
     var priceError: String?
     var currencyCode: String = "USD"
+    var lastUpdated: Date?
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -36,6 +37,8 @@ class DashboardViewModel {
             )
 
             let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
+
+            lastUpdated = Date()
 
             let missingPrices = assets.filter { priceMap[$0.symbol] == nil }
             if !missingPrices.isEmpty {
