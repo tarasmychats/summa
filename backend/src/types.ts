@@ -1,4 +1,4 @@
-export type AssetCategory = "crypto" | "stock" | "fiat";
+export type AssetCategory = "crypto" | "stock" | "etf" | "fiat";
 
 export interface PriceRequest {
   assets: Array<{
