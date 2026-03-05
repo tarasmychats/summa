@@ -6,6 +6,8 @@ struct AddAssetView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var allAssets: [Asset]
 
+    var initialAsset: AssetDefinition?
+
     @State private var searchText = ""
     @State private var selectedAsset: AssetDefinition?
     @State private var amount = ""
@@ -51,6 +53,11 @@ struct AddAssetView: View {
             } message: {
                 if let asset = duplicateAsset {
                     Text("\(asset.name) is already in your portfolio. Add another?")
+                }
+            }
+            .onAppear {
+                if let initialAsset, selectedAsset == nil {
+                    selectedAsset = initialAsset
                 }
             }
             .navigationTitle("Add Asset")

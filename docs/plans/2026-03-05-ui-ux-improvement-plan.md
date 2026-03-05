@@ -136,9 +136,9 @@
 ### Phase 4: Information Density & Polish
 
 ### Task 15: Add suggested assets to empty state
-- [ ] In `DashboardView.emptyState`, add 3 quick-add suggestion buttons below the "Add Asset" button (e.g., "Bitcoin", "S&P 500 ETF", "US Dollar")
-- [ ] Tapping a suggestion pre-fills the AddAssetView search or navigates directly to the amount input
-- [ ] Style suggestion buttons as capsule chips with category colors
+- [x] In `DashboardView.emptyState`, add 3 quick-add suggestion buttons below the "Add Asset" button (e.g., "Bitcoin", "S&P 500 ETF", "US Dollar")
+- [x] Tapping a suggestion pre-fills the AddAssetView search or navigates directly to the amount input
+- [x] Style suggestion buttons as capsule chips with category colors
 
 ### Task 16: Add visual gauge for risk score
 - [ ] Replace the text-only risk score in `DashboardView.riskScoreCard` with a horizontal `Gauge` or custom arc view

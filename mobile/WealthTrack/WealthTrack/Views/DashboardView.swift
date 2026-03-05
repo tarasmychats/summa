@@ -7,7 +7,14 @@ struct DashboardView: View {
     @Query private var allSettings: [UserSettings]
     @State private var viewModel = DashboardViewModel()
     @State private var showingAddAsset = false
+    @State private var suggestedAsset: AssetDefinition?
     @State private var cardsAppeared = false
+
+    static let suggestedAssets: [AssetDefinition] = [
+        AssetDefinition(id: "bitcoin", name: "Bitcoin", symbol: "BTC", category: .crypto),
+        AssetDefinition(id: "VOO", name: "S&P 500 ETF", symbol: "VOO", category: .stock),
+        AssetDefinition(id: "USD", name: "US Dollar", symbol: "USD", category: .fiat),
+    ]
 
     private var displayCurrency: String {
         allSettings.first?.displayCurrency ?? "USD"
@@ -76,6 +83,9 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $showingAddAsset) {
                 AddAssetView()
+            }
+            .sheet(item: $suggestedAsset) { asset in
+                AddAssetView(initialAsset: asset)
             }
             .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
                 await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
@@ -148,6 +158,32 @@ struct DashboardView: View {
                 showingAddAsset = true
             }
             .buttonStyle(.borderedProminent)
+
+            VStack(spacing: 8) {
+                Text("Quick add")
+                    .font(Theme.captionFont)
+                    .foregroundStyle(Theme.textMuted)
+                HStack(spacing: 10) {
+                    ForEach(Self.suggestedAssets) { asset in
+                        Button {
+                            suggestedAsset = asset
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: asset.category.iconName)
+                                    .font(.system(size: 12))
+                                Text(asset.name)
+                                    .font(Theme.captionFont)
+                            }
+                            .foregroundStyle(Theme.categoryColor(asset.category))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Theme.categoryTint(asset.category))
+                            .clipShape(Capsule())
+                        }
+                    }
+                }
+            }
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
         .padding()
