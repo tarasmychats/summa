@@ -72,6 +72,9 @@ struct ProjectionsView: View {
                 }
             }
             .background(Theme.bgPrimary)
+            .refreshable {
+                await refreshHoldings()
+            }
             .navigationTitle("Projections")
             .task(id: "\(assets.count)-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.reduce(0, +))") {
                 await refreshHoldings()

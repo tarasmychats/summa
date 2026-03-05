@@ -64,8 +64,8 @@
 - [x] Ensure code compiles by following existing `DashboardView` patterns (themeCard, spacing)
 
 ### Task 3: Add pull-to-refresh on Projections and Insights tabs
-- [ ] Add `.refreshable` modifier to `ProjectionsView` ScrollView, calling `refreshHoldings()`
-- [ ] Add `.refreshable` modifier to `InsightsView` List, calling `refreshHoldings()`
+- [x] Add `.refreshable` modifier to `ProjectionsView` ScrollView, calling `refreshHoldings()`
+- [x] Add `.refreshable` modifier to `InsightsView` List, calling `refreshHoldings()`
 
 ### Task 4: Add delete confirmation for assets
 - [ ] In `AssetListView`, replace direct `.onDelete` with a confirmation alert ("Delete [asset name]? This will remove all transaction history.")
