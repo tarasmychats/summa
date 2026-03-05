@@ -76,7 +76,7 @@ struct AssetChartView: View {
                 .accessibilityLabel("\(range.accessibilityName)\(selectedRange == range ? ", selected" : "")")
             }
         }
-        .sensoryFeedback(.impact(.light), trigger: selectedRange)
+        .sensoryFeedback(.impact(weight: .light), trigger: selectedRange)
     }
 
     private var chart: some View {

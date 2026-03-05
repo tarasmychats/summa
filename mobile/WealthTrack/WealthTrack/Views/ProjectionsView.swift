@@ -113,7 +113,7 @@ struct ProjectionsView: View {
                 baseCurrency: displayCurrency
             )
             currencyCode = displayCurrency
-            let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
+            let priceMap = Dictionary(prices.map { ($0.id, $0.price) }, uniquingKeysWith: { _, last in last })
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,

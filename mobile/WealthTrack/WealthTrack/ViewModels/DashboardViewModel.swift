@@ -47,7 +47,7 @@ class DashboardViewModel {
                 baseCurrency: baseCurrency
             )
 
-            let priceMap = Dictionary(uniqueKeysWithValues: prices.map { ($0.id, $0.price) })
+            let priceMap = Dictionary(prices.map { ($0.id, $0.price) }, uniquingKeysWith: { _, last in last })
 
             lastUpdated = Date()
 
@@ -130,7 +130,7 @@ class DashboardViewModel {
             for asset in assets {
                 let compositeKey = "\(asset.symbol):\(asset.category)"
                 guard let assetHistory = history[compositeKey] else { continue }
-                let priceMap = Dictionary(uniqueKeysWithValues: assetHistory.map { ($0.date, $0.price) })
+                let priceMap = Dictionary(assetHistory.map { ($0.date, $0.price) }, uniquingKeysWith: { _, last in last })
                 guard let price = priceMap[previousDate] else { continue }
                 dayTotal += price * asset.currentAmount
             }
