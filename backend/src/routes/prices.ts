@@ -3,7 +3,6 @@ import { fetchCryptoPrices } from "../services/crypto.js";
 import { fetchStockPrices } from "../services/stocks.js";
 import { fetchExchangeRates } from "../services/fiat.js";
 import { PriceCache } from "../cache.js";
-import { upsertTrackedAssets } from "../repositories/trackedAssets.js";
 import { logger } from "../logger.js";
 import { normalizeCurrency } from "../currency.js";
 import type { PriceRequest, AssetPrice, PriceResponse } from "../types.js";
@@ -45,18 +44,6 @@ export function createPricesRouter(): Router {
       }
     }
 
-    // Fire-and-forget: track requested assets for the daily cron job
-    // (runs regardless of cache status)
-    const validCategories = new Set(["crypto", "stock", "fiat"]);
-    const trackableAssets = body.assets
-      .filter((a) => validCategories.has(a.category))
-      .map((a) => ({ assetId: a.id, category: a.category }));
-    if (trackableAssets.length > 0) {
-      upsertTrackedAssets(trackableAssets).catch(() => {
-        // Silently ignore DB errors — tracking is best-effort
-      });
-    }
-
     // If everything was cached, return immediately
     if (uncachedAssets.length === 0) {
       const response: PriceResponse = {
@@ -74,7 +61,7 @@ export function createPricesRouter(): Router {
       .filter((a) => a.category === "crypto")
       .map((a) => a.id);
     const stockIds = uncachedAssets
-      .filter((a) => a.category === "stock")
+      .filter((a) => a.category === "stock" || a.category === "etf")
       .map((a) => a.id);
     const fiatIds = uncachedAssets
       .filter((a) => a.category === "fiat")
@@ -89,6 +76,16 @@ export function createPricesRouter(): Router {
       ]);
 
       const convertedStockPrices = await convertStockPricesToBase(stockPrices, base);
+
+      // Restore original category for ETFs (fetchStockPrices returns category: "stock")
+      const etfIds = new Set(
+        uncachedAssets.filter((a) => a.category === "etf").map((a) => a.id)
+      );
+      for (const price of convertedStockPrices) {
+        if (etfIds.has(price.id)) {
+          (price as any).category = "etf";
+        }
+      }
 
       freshPrices = [...cryptoPrices, ...convertedStockPrices, ...fiatPrices];
     } catch {
@@ -122,7 +119,7 @@ export function createPricesRouter(): Router {
  */
 function addUnconvertedWarnings(response: PriceResponse, base: string): void {
   const unconvertedStocks = response.prices.filter(
-    (p) => p.category === "stock" && p.currency.toUpperCase() !== base
+    (p) => (p.category === "stock" || p.category === "etf") && p.currency.toUpperCase() !== base
   );
   if (unconvertedStocks.length > 0) {
     response.warnings = [

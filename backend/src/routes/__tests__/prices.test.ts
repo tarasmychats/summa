@@ -2,14 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import express from "express";
 import request from "supertest";
 
-const mockUpsertTrackedAssets = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 const mockFetchCryptoPrices = vi.hoisted(() => vi.fn());
 const mockFetchStockPrices = vi.hoisted(() => vi.fn());
 const mockFetchExchangeRates = vi.hoisted(() => vi.fn());
-
-vi.mock("../../repositories/trackedAssets.js", () => ({
-  upsertTrackedAssets: mockUpsertTrackedAssets,
-}));
 
 vi.mock("../../services/crypto.js", () => ({
   fetchCryptoPrices: mockFetchCryptoPrices,
@@ -95,40 +90,6 @@ describe("POST /api/prices", () => {
     expect(response.status).toBe(400);
   });
 
-  it("calls upsertTrackedAssets with requested assets after fetching prices", async () => {
-    await request(app)
-      .post("/api/prices")
-      .send({
-        assets: [
-          { id: "bitcoin", category: "crypto" },
-          { id: "VOO", category: "stock" },
-        ],
-        baseCurrency: "USD",
-      });
-
-    // Allow fire-and-forget promise to resolve
-    await new Promise((r) => setTimeout(r, 10));
-
-    expect(mockUpsertTrackedAssets).toHaveBeenCalledWith([
-      { assetId: "bitcoin", category: "crypto" },
-      { assetId: "VOO", category: "stock" },
-    ]);
-  });
-
-  it("does not block response when upsertTrackedAssets fails", async () => {
-    mockUpsertTrackedAssets.mockRejectedValueOnce(new Error("DB down"));
-
-    const response = await request(app)
-      .post("/api/prices")
-      .send({
-        assets: [{ id: "bitcoin", category: "crypto" }],
-        baseCurrency: "EUR",
-      });
-
-    expect(response.status).toBe(200);
-    expect(response.body.prices).toBeDefined();
-  });
-
   it("returns 400 when more than 50 assets are requested", async () => {
     const assets = Array.from({ length: 51 }, (_, i) => ({
       id: `asset-${i}`,
@@ -143,12 +104,30 @@ describe("POST /api/prices", () => {
     expect(response.body.error).toMatch(/too many assets/i);
   });
 
-  it("does not call upsertTrackedAssets for invalid requests", async () => {
-    await request(app)
-      .post("/api/prices")
-      .send({ invalid: true });
+  it("fetches ETF prices using stock provider", async () => {
+    mockFetchCryptoPrices.mockResolvedValue([]);
+    mockFetchExchangeRates.mockResolvedValue([]);
+    mockFetchStockPrices.mockResolvedValue([
+      {
+        id: "SPY",
+        category: "stock",
+        price: 520,
+        currency: "USD",
+        change24h: 0.4,
+        updatedAt: "2026-02-27T00:00:00Z",
+      },
+    ]);
 
-    expect(mockUpsertTrackedAssets).not.toHaveBeenCalled();
+    const response = await request(app)
+      .post("/api/prices")
+      .send({
+        assets: [{ id: "SPY", category: "etf" }],
+        baseCurrency: "USD",
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.prices[0].category).toBe("etf");
+    expect(response.body.prices[0].id).toBe("SPY");
   });
 
   describe("minor-unit currency normalization", () => {
