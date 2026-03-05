@@ -160,6 +160,17 @@ struct DashboardView: View {
             Text(viewModel.totalValue, format: .currency(code: viewModel.currencyCode))
                 .font(Theme.largeValue)
                 .contentTransition(.numericText())
+            if let change = viewModel.valueChange {
+                HStack(spacing: 4) {
+                    Image(systemName: change.isPositive ? "arrow.up.right" : "arrow.down.right")
+                        .font(Theme.captionFont)
+                    Text(change.amount, format: .currency(code: viewModel.currencyCode).sign(strategy: .always()))
+                    Text("(\(change.percent, specifier: "%+.1f")%)")
+                }
+                .font(Theme.captionFont.weight(.medium))
+                .foregroundStyle(change.isPositive ? Theme.sage : Theme.coral)
+                .contentTransition(.numericText())
+            }
         }
         .frame(maxWidth: .infinity)
         .themeCard()

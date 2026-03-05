@@ -103,11 +103,11 @@
 - [x] Reuse or extract shared chart overlay logic if patterns are identical
 
 ### Task 10: Add portfolio value change indicator
-- [ ] In `DashboardViewModel`, add properties for `previousValue` (yesterday's portfolio value) and computed `valueChange` / `percentChange`
-- [ ] Fetch or derive yesterday's value from the portfolio chart history data (most recent prior data point)
-- [ ] In `DashboardView.totalValueCard`, display the change below the total (e.g., "+$1,234 (+5.2%)" in green, or "-$500 (-2.1%)" in coral)
-- [ ] Handle edge case: no previous data available (hide change indicator)
-- [ ] Write tests for change calculation logic (positive, negative, zero, no data)
+- [x] In `DashboardViewModel`, add properties for `previousValue` (yesterday's portfolio value) and computed `valueChange` / `percentChange`
+- [x] Fetch or derive yesterday's value from the portfolio chart history data (most recent prior data point)
+- [x] In `DashboardView.totalValueCard`, display the change below the total (e.g., "+$1,234 (+5.2%)" in green, or "-$500 (-2.1%)" in coral)
+- [x] Handle edge case: no previous data available (hide change indicator)
+- [x] Write tests for change calculation logic (positive, negative, zero, no data)
 
 ### Task 11: Add top holdings section to Dashboard for quick navigation
 - [ ] Add a "Holdings" section below the total value card in `DashboardView`

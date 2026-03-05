@@ -39,4 +39,19 @@ enum PortfolioCalculator {
         }
         return percentages
     }
+
+    /// Calculate the change between current and previous portfolio values
+    static func valueChange(currentValue: Double, previousValue: Double?) -> ValueChange? {
+        guard let previousValue, previousValue > 0 else { return nil }
+        let change = currentValue - previousValue
+        let percentChange = (change / previousValue) * 100
+        return ValueChange(amount: change, percent: percentChange)
+    }
+}
+
+struct ValueChange {
+    let amount: Double
+    let percent: Double
+
+    var isPositive: Bool { amount >= 0 }
 }
