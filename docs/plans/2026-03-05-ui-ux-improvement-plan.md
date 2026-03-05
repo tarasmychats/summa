@@ -98,9 +98,9 @@
 - [x] Extract nearest-point lookup to a testable function and write test
 
 ### Task 9: Add interactive chart selection to AssetChartView
-- [ ] Apply the same interactive selection pattern from Task 8 to `AssetChartView`
-- [ ] Show selected date and price in a floating label
-- [ ] Reuse or extract shared chart overlay logic if patterns are identical
+- [x] Apply the same interactive selection pattern from Task 8 to `AssetChartView`
+- [x] Show selected date and price in a floating label
+- [x] Reuse or extract shared chart overlay logic if patterns are identical
 
 ### Task 10: Add portfolio value change indicator
 - [ ] In `DashboardViewModel`, add properties for `previousValue` (yesterday's portfolio value) and computed `valueChange` / `percentChange`
