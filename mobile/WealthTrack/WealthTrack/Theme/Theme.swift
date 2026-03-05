@@ -16,13 +16,13 @@ enum Theme {
     static let stockTint = Color(light: .init(hex: 0xEFF6F2), dark: .init(hex: 0x242E29))
     static let fiatTint = Color(light: .init(hex: 0xFBF6EC), dark: .init(hex: 0x302C22))
 
-    // MARK: - Typography
+    // MARK: - Typography (Dynamic Type)
 
-    static let largeValue = Font.system(size: 34, weight: .bold, design: .rounded)
-    static let titleFont = Font.system(size: 22, weight: .bold, design: .rounded)
-    static let headlineFont = Font.system(size: 17, weight: .semibold, design: .rounded)
-    static let bodyFont = Font.system(size: 15, weight: .regular, design: .rounded)
-    static let captionFont = Font.system(size: 13, weight: .regular, design: .rounded)
+    static let largeValue = Font.system(.largeTitle, design: .rounded, weight: .bold)
+    static let titleFont = Font.system(.title2, design: .rounded, weight: .bold)
+    static let headlineFont = Font.system(.headline, design: .rounded, weight: .semibold)
+    static let bodyFont = Font.system(.body, design: .rounded)
+    static let captionFont = Font.system(.caption, design: .rounded)
 
     // MARK: - Spacing
 

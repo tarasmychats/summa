@@ -125,9 +125,9 @@
 - [x] Add `.accessibilityLabel` to allocation pie chart ("Portfolio allocation: [category] [percent]%")
 
 ### Task 13: Switch to Dynamic Type-compatible fonts
-- [ ] In `Theme.swift`, replace fixed `Font.system(size:weight:design:)` with text styles: `.largeTitle`, `.title`, `.headline`, `.body`, `.caption` with `.fontDesign(.rounded)`
-- [ ] Update `largeValue` to use `.largeTitle.weight(.bold)` with `.fontDesign(.rounded)` or equivalent
-- [ ] Write basic test that Theme font properties exist (sanity check)
+- [x] In `Theme.swift`, replace fixed `Font.system(size:weight:design:)` with text styles: `.largeTitle`, `.title`, `.headline`, `.body`, `.caption` with `.fontDesign(.rounded)`
+- [x] Update `largeValue` to use `.largeTitle.weight(.bold)` with `.fontDesign(.rounded)` or equivalent
+- [x] Write basic test that Theme font properties exist (sanity check)
 
 ### Task 14: Fix color contrast for textMuted
 - [ ] In `Theme.swift`, darken `textMuted` light mode value from `#8A857E` to at least `#6B6660` to meet WCAG AA 4.5:1 contrast ratio against `#FAF8F5` background
