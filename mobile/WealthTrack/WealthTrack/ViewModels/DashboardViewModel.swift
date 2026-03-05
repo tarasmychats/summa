@@ -25,7 +25,18 @@ class DashboardViewModel {
 
     func refresh(assets: [Asset], baseCurrency: String = "USD") async {
         currencyCode = baseCurrency
-        guard !assets.isEmpty else { return }
+        guard !assets.isEmpty else {
+            holdings = []
+            totalValue = 0
+            previousValue = nil
+            valueChange = nil
+            breakdown = [:]
+            riskScore = RiskScore(value: 0, label: "No Assets")
+            projectionPreview = nil
+            lastUpdated = nil
+            isLoading = false
+            return
+        }
         isLoading = true
         priceError = nil
 
