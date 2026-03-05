@@ -38,6 +38,7 @@ struct PortfolioChartView: View {
     @State private var dataPoints: [PortfolioDataPoint] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var selectedPoint: PortfolioDataPoint?
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -120,6 +121,26 @@ struct PortfolioChartView: View {
                 )
             )
             .interpolationMethod(.catmullRom)
+
+            if let selected = selectedPoint {
+                RuleMark(x: .value("Selected", selected.date))
+                    .foregroundStyle(Theme.textMuted.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .annotation(position: .top, alignment: .center) {
+                        VStack(spacing: 2) {
+                            Text(selected.value, format: .currency(code: currency).precision(.fractionLength(0)))
+                                .font(Theme.captionFont.weight(.semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text(selected.date, format: .dateTime.month(.abbreviated).day())
+                                .font(Theme.captionFont)
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Theme.bgCard, in: RoundedRectangle(cornerRadius: 6))
+                        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                    }
+            }
         }
         .chartYAxis {
             AxisMarks(position: .leading) { value in
@@ -139,6 +160,27 @@ struct PortfolioChartView: View {
                             .font(Theme.captionFont)
                     }
                 }
+            }
+        }
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                let xPosition = value.location.x - geometry[proxy.plotAreaFrame].origin.x
+                                guard let date: Date = proxy.value(atX: xPosition) else { return }
+                                let dates = dataPoints.map(\.date)
+                                if let index = ChartSelectionHelper.nearestIndex(in: dates, to: date) {
+                                    selectedPoint = dataPoints[index]
+                                }
+                            }
+                            .onEnded { _ in
+                                selectedPoint = nil
+                            }
+                    )
             }
         }
         .frame(height: 200)

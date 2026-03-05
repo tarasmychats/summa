@@ -90,12 +90,12 @@
 ### Phase 2: Core UX
 
 ### Task 8: Add interactive chart selection to PortfolioChartView
-- [ ] Add `@State` for selected data point in `PortfolioChartView`
-- [ ] Add `.chartOverlay` with drag gesture to find nearest data point on x-axis
-- [ ] Show a vertical rule indicator line at the selected point
-- [ ] Display selected date and value in a floating label above the chart
-- [ ] Clear selection when drag ends or user taps outside
-- [ ] Extract nearest-point lookup to a testable function and write test
+- [x] Add `@State` for selected data point in `PortfolioChartView`
+- [x] Add `.chartOverlay` with drag gesture to find nearest data point on x-axis
+- [x] Show a vertical rule indicator line at the selected point
+- [x] Display selected date and value in a floating label above the chart
+- [x] Clear selection when drag ends or user taps outside
+- [x] Extract nearest-point lookup to a testable function and write test
 
 ### Task 9: Add interactive chart selection to AssetChartView
 - [ ] Apply the same interactive selection pattern from Task 8 to `AssetChartView`
