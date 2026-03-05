@@ -1,6 +1,7 @@
 import cron from "node-cron";
+import { config } from "../config.js";
 import { logger } from "../logger.js";
-import { getAllTrackedAssets } from "../repositories/trackedAssets.js";
+import { getAllAssets } from "../repositories/assets.js";
 import { getBackfillStatus } from "../repositories/backfillStatus.js";
 import { insertDailyPrices, DailyPriceInput } from "../repositories/dailyPrices.js";
 import { upsertBackfillStatus } from "../repositories/backfillStatus.js";
@@ -20,7 +21,7 @@ export async function runDailyPriceUpdate(): Promise<void> {
 
   let groupedAssets: Record<string, Array<{ assetId: string; category: string }>>;
   try {
-    groupedAssets = await getAllTrackedAssets();
+    groupedAssets = await getAllAssets();
   } catch (err) {
     logger.error("daily price update failed — could not load tracked assets", {
       error: String(err),
@@ -182,6 +183,55 @@ async function fetchAndStoreTodayPrice(
       ];
       break;
     }
+    case "etf": {
+      const result = await fetchStockPrices([assetId]);
+      if (result.length === 0) {
+        logger.warn("no ETF price returned for today", { assetId });
+        return false;
+      }
+
+      const { iso: isoCurrency, divisor } = normalizeCurrency(result[0].currency);
+      const nativePrice = result[0].price / divisor;
+
+      let priceUsd: number;
+      let priceEur: number | null = null;
+
+      if (isoCurrency === "USD") {
+        priceUsd = nativePrice;
+        priceEur = eurPerUsd != null ? priceUsd * eurPerUsd : null;
+      } else {
+        try {
+          const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
+          const fxRates = await fetchFiatHistory(isoCurrency, yesterday, today);
+          if (fxRates.length > 0) {
+            const fx = fxRates[fxRates.length - 1];
+            priceUsd = nativePrice * fx.priceUsd;
+            priceEur = nativePrice * fx.priceEur;
+          } else {
+            logger.warn("no FX rate for non-USD ETF, skipping", { assetId, nativeCurrency: isoCurrency });
+            return false;
+          }
+        } catch (err) {
+          logger.warn("FX conversion failed for non-USD ETF", {
+            assetId,
+            nativeCurrency: isoCurrency,
+            error: String(err),
+          });
+          return false;
+        }
+      }
+
+      prices = [
+        {
+          assetId,
+          category: "etf",
+          date: today,
+          priceUsd,
+          priceEur,
+        },
+      ];
+      break;
+    }
     case "fiat": {
       // ECB publishes rates around 16:00 CET; at 02:00 UTC today's rate
       // won't exist yet. Fetch yesterday..today and use the most recent.
@@ -230,5 +280,13 @@ export function startDailyCron(): cron.ScheduledTask {
   );
 
   logger.info("daily cron job scheduled", { schedule: "0 2 * * * (UTC)" });
+
+  if (config.runCronOnStartup) {
+    logger.info("RUN_CRON_ON_STARTUP enabled — running daily price update now");
+    runDailyPriceUpdate().catch((err) => {
+      logger.error("startup price update failed", { error: String(err) });
+    });
+  }
+
   return task;
 }

@@ -69,6 +69,10 @@ export async function backfillAsset(
       case "fiat":
         prices = await fetchAndMapFiat(assetId);
         break;
+      case "etf":
+        prices = await fetchAndMapStock(assetId);
+        prices = prices.map((p) => ({ ...p, category: "etf" }));
+        break;
       default:
         logger.warn("unknown category for backfill", { assetId, category });
         return;
@@ -300,6 +304,8 @@ export function getRateLimitDelay(
       return stockRateLimit;
     case "fiat":
       return fiatRateLimit;
+    case "etf":
+      return stockRateLimit;
     default:
       return null;
   }

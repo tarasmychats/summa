@@ -293,6 +293,25 @@ describe("backfillAsset", () => {
     });
   });
 
+  describe("ETF backfill", () => {
+    it("backfills ETF using stock provider with category 'etf'", async () => {
+      mockGetBackfillStatus.mockResolvedValue(null);
+      mockFetchStockHistory.mockResolvedValue([
+        { date: "2025-01-01", price: 500 },
+      ]);
+      mockGetStockCurrency.mockResolvedValue("USD");
+      mockFetchFiatHistory.mockResolvedValue([]);
+
+      await backfillAsset("SPY", "etf");
+
+      expect(mockInsertDailyPrices).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ assetId: "SPY", category: "etf" }),
+        ])
+      );
+    });
+  });
+
   describe("empty results", () => {
     it("does not insert prices but still updates backfill status when fetch returns empty", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
@@ -403,6 +422,11 @@ describe("getRateLimitDelay", () => {
 
   it("returns a function for fiat", () => {
     const delay = getRateLimitDelay("fiat");
+    expect(delay).toBeInstanceOf(Function);
+  });
+
+  it("returns a function for etf", () => {
+    const delay = getRateLimitDelay("etf");
     expect(delay).toBeInstanceOf(Function);
   });
 

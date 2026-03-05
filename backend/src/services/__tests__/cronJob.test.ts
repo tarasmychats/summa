@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock repositories
-const mockGetAllTrackedAssets = vi.fn();
+const mockGetAllAssets = vi.fn();
 const mockGetBackfillStatus = vi.fn();
 const mockInsertDailyPrices = vi.fn();
 const mockUpsertBackfillStatus = vi.fn();
 
-vi.mock("../../repositories/trackedAssets.js", () => ({
-  getAllTrackedAssets: (...args: unknown[]) => mockGetAllTrackedAssets(...args),
+vi.mock("../../repositories/assets.js", () => ({
+  getAllAssets: (...args: unknown[]) => mockGetAllAssets(...args),
 }));
 
 vi.mock("../../repositories/backfillStatus.js", () => ({
@@ -64,7 +64,7 @@ describe("runDailyPriceUpdate", () => {
   });
 
   it("does nothing when there are no tracked assets", async () => {
-    mockGetAllTrackedAssets.mockResolvedValueOnce({});
+    mockGetAllAssets.mockResolvedValueOnce({});
 
     await runDailyPriceUpdate();
 
@@ -74,7 +74,7 @@ describe("runDailyPriceUpdate", () => {
   });
 
   it("triggers backfill for new assets without backfill status", async () => {
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       crypto: [{ assetId: "bitcoin", category: "crypto" }],
     });
     // Pre-fetch EUR rate
@@ -92,7 +92,7 @@ describe("runDailyPriceUpdate", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       crypto: [{ assetId: "bitcoin", category: "crypto" }],
     });
     // Pre-fetch EUR rate (returns empty = eurPerUsd stays null)
@@ -123,7 +123,7 @@ describe("runDailyPriceUpdate", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
     // Pre-fetch EUR rate (returns empty = eurPerUsd stays null)
@@ -149,12 +149,42 @@ describe("runDailyPriceUpdate", () => {
     ]);
   });
 
+  it("fetches today's ETF price for existing backfilled asset", async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    mockGetAllAssets.mockResolvedValueOnce({
+      etf: [{ assetId: "SPY", category: "etf" }],
+    });
+    // Pre-fetch EUR rate (returns empty = eurPerUsd stays null)
+    mockFetchFiatHistory.mockResolvedValueOnce([]);
+    mockGetBackfillStatus.mockResolvedValueOnce({
+      oldestDate: new Date("2021-01-01"),
+      lastUpdated: yesterday,
+    });
+    mockFetchStockPrices.mockResolvedValueOnce([
+      { id: "SPY", category: "etf", price: 500.25, currency: "USD" },
+    ]);
+
+    await runDailyPriceUpdate();
+
+    expect(mockFetchStockPrices).toHaveBeenCalledWith(["SPY"]);
+    expect(mockInsertDailyPrices).toHaveBeenCalledWith([
+      expect.objectContaining({
+        assetId: "SPY",
+        category: "etf",
+        priceUsd: 500.25,
+        priceEur: null,
+      }),
+    ]);
+  });
+
   it("fetches today's fiat rate for existing backfilled asset", async () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const today = new Date().toISOString().split("T")[0];
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       fiat: [{ assetId: "EUR", category: "fiat" }],
     });
     // Pre-fetch EUR rate (first call)
@@ -194,7 +224,7 @@ describe("runDailyPriceUpdate", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       crypto: [{ assetId: "bitcoin", category: "crypto" }],
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
@@ -225,7 +255,7 @@ describe("runDailyPriceUpdate", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       crypto: [
         { assetId: "bitcoin", category: "crypto" },
         { assetId: "ethereum", category: "crypto" },
@@ -259,7 +289,7 @@ describe("runDailyPriceUpdate", () => {
   });
 
   it("handles getAllTrackedAssets failure gracefully", async () => {
-    mockGetAllTrackedAssets.mockRejectedValueOnce(new Error("DB down"));
+    mockGetAllAssets.mockRejectedValueOnce(new Error("DB down"));
 
     // Should not throw
     await runDailyPriceUpdate();
@@ -271,7 +301,7 @@ describe("runDailyPriceUpdate", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       crypto: [{ assetId: "bad-coin", category: "crypto" }],
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
@@ -303,7 +333,7 @@ describe("runDailyPriceUpdate", () => {
     yesterday.setDate(yesterday.getDate() - 1);
     const oldestDate = new Date("2024-01-01");
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       stock: [{ assetId: "AAPL", category: "stock" }],
     });
     // Pre-fetch EUR rate
@@ -329,7 +359,7 @@ describe("runDailyPriceUpdate", () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({
+    mockGetAllAssets.mockResolvedValueOnce({
       stock: [{ assetId: "INVALID", category: "stock" }],
     });
     // Pre-fetch EUR rate
@@ -382,12 +412,12 @@ describe("startDailyCron", () => {
       }
     );
 
-    mockGetAllTrackedAssets.mockResolvedValueOnce({});
+    mockGetAllAssets.mockResolvedValueOnce({});
     mockFetchFiatHistory.mockResolvedValueOnce([]);
 
     startDailyCron();
     await scheduledCallback!();
 
-    expect(mockGetAllTrackedAssets).toHaveBeenCalled();
+    expect(mockGetAllAssets).toHaveBeenCalled();
   });
 });
