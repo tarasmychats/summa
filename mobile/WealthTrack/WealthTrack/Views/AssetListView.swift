@@ -5,6 +5,8 @@ struct AssetListView: View {
     @Query private var assets: [Asset]
     @Environment(\.modelContext) private var modelContext
     var viewModel: DashboardViewModel?
+    @State private var assetToDelete: Asset?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         List {
@@ -33,14 +35,28 @@ struct AssetListView: View {
                 .listRowBackground(Theme.bgCard)
             }
             .onDelete { indexSet in
-                for index in indexSet {
-                    modelContext.delete(assets[index])
+                if let index = indexSet.first {
+                    assetToDelete = assets[index]
+                    showDeleteConfirmation = true
                 }
             }
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bgPrimary)
         .navigationTitle("My Assets")
+        .alert("Delete \(assetToDelete?.name ?? "Asset")?",
+               isPresented: $showDeleteConfirmation,
+               presenting: assetToDelete) { asset in
+            Button("Delete", role: .destructive) {
+                modelContext.delete(asset)
+                assetToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                assetToDelete = nil
+            }
+        } message: { asset in
+            Text("This will remove \(asset.name) and all its transaction history.")
+        }
     }
 }
 

@@ -68,8 +68,8 @@
 - [x] Add `.refreshable` modifier to `InsightsView` List, calling `refreshHoldings()`
 
 ### Task 4: Add delete confirmation for assets
-- [ ] In `AssetListView`, replace direct `.onDelete` with a confirmation alert ("Delete [asset name]? This will remove all transaction history.")
-- [ ] Keep swipe-to-delete gesture but show alert before actually deleting
+- [x] In `AssetListView`, replace direct `.onDelete` with a confirmation alert ("Delete [asset name]? This will remove all transaction history.")
+- [x] Keep swipe-to-delete gesture but show alert before actually deleting
 
 ### Task 5: Add percentage labels to allocation chart
 - [ ] In `DashboardView.breakdownChart`, compute percentage for each category from `viewModel.breakdown`
