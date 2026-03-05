@@ -301,21 +301,28 @@ struct DashboardView: View {
     }
 
     private var riskScoreCard: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text("Risk Score")
-                    .font(Theme.headlineFont)
-                Text(viewModel.riskScore.label)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Risk Score")
+                        .font(Theme.headlineFont)
+                    Text(viewModel.riskScore.label)
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textMuted)
+                }
+                Spacer()
+                Text("\(viewModel.riskScore.value)")
+                    .font(Theme.largeValue)
+                    .foregroundStyle(Theme.riskColor(viewModel.riskScore.value))
+                Text("/ 10")
                     .font(Theme.bodyFont)
                     .foregroundStyle(Theme.textMuted)
             }
-            Spacer()
-            Text("\(viewModel.riskScore.value)")
-                .font(Theme.largeValue)
-                .foregroundStyle(Theme.riskColor(viewModel.riskScore.value))
-            Text("/ 10")
-                .font(Theme.bodyFont)
-                .foregroundStyle(Theme.textMuted)
+            Gauge(value: Double(viewModel.riskScore.value), in: 0...10) {
+                EmptyView()
+            }
+            .gaugeStyle(.linearCapacity)
+            .tint(Gradient(colors: [Theme.sage, Theme.amber, Theme.coral]))
         }
         .themeCard()
         .accessibilityElement(children: .ignore)

@@ -141,9 +141,9 @@
 - [x] Style suggestion buttons as capsule chips with category colors
 
 ### Task 16: Add visual gauge for risk score
-- [ ] Replace the text-only risk score in `DashboardView.riskScoreCard` with a horizontal `Gauge` or custom arc view
-- [ ] Color the gauge using `Theme.riskColor` gradient (green-amber-red)
-- [ ] Keep the numeric value and label visible alongside the gauge
+- [x] Replace the text-only risk score in `DashboardView.riskScoreCard` with a horizontal `Gauge` or custom arc view
+- [x] Color the gauge using `Theme.riskColor` gradient (green-amber-red)
+- [x] Keep the numeric value and label visible alongside the gauge
 
 ### Task 17: Add "Last Updated" timestamp
 - [ ] Add a `lastUpdated: Date?` property to `DashboardViewModel`, set it when prices are fetched
