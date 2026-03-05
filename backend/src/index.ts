@@ -11,6 +11,8 @@ import { logger } from "./logger.js";
 import { config } from "./config.js";
 import { initDb, isDbReady, setDbReady, closePool } from "./db.js";
 import { startDailyCron } from "./services/cronJob.js";
+import { seedAssets } from "./repositories/assets.js";
+import { SEED_ASSETS } from "./seed/assets.js";
 
 const app = express();
 const PORT = config.port;
@@ -42,6 +44,8 @@ export async function startServer(): Promise<void> {
     await initDb();
     setDbReady(true);
     logger.info("database initialized");
+    await seedAssets(SEED_ASSETS);
+    logger.info("assets seeded", { count: SEED_ASSETS.length });
   } catch (err) {
     logger.error("database initialization failed, running without DB", {
       error: err instanceof Error ? err.message : String(err),

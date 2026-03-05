@@ -31,25 +31,18 @@ vi.mock("../services/fiat.js", () => ({
   fetchExchangeRates: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("../repositories/trackedAssets.js", () => ({
-  upsertTrackedAssets: vi.fn().mockResolvedValue(undefined),
+vi.mock("../repositories/assets.js", () => ({
+  seedAssets: vi.fn().mockResolvedValue(undefined),
+  searchAssets: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../seed/assets.js", () => ({
+  SEED_ASSETS: [],
 }));
 
 vi.mock("../repositories/dailyPrices.js", () => ({
   getMultiAssetPrices: vi.fn().mockResolvedValue({}),
   assetKey: (assetId: string, category: string) => `${assetId}:${category}`,
-}));
-
-vi.mock("../services/cryptoSearch.js", () => ({
-  searchCrypto: vi.fn().mockResolvedValue([]),
-}));
-
-vi.mock("../services/stockSearch.js", () => ({
-  searchStocks: vi.fn().mockResolvedValue([]),
-}));
-
-vi.mock("../services/fiatSearch.js", () => ({
-  searchFiat: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../services/backfill.js", () => ({
