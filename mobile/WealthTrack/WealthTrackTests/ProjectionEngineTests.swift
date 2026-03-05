@@ -15,7 +15,7 @@ final class ProjectionEngineTests: XCTestCase {
 
     func testProjectPortfolio() {
         let holdings = [
-            PortfolioHolding(name: "S&P 500", amount: 100, pricePerUnit: 100, category: .stock),
+            PortfolioHolding(name: "S&P 500", symbol: "VOO", amount: 100, pricePerUnit: 100, category: .stock),
         ]
 
         let projection = ProjectionEngine.project(holdings: holdings, years: 10)
@@ -29,7 +29,7 @@ final class ProjectionEngineTests: XCTestCase {
 
     func testCashLosesToInflation() {
         let holdings = [
-            PortfolioHolding(name: "USD", amount: 10000, pricePerUnit: 1, category: .fiat),
+            PortfolioHolding(name: "USD", symbol: "USD", amount: 10000, pricePerUnit: 1, category: .fiat),
         ]
 
         let projection = ProjectionEngine.project(holdings: holdings, years: 10)

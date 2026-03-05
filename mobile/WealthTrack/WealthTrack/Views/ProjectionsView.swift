@@ -35,6 +35,17 @@ struct ProjectionsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Theme.sectionSpacing) {
+                    if let priceError {
+                        Text(priceError)
+                            .font(Theme.captionFont)
+                            .foregroundStyle(Theme.coral)
+                            .frame(maxWidth: .infinity)
+                            .padding(12)
+                            .background(Theme.coral.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .padding(.horizontal)
+                    }
+
                     Picker("Timeframe", selection: $selectedYears) {
                         ForEach(yearOptions, id: \.self) { years in
                             Text("\(years) Years").tag(years)
@@ -70,14 +81,6 @@ struct ProjectionsView: View {
                         .foregroundStyle(Theme.textMuted)
                         .multilineTextAlignment(.center)
                         .padding()
-
-                    if let priceError {
-                        Text(priceError)
-                            .font(Theme.captionFont)
-                            .foregroundStyle(Theme.coral)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
                 }
             }
             .background(Theme.bgPrimary)
@@ -114,6 +117,7 @@ struct ProjectionsView: View {
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,
+                    symbol: asset.symbol,
                     amount: asset.currentAmount,
                     pricePerUnit: priceMap[asset.symbol] ?? 0,
                     category: asset.assetCategory
@@ -128,6 +132,7 @@ struct ProjectionsView: View {
             holdings = assets.map { asset in
                 PortfolioHolding(
                     name: asset.name,
+                    symbol: asset.symbol,
                     amount: asset.currentAmount,
                     pricePerUnit: 0,
                     category: asset.assetCategory

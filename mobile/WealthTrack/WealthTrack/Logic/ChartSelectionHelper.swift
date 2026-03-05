@@ -31,9 +31,6 @@ enum ChartSelectionHelper {
         if low == 0 {
             return 0
         }
-        if low == dates.count {
-            return dates.count - 1
-        }
 
         let distPrev = abs(dates[low - 1].timeIntervalSince1970 - target)
         let distCurr = abs(dates[low].timeIntervalSince1970 - target)

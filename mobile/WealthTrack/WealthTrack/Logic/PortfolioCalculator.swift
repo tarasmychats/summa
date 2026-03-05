@@ -2,6 +2,7 @@ import Foundation
 
 struct PortfolioHolding {
     let name: String
+    let symbol: String
     let amount: Double
     let pricePerUnit: Double
     let category: AssetCategory

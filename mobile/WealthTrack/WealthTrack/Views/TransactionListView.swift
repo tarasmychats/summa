@@ -22,6 +22,7 @@ struct TransactionListView: View {
                 List {
                     ForEach(sortedTransactions) { txn in
                         TransactionRow(transaction: txn, asset: asset)
+                            .listRowBackground(Theme.bgCard)
                     }
                     .onDelete { indexSet in
                         for index in indexSet {

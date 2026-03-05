@@ -10,7 +10,7 @@ final class AssetValueFormatterTests: XCTestCase {
     func testFormattedValueWithMatchingHolding() {
         let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", amount: 1.5)
         let holdings = [
-            PortfolioHolding(name: "Bitcoin", amount: 1.5, pricePerUnit: 60000, category: .crypto)
+            PortfolioHolding(name: "Bitcoin", symbol: "bitcoin", amount: 1.5, pricePerUnit: 60000, category: .crypto)
         ]
         let result = AssetValueFormatter.formattedValue(for: asset, holdings: holdings, currencyCode: "USD")
         // 1.5 * 60000 = 90000 — should contain "90" and not be the placeholder
@@ -28,7 +28,7 @@ final class AssetValueFormatterTests: XCTestCase {
     func testFormattedValueReturnsPlaceholderWhenPriceIsZero() {
         let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", amount: 1)
         let holdings = [
-            PortfolioHolding(name: "Bitcoin", amount: 1, pricePerUnit: 0, category: .crypto)
+            PortfolioHolding(name: "Bitcoin", symbol: "bitcoin", amount: 1, pricePerUnit: 0, category: .crypto)
         ]
         let result = AssetValueFormatter.formattedValue(for: asset, holdings: holdings, currencyCode: "USD")
         XCTAssertEqual(result, "—")
@@ -37,7 +37,7 @@ final class AssetValueFormatterTests: XCTestCase {
     func testFormattedValueWithEURCurrency() {
         let asset = makeAsset(name: "VOO", symbol: "VOO", amount: 10, category: .stock)
         let holdings = [
-            PortfolioHolding(name: "VOO", amount: 10, pricePerUnit: 500, category: .stock)
+            PortfolioHolding(name: "VOO", symbol: "VOO", amount: 10, pricePerUnit: 500, category: .stock)
         ]
         let result = AssetValueFormatter.formattedValue(for: asset, holdings: holdings, currencyCode: "EUR")
         // 10 * 500 = 5000 — should contain "5" and not be placeholder
@@ -54,11 +54,11 @@ final class AssetValueFormatterTests: XCTestCase {
                        "Expected rounded value 1234.57, got: \(result) (digits: \(digits))")
     }
 
-    func testFormattedValueMatchesByAssetName() {
+    func testFormattedValueMatchesByAssetSymbol() {
         let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", amount: 2)
         let holdings = [
-            PortfolioHolding(name: "Ethereum", amount: 10, pricePerUnit: 3000, category: .crypto),
-            PortfolioHolding(name: "Bitcoin", amount: 2, pricePerUnit: 50000, category: .crypto),
+            PortfolioHolding(name: "Ethereum", symbol: "ethereum", amount: 10, pricePerUnit: 3000, category: .crypto),
+            PortfolioHolding(name: "Bitcoin", symbol: "bitcoin", amount: 2, pricePerUnit: 50000, category: .crypto),
         ]
         let result = AssetValueFormatter.formattedValue(for: asset, holdings: holdings, currencyCode: "USD")
         // 2 * 50000 = 100000 — should match Bitcoin, not Ethereum

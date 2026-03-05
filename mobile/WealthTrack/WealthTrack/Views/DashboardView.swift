@@ -218,7 +218,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var lastUpdatedLabel: some View {
         if let lastUpdated = viewModel.lastUpdated {
-            TimelineView(.periodic(from: .now, by: 30)) { context in
+            TimelineView(.periodic(from: .now, by: 30)) { _ in
                 Text("Updated \(lastUpdated, format: .relative(presentation: .named))")
                     .font(Theme.captionFont)
                     .foregroundStyle(Theme.textMuted)
@@ -237,8 +237,8 @@ struct DashboardView: View {
             Text("Holdings")
                 .font(Theme.headlineFont)
 
-            ForEach(topHoldings, id: \.name) { holding in
-                if let asset = assets.first(where: { $0.name == holding.name }) {
+            ForEach(topHoldings, id: \.symbol) { holding in
+                if let asset = assets.first(where: { $0.symbol == holding.symbol }) {
                     NavigationLink(destination: AssetDetailView(asset: asset)) {
                         HStack(spacing: 12) {
                             Image(systemName: holding.category.iconName)
@@ -274,11 +274,14 @@ struct DashboardView: View {
     }
 
     private var breakdownChart: some View {
-        VStack(alignment: .leading) {
+        let sortedCategories = viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })
+        let percentages = PortfolioCalculator.categoryPercentages(breakdown: viewModel.breakdown)
+
+        return VStack(alignment: .leading) {
             Text("Allocation")
                 .font(Theme.headlineFont)
             Chart {
-                ForEach(Array(viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })), id: \.self) { category in
+                ForEach(Array(sortedCategories), id: \.self) { category in
                     SectorMark(
                         angle: .value(category.displayName, viewModel.breakdown[category] ?? 0),
                         angularInset: 1.5
@@ -288,9 +291,8 @@ struct DashboardView: View {
             }
             .frame(height: 200)
 
-            let percentages = PortfolioCalculator.categoryPercentages(breakdown: viewModel.breakdown)
             HStack(spacing: 16) {
-                ForEach(Array(viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })), id: \.self) { category in
+                ForEach(Array(sortedCategories), id: \.self) { category in
                     HStack(spacing: 6) {
                         Circle()
                             .fill(Theme.categoryColor(category))
@@ -306,8 +308,6 @@ struct DashboardView: View {
         .themeCard()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel({
-            let sortedCategories = viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })
-            let percentages = PortfolioCalculator.categoryPercentages(breakdown: viewModel.breakdown)
             let items = sortedCategories.map { "\($0.displayName) \(percentages[$0] ?? 0)%" }
             return "Portfolio allocation: \(items.joined(separator: ", "))"
         }())

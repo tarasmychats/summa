@@ -21,7 +21,7 @@ Multi-asset wealth tracking app — monorepo with Node.js backend and iOS app.
 - `mobile/WealthTrack/WealthTrack/Views/` — SwiftUI views (Dashboard, AssetList, AssetDetail, AssetChart, PortfolioChart, Settings, Transactions)
 - `mobile/WealthTrack/WealthTrack/ViewModels/` — view models (DashboardViewModel)
 - `mobile/WealthTrack/WealthTrack/Logic/` — testable business logic helpers (AssetValueFormatter, ChartSelectionHelper, DuplicateAssetDetector, PortfolioCalculator, RiskCalculator, ProjectionEngine, InsightsEngine)
-- `mobile/WealthTrack/WealthTrack/Services/` — API client and response models (PriceAPIClient, PriceModels)
+- `mobile/WealthTrack/WealthTrack/Services/` — API client, response models, and error helpers (PriceAPIClient, PriceModels, ErrorMessageHelper)
 
 ## Backend commands
 
@@ -61,3 +61,7 @@ Prerequisites: Node.js, Docker (for PostgreSQL)
 - Theme.swift uses Dynamic Type text styles (not fixed font sizes) with `.rounded` design for accessibility
 - Charts use `.chartOverlay` with `DragGesture` for interactive selection; shared logic in `ChartSelectionHelper`
 - Haptic feedback via `.sensoryFeedback` on key interactions (add asset, save transaction, chart range taps)
+- Error messages use `PriceErrorMessage.userMessage(from:)` to map URLError/APIError to user-friendly strings; shared across Dashboard, Projections, and Insights
+- Dashboard shows portfolio value change (amount + percentage) derived from previous day's prices via `PortfolioCalculator.valueChange()`
+- AddAssetView detects duplicate assets by symbol via `DuplicateAssetDetector`; shows badge and confirmation before re-adding
+- VoiceOver accessibility labels on charts, risk score, time range buttons, and allocation chart
