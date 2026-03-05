@@ -73,6 +73,7 @@ struct AssetChartView: View {
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(range.accessibilityName)\(selectedRange == range ? ", selected" : "")")
             }
         }
         .sensoryFeedback(.impact(.light), trigger: selectedRange)
@@ -162,6 +163,8 @@ struct AssetChartView: View {
             }
         }
         .frame(height: 200)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Price history chart for \(asset.name)")
     }
 
     private func loadHistory() async {

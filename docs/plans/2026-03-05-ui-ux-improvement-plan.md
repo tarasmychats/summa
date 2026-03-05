@@ -118,11 +118,11 @@
 ### Phase 3: Accessibility
 
 ### Task 12: Add VoiceOver accessibility labels
-- [ ] Add `.accessibilityLabel` to portfolio chart ("Portfolio value chart showing [range] history")
-- [ ] Add `.accessibilityLabel` to asset price chart ("Price history chart for [asset name]")
-- [ ] Add `.accessibilityLabel` to time range selector buttons ("[range], selected" / "[range]")
-- [ ] Add `.accessibilityLabel` to risk score card ("Risk score: [value] out of 10, [label]")
-- [ ] Add `.accessibilityLabel` to allocation pie chart ("Portfolio allocation: [category] [percent]%")
+- [x] Add `.accessibilityLabel` to portfolio chart ("Portfolio value chart showing [range] history")
+- [x] Add `.accessibilityLabel` to asset price chart ("Price history chart for [asset name]")
+- [x] Add `.accessibilityLabel` to time range selector buttons ("[range], selected" / "[range]")
+- [x] Add `.accessibilityLabel` to risk score card ("Risk score: [value] out of 10, [label]")
+- [x] Add `.accessibilityLabel` to allocation pie chart ("Portfolio allocation: [category] [percent]%")
 
 ### Task 13: Switch to Dynamic Type-compatible fonts
 - [ ] In `Theme.swift`, replace fixed `Font.system(size:weight:design:)` with text styles: `.largeTitle`, `.title`, `.headline`, `.body`, `.caption` with `.fontDesign(.rounded)`

@@ -255,6 +255,13 @@ struct DashboardView: View {
             .padding(.top, 4)
         }
         .themeCard()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel({
+            let sortedCategories = viewModel.breakdown.keys.sorted(by: { $0.rawValue < $1.rawValue })
+            let percentages = PortfolioCalculator.categoryPercentages(breakdown: viewModel.breakdown)
+            let items = sortedCategories.map { "\($0.displayName) \(percentages[$0] ?? 0)%" }
+            return "Portfolio allocation: \(items.joined(separator: ", "))"
+        }())
     }
 
     private var riskScoreCard: some View {
@@ -275,6 +282,8 @@ struct DashboardView: View {
                 .foregroundStyle(Theme.textMuted)
         }
         .themeCard()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Risk score: \(viewModel.riskScore.value) out of 10, \(viewModel.riskScore.label)")
     }
 
     private func projectionPreviewCard(_ projection: Projection) -> some View {

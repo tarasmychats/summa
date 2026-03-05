@@ -11,6 +11,16 @@ enum ChartTimeRange: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var accessibilityName: String {
+        switch self {
+        case .oneMonth: return "1 month"
+        case .threeMonths: return "3 months"
+        case .sixMonths: return "6 months"
+        case .oneYear: return "1 year"
+        case .fiveYears: return "5 years"
+        }
+    }
+
     var startDate: Date {
         let calendar = Calendar.current
         let now = Date()
@@ -95,6 +105,7 @@ struct PortfolioChartView: View {
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(range.accessibilityName)\(selectedRange == range ? ", selected" : "")")
             }
         }
         .sensoryFeedback(.impact(.light), trigger: selectedRange)
@@ -184,6 +195,8 @@ struct PortfolioChartView: View {
             }
         }
         .frame(height: 200)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Portfolio value chart showing \(selectedRange.accessibilityName) history")
     }
 
     private func loadHistory() async {
