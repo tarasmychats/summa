@@ -18,6 +18,8 @@ struct DashboardView: View {
             ScrollView {
                 if assets.isEmpty {
                     emptyState
+                } else if viewModel.isLoading && viewModel.holdings.isEmpty {
+                    loadingSkeleton
                 } else {
                     VStack(spacing: Theme.sectionSpacing) {
                         if let error = viewModel.priceError {
@@ -77,6 +79,57 @@ struct DashboardView: View {
                 await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
             }
         }
+    }
+
+    private var loadingSkeleton: some View {
+        VStack(spacing: Theme.sectionSpacing) {
+            // Chart placeholder
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Theme.bgCard)
+                .frame(height: 200)
+                .themeCard()
+
+            // Total value placeholder
+            VStack(spacing: 4) {
+                Text("Total Portfolio Value")
+                    .font(Theme.bodyFont)
+                    .foregroundStyle(Theme.textMuted)
+                Text("$00,000")
+                    .font(Theme.largeValue)
+            }
+            .frame(maxWidth: .infinity)
+            .themeCard()
+
+            // Allocation placeholder
+            VStack(alignment: .leading) {
+                Text("Allocation")
+                    .font(Theme.headlineFont)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Theme.bgCard)
+                    .frame(height: 200)
+            }
+            .themeCard()
+
+            // Risk score placeholder
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Risk Score")
+                        .font(Theme.headlineFont)
+                    Text("Calculating...")
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textMuted)
+                }
+                Spacer()
+                Text("0")
+                    .font(Theme.largeValue)
+                Text("/ 10")
+                    .font(Theme.bodyFont)
+                    .foregroundStyle(Theme.textMuted)
+            }
+            .themeCard()
+        }
+        .padding()
+        .redacted(reason: .placeholder)
     }
 
     private var emptyState: some View {

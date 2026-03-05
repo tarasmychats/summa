@@ -59,9 +59,9 @@
 - [x] Write tests for the value formatting logic in `WealthTrackTests/AssetValueFormatterTests.swift`
 
 ### Task 2: Add loading skeleton to Dashboard
-- [ ] In `DashboardView`, show placeholder cards with `.redacted(reason: .placeholder)` while `viewModel.isLoading` is true and no data exists yet
-- [ ] Ensure skeleton appears on first launch and during refresh when holdings are empty
-- [ ] Ensure code compiles by following existing `DashboardView` patterns (themeCard, spacing)
+- [x] In `DashboardView`, show placeholder cards with `.redacted(reason: .placeholder)` while `viewModel.isLoading` is true and no data exists yet
+- [x] Ensure skeleton appears on first launch and during refresh when holdings are empty
+- [x] Ensure code compiles by following existing `DashboardView` patterns (themeCard, spacing)
 
 ### Task 3: Add pull-to-refresh on Projections and Insights tabs
 - [ ] Add `.refreshable` modifier to `ProjectionsView` ScrollView, calling `refreshHoldings()`
