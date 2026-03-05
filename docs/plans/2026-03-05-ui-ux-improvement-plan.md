@@ -25,18 +25,21 @@
 
 ## Development Approach
 - **Testing approach**: Regular (code first, then tests)
+- **NO XCODE**: Do not open Xcode IDE or run xcodebuild during implementation
+  - Write test files as code — compilation and execution deferred to post-completion
+  - Visual verification (previews, layout checks) deferred to post-completion
+  - Validate correctness by reading code and ensuring consistency with existing patterns
 - Complete each task fully before moving to the next
 - Make small, focused changes
-- **CRITICAL: every task MUST include new/updated tests** for code changes in that task
-- **CRITICAL: all tests must pass before starting next task** — no exceptions
+- **CRITICAL: every task MUST include new/updated test files** for code changes with testable logic
 - **CRITICAL: update this plan file when scope changes during implementation**
-- Run tests after each change
 - Maintain backward compatibility
 
 ## Testing Strategy
-- **Unit tests**: required for every task with testable logic
-- **SwiftUI previews**: verify visual changes via Xcode previews after each UI task
-- UI-only changes (adding modifiers, layout tweaks) may not need unit tests but must be visually verified
+- **Unit tests**: Write test files for every task with testable logic (formatters, calculators, view model logic)
+- **No test execution during implementation** — all test runs deferred to post-completion
+- **Compilation check**: Ensure code follows existing patterns and imports; no syntax errors by careful review
+- UI-only changes (adding modifiers, layout tweaks) do not need test files but must follow existing conventions
 
 ## Progress Tracking
 - Mark completed items with `[x]` immediately when done
@@ -47,49 +50,44 @@
 
 ## Implementation Steps
 
+### Phase 1: Quick Wins
+
 ### Task 1: Add fiat value per asset in AssetListView
-- [ ] Add price data to `AssetListView` — fetch prices via `DashboardViewModel` or a shared price state, display fiat value right-aligned in each asset row
-- [ ] Show formatted currency value (e.g., "$45,230") next to each asset in the list
-- [ ] Handle loading/error states gracefully (show "—" if price unavailable)
-- [ ] Write tests for the value formatting logic
-- [ ] Run tests — must pass before next task
+- [x] Add price data to `AssetListView` — fetch prices via `DashboardViewModel` or a shared price state, display fiat value right-aligned in each asset row
+- [x] Show formatted currency value (e.g., "$45,230") next to each asset in the list
+- [x] Handle loading/error states gracefully (show "—" if price unavailable)
+- [x] Write tests for the value formatting logic in `WealthTrackTests/AssetValueFormatterTests.swift`
 
 ### Task 2: Add loading skeleton to Dashboard
 - [ ] In `DashboardView`, show placeholder cards with `.redacted(reason: .placeholder)` while `viewModel.isLoading` is true and no data exists yet
 - [ ] Ensure skeleton appears on first launch and during refresh when holdings are empty
-- [ ] Verify visually via preview that skeleton cards match the real card layout
-- [ ] Run tests — must pass before next task
+- [ ] Ensure code compiles by following existing `DashboardView` patterns (themeCard, spacing)
 
 ### Task 3: Add pull-to-refresh on Projections and Insights tabs
 - [ ] Add `.refreshable` modifier to `ProjectionsView` ScrollView, calling `refreshHoldings()`
 - [ ] Add `.refreshable` modifier to `InsightsView` List, calling `refreshHoldings()`
-- [ ] Verify pull-to-refresh triggers a fresh price fetch on both tabs
-- [ ] Run tests — must pass before next task
 
 ### Task 4: Add delete confirmation for assets
 - [ ] In `AssetListView`, replace direct `.onDelete` with a confirmation alert ("Delete [asset name]? This will remove all transaction history.")
 - [ ] Keep swipe-to-delete gesture but show alert before actually deleting
-- [ ] Write test verifying the alert is presented on delete attempt
-- [ ] Run tests — must pass before next task
 
 ### Task 5: Add percentage labels to allocation chart
 - [ ] In `DashboardView.breakdownChart`, compute percentage for each category from `viewModel.breakdown`
 - [ ] Display percentage next to category name in the legend (e.g., "Crypto 45%")
-- [ ] Write test for percentage calculation logic
-- [ ] Run tests — must pass before next task
+- [ ] Write test for percentage calculation logic (extract to testable function)
 
 ### Task 6: Add haptic feedback to key interactions
 - [ ] Add `.sensoryFeedback(.success, trigger:)` when an asset is successfully added in `AddAssetView`
 - [ ] Add `.sensoryFeedback(.success, trigger:)` when a transaction is saved in `AddTransactionView`
 - [ ] Add `.sensoryFeedback(.impact(.light), trigger:)` on chart time range selector taps in `PortfolioChartView` and `AssetChartView`
-- [ ] Run tests — must pass before next task
 
 ### Task 7: Detect and mark already-added assets in AddAssetView
 - [ ] In `AddAssetView`, compare search results against `allAssets` by symbol
 - [ ] Show a checkmark badge or "Already added" label on matching search results
 - [ ] Disable or show confirmation when user taps an already-added asset
 - [ ] Write test for the duplicate detection logic (matching by symbol)
-- [ ] Run tests — must pass before next task
+
+### Phase 2: Core UX
 
 ### Task 8: Add interactive chart selection to PortfolioChartView
 - [ ] Add `@State` for selected data point in `PortfolioChartView`
@@ -97,14 +95,12 @@
 - [ ] Show a vertical rule indicator line at the selected point
 - [ ] Display selected date and value in a floating label above the chart
 - [ ] Clear selection when drag ends or user taps outside
-- [ ] Write test for the nearest-point lookup logic
-- [ ] Run tests — must pass before next task
+- [ ] Extract nearest-point lookup to a testable function and write test
 
 ### Task 9: Add interactive chart selection to AssetChartView
 - [ ] Apply the same interactive selection pattern from Task 8 to `AssetChartView`
 - [ ] Show selected date and price in a floating label
 - [ ] Reuse or extract shared chart overlay logic if patterns are identical
-- [ ] Run tests — must pass before next task
 
 ### Task 10: Add portfolio value change indicator
 - [ ] In `DashboardViewModel`, add properties for `previousValue` (yesterday's portfolio value) and computed `valueChange` / `percentChange`
@@ -112,14 +108,14 @@
 - [ ] In `DashboardView.totalValueCard`, display the change below the total (e.g., "+$1,234 (+5.2%)" in green, or "-$500 (-2.1%)" in coral)
 - [ ] Handle edge case: no previous data available (hide change indicator)
 - [ ] Write tests for change calculation logic (positive, negative, zero, no data)
-- [ ] Run tests — must pass before next task
 
 ### Task 11: Add top holdings section to Dashboard for quick navigation
 - [ ] Add a "Holdings" section below the total value card in `DashboardView`
 - [ ] Show each asset as a tappable row with name, amount, and fiat value
 - [ ] Each row navigates directly to `AssetDetailView` via `NavigationLink`
 - [ ] Limit to top 5 assets by value; show "View All" link to `AssetListView` if more
-- [ ] Run tests — must pass before next task
+
+### Phase 3: Accessibility
 
 ### Task 12: Add VoiceOver accessibility labels
 - [ ] Add `.accessibilityLabel` to portfolio chart ("Portfolio value chart showing [range] history")
@@ -127,64 +123,59 @@
 - [ ] Add `.accessibilityLabel` to time range selector buttons ("[range], selected" / "[range]")
 - [ ] Add `.accessibilityLabel` to risk score card ("Risk score: [value] out of 10, [label]")
 - [ ] Add `.accessibilityLabel` to allocation pie chart ("Portfolio allocation: [category] [percent]%")
-- [ ] Run tests — must pass before next task
 
 ### Task 13: Switch to Dynamic Type-compatible fonts
 - [ ] In `Theme.swift`, replace fixed `Font.system(size:weight:design:)` with text styles: `.largeTitle`, `.title`, `.headline`, `.body`, `.caption` with `.fontDesign(.rounded)`
-- [ ] Update `largeValue` to use `.largeTitle.weight(.bold).design(.rounded)` or equivalent
-- [ ] Verify all views render correctly at default, larger, and accessibility text sizes
-- [ ] Write test that Theme font properties are non-nil (basic sanity)
-- [ ] Run tests — must pass before next task
+- [ ] Update `largeValue` to use `.largeTitle.weight(.bold)` with `.fontDesign(.rounded)` or equivalent
+- [ ] Write basic test that Theme font properties exist (sanity check)
 
 ### Task 14: Fix color contrast for textMuted
 - [ ] In `Theme.swift`, darken `textMuted` light mode value from `#8A857E` to at least `#6B6660` to meet WCAG AA 4.5:1 contrast ratio against `#FAF8F5` background
 - [ ] Verify dark mode `textMuted` also meets contrast requirements against dark background
-- [ ] Visually verify all screens using `textMuted` still look good
-- [ ] Run tests — must pass before next task
+
+### Phase 4: Information Density & Polish
 
 ### Task 15: Add suggested assets to empty state
 - [ ] In `DashboardView.emptyState`, add 3 quick-add suggestion buttons below the "Add Asset" button (e.g., "Bitcoin", "S&P 500 ETF", "US Dollar")
 - [ ] Tapping a suggestion pre-fills the AddAssetView search or navigates directly to the amount input
 - [ ] Style suggestion buttons as capsule chips with category colors
-- [ ] Run tests — must pass before next task
 
 ### Task 16: Add visual gauge for risk score
 - [ ] Replace the text-only risk score in `DashboardView.riskScoreCard` with a horizontal `Gauge` or custom arc view
 - [ ] Color the gauge using `Theme.riskColor` gradient (green-amber-red)
 - [ ] Keep the numeric value and label visible alongside the gauge
-- [ ] Run tests — must pass before next task
 
 ### Task 17: Add "Last Updated" timestamp
 - [ ] Add a `lastUpdated: Date?` property to `DashboardViewModel`, set it when prices are fetched
 - [ ] Display a "Last updated: X min ago" label below the total value card (using `RelativeDateTimeFormatter` or `.relative` date style)
 - [ ] Update the label reactively as time passes
 - [ ] Write test for the lastUpdated property being set after refresh
-- [ ] Run tests — must pass before next task
 
 ### Task 18: Improve error messages with specificity
 - [ ] In `DashboardViewModel.refresh`, differentiate between `URLError` (network) and other errors
 - [ ] Show "No internet connection" for `.notConnectedToInternet`, "Server unavailable" for server errors, "Some prices could not be loaded" for partial failures
 - [ ] Apply same error differentiation to `ProjectionsView` and `InsightsView`
-- [ ] Write tests for error message mapping logic
-- [ ] Run tests — must pass before next task
+- [ ] Write tests for error message mapping logic (extract to testable helper)
 
 ### Task 19: Wire up or remove unused TransactionListView
 - [ ] Decide: either add a navigation link to `TransactionListView` from `AssetDetailView` (e.g., "View All Transactions" row) or delete the unused file
 - [ ] If keeping, ensure it uses the same styling (`.scrollContentBackground(.hidden)`, `.background(Theme.bgPrimary)`, `.listRowBackground(Theme.bgCard)`)
-- [ ] Run tests — must pass before next task
+
+### Verification
 
 ### Task 20: Verify acceptance criteria
-- [ ] Verify all Phase 1 items work: asset values in list, loading skeleton, refreshable on all tabs, delete confirmation, allocation percentages, haptics, duplicate detection
-- [ ] Verify all Phase 2 items work: chart interactivity on both charts, portfolio change indicator, top holdings navigation
-- [ ] Verify all Phase 3 items work: VoiceOver labels, Dynamic Type fonts, color contrast
-- [ ] Verify all Phase 4 items work: empty state suggestions, risk gauge, last updated, error messages, TransactionListView cleanup
-- [ ] Run full test suite
-- [ ] Run linter — all issues must be fixed
+- [ ] Review all Phase 1 code: asset values in list, loading skeleton, refreshable on all tabs, delete confirmation, allocation percentages, haptics, duplicate detection
+- [ ] Review all Phase 2 code: chart interactivity on both charts, portfolio change indicator, top holdings navigation
+- [ ] Review all Phase 3 code: VoiceOver labels, Dynamic Type fonts, color contrast
+- [ ] Review all Phase 4 code: empty state suggestions, risk gauge, last updated, error messages, TransactionListView cleanup
+- [ ] Ensure all test files are written and follow existing test patterns
 
 ### Task 21: [Final] Update documentation
 - [ ] Update `docs/plans/2026-02-27-design-system.md` if Theme.swift changes (font strategy, colors)
 - [ ] Update `CLAUDE.md` if new patterns or conventions were established
 - [ ] Update README.md if needed
+
+*Note: ralphex automatically moves completed plans to `docs/plans/completed/`*
 
 ## Technical Details
 
@@ -206,7 +197,13 @@
 
 ## Post-Completion
 
-**Manual verification:**
+**Build and test verification (requires Xcode):**
+- Run full test suite via Xcode or `xcodebuild test`
+- Fix any compilation errors
+- Verify all tests pass
+
+**Visual verification (requires Xcode):**
+- Check SwiftUI previews for all modified views
 - Test on multiple device sizes (iPhone SE, iPhone 15 Pro, iPhone 15 Pro Max)
 - Test with Dynamic Type set to largest accessibility size
 - Test with VoiceOver enabled

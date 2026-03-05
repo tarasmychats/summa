@@ -4,6 +4,7 @@ import SwiftData
 struct AssetListView: View {
     @Query private var assets: [Asset]
     @Environment(\.modelContext) private var modelContext
+    var viewModel: DashboardViewModel?
 
     var body: some View {
         List {
@@ -20,6 +21,13 @@ struct AssetListView: View {
                                 .foregroundStyle(Theme.textMuted)
                         }
                         Spacer()
+                        Text(AssetValueFormatter.formattedValue(
+                            for: asset,
+                            holdings: viewModel?.holdings ?? [],
+                            currencyCode: viewModel?.currencyCode ?? "USD"
+                        ))
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textMuted)
                     }
                 }
                 .listRowBackground(Theme.bgCard)

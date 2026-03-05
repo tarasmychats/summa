@@ -53,7 +53,7 @@ struct DashboardView: View {
             .navigationTitle("WealthTrack")
             .toolbar {
                 ToolbarItem(placement: .navigation) {
-                    NavigationLink(destination: AssetListView()) {
+                    NavigationLink(destination: AssetListView(viewModel: viewModel)) {
                         Image(systemName: "list.bullet")
                     }
                 }
