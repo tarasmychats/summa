@@ -60,6 +60,7 @@ class DashboardViewModel {
 
             holdings = assets.map { asset in
                 PortfolioHolding(
+                    id: asset.id,
                     name: asset.name,
                     symbol: asset.symbol,
                     amount: asset.currentAmount,
@@ -73,6 +74,7 @@ class DashboardViewModel {
             // Use zero prices on error — user still sees their assets
             holdings = assets.map { asset in
                 PortfolioHolding(
+                    id: asset.id,
                     name: asset.name,
                     symbol: asset.symbol,
                     amount: asset.currentAmount,
@@ -92,6 +94,32 @@ class DashboardViewModel {
         valueChange = PortfolioCalculator.valueChange(currentValue: totalValue, previousValue: previousValue)
 
         isLoading = false
+    }
+
+    /// UTC calendar used for date comparisons to match the UTC date strings from the API
+    private static let utcCalendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }()
+
+    /// Replay transactions up to a given date to determine asset amount at that point in time
+    private func amountAtDate(date: Date, transactions: [Transaction], fallbackAmount: Double) -> Double {
+        guard !transactions.isEmpty else { return fallbackAmount }
+
+        let relevant = transactions.filter { Self.utcCalendar.startOfDay(for: $0.date) <= Self.utcCalendar.startOfDay(for: date) }
+        guard !relevant.isEmpty else { return 0.0 }
+
+        var balance = 0.0
+        for txn in relevant {
+            switch txn.type {
+            case .delta:
+                balance += txn.amount
+            case .snapshot:
+                balance = txn.amount
+            }
+        }
+        return balance
     }
 
     /// Fetch the most recent prior day's portfolio value from history API
@@ -121,21 +149,49 @@ class DashboardViewModel {
                 }
             }
 
-            // Sort dates and find the most recent one before today
-            let sortedDates = allDates.sorted().filter { $0 < todayString }
-            guard let previousDate = sortedDates.last else { return nil }
+            // Sort dates descending (most recent first) and filter to before today
+            let sortedDates = allDates.sorted(by: >).filter { $0 < todayString }
+            guard !sortedDates.isEmpty else { return nil }
 
-            // Compute portfolio total for that date
-            var dayTotal = 0.0
-            for asset in assets {
-                let compositeKey = "\(asset.symbol):\(asset.category)"
-                guard let assetHistory = history[compositeKey] else { continue }
-                let priceMap = Dictionary(assetHistory.map { ($0.date, $0.price) }, uniquingKeysWith: { _, last in last })
-                guard let price = priceMap[previousDate] else { continue }
-                dayTotal += price * asset.currentAmount
+            // Pre-compute sorted transactions for each asset
+            let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
+                let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+                return (asset, txns)
             }
 
-            return dayTotal > 0 ? dayTotal : nil
+            // Build per-asset price maps
+            let assetPriceMaps: [(asset: Asset, sortedTxns: [Transaction], priceMap: [String: Double])] = assetTransactions.compactMap { (asset, sortedTxns) in
+                let compositeKey = "\(asset.symbol):\(asset.category)"
+                guard let assetHistory = history[compositeKey] else { return nil }
+                let priceMap = Dictionary(assetHistory.map { ($0.date, $0.price) }, uniquingKeysWith: { _, last in last })
+                return (asset, sortedTxns, priceMap)
+            }
+
+            // If any asset has no history at all, we can't compute previous value
+            guard assetPriceMaps.count == assets.count else { return nil }
+
+            // Find the most recent date where ALL assets have a price
+            for candidateDate in sortedDates {
+                guard let candidateDateParsed = Self.dateFormatter.date(from: candidateDate) else { continue }
+
+                var dayTotal = 0.0
+                var allHavePrice = true
+                for (asset, sortedTxns, priceMap) in assetPriceMaps {
+                    guard let price = priceMap[candidateDate] else {
+                        allHavePrice = false
+                        break
+                    }
+                    let amount = amountAtDate(date: candidateDateParsed, transactions: sortedTxns, fallbackAmount: asset.amount)
+                    dayTotal += price * amount
+                }
+
+                if allHavePrice {
+                    return dayTotal > 0 ? dayTotal : nil
+                }
+            }
+
+            // No date found where all assets have prices
+            return nil
         } catch {
             print("[WealthTrack] History fetch for change indicator failed: \(error)")
             return nil

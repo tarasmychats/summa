@@ -5,7 +5,7 @@ struct AssetListView: View {
     @Query private var assets: [Asset]
     @Environment(\.modelContext) private var modelContext
     var viewModel: DashboardViewModel?
-    @State private var assetToDelete: Asset?
+    @State private var assetsToDelete: [Asset] = []
     @State private var showDeleteConfirmation = false
 
     var body: some View {
@@ -35,27 +35,32 @@ struct AssetListView: View {
                 .listRowBackground(Theme.bgCard)
             }
             .onDelete { indexSet in
-                if let index = indexSet.first {
-                    assetToDelete = assets[index]
-                    showDeleteConfirmation = true
-                }
+                assetsToDelete = indexSet.map { assets[$0] }
+                showDeleteConfirmation = true
             }
         }
         .scrollContentBackground(.hidden)
         .background(Theme.bgPrimary)
         .navigationTitle("My Assets")
-        .alert("Delete \(assetToDelete?.name ?? "Asset")?",
-               isPresented: $showDeleteConfirmation,
-               presenting: assetToDelete) { asset in
+        .alert(assetsToDelete.count > 1
+               ? "Delete \(assetsToDelete.count) Assets?"
+               : "Delete \(assetsToDelete.first?.name ?? "Asset")?",
+               isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
-                modelContext.delete(asset)
-                assetToDelete = nil
+                for asset in assetsToDelete {
+                    modelContext.delete(asset)
+                }
+                assetsToDelete = []
             }
             Button("Cancel", role: .cancel) {
-                assetToDelete = nil
+                assetsToDelete = []
             }
-        } message: { asset in
-            Text("This will remove \(asset.name) and all its transaction history.")
+        } message: {
+            if assetsToDelete.count > 1 {
+                Text("This will remove \(assetsToDelete.count) assets and all their transaction history.")
+            } else if let asset = assetsToDelete.first {
+                Text("This will remove \(asset.name) and all its transaction history.")
+            }
         }
     }
 }

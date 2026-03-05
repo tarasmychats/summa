@@ -8,7 +8,7 @@ enum AssetValueFormatter {
         holdings: [PortfolioHolding],
         currencyCode: String
     ) -> String {
-        guard let holding = holdings.first(where: { $0.symbol == asset.symbol }),
+        guard let holding = holdings.first(where: { $0.id == asset.id }),
               holding.pricePerUnit > 0 else {
             return "—"
         }

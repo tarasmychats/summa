@@ -237,8 +237,8 @@ struct DashboardView: View {
             Text("Holdings")
                 .font(Theme.headlineFont)
 
-            ForEach(topHoldings, id: \.symbol) { holding in
-                if let asset = assets.first(where: { $0.symbol == holding.symbol }) {
+            ForEach(topHoldings) { holding in
+                if let asset = assets.first(where: { $0.id == holding.id }) {
                     NavigationLink(destination: AssetDetailView(asset: asset)) {
                         HStack(spacing: 12) {
                             Image(systemName: holding.category.iconName)

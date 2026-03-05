@@ -1,6 +1,7 @@
 import Foundation
 
-struct PortfolioHolding {
+struct PortfolioHolding: Identifiable {
+    let id: UUID
     let name: String
     let symbol: String
     let amount: Double
@@ -9,6 +10,15 @@ struct PortfolioHolding {
 
     var totalValue: Double {
         amount * pricePerUnit
+    }
+
+    init(id: UUID = UUID(), name: String, symbol: String, amount: Double, pricePerUnit: Double, category: AssetCategory) {
+        self.id = id
+        self.name = name
+        self.symbol = symbol
+        self.amount = amount
+        self.pricePerUnit = pricePerUnit
+        self.category = category
     }
 }
 

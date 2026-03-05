@@ -189,7 +189,7 @@ struct AssetChartView: View {
                 dataPoints = points.compactMap { point in
                     guard let date = Self.dateFormatter.date(from: point.date) else { return nil }
                     return AssetPricePoint(date: date, price: point.price)
-                }
+                }.sorted { $0.date < $1.date }
             } else {
                 dataPoints = []
             }
