@@ -77,9 +77,9 @@
 - [x] Write test for percentage calculation logic (extract to testable function)
 
 ### Task 6: Add haptic feedback to key interactions
-- [ ] Add `.sensoryFeedback(.success, trigger:)` when an asset is successfully added in `AddAssetView`
-- [ ] Add `.sensoryFeedback(.success, trigger:)` when a transaction is saved in `AddTransactionView`
-- [ ] Add `.sensoryFeedback(.impact(.light), trigger:)` on chart time range selector taps in `PortfolioChartView` and `AssetChartView`
+- [x] Add `.sensoryFeedback(.success, trigger:)` when an asset is successfully added in `AddAssetView`
+- [x] Add `.sensoryFeedback(.success, trigger:)` when a transaction is saved in `AddTransactionView`
+- [x] Add `.sensoryFeedback(.impact(.light), trigger:)` on chart time range selector taps in `PortfolioChartView` and `AssetChartView`
 
 ### Task 7: Detect and mark already-added assets in AddAssetView
 - [ ] In `AddAssetView`, compare search results against `allAssets` by symbol

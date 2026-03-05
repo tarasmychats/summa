@@ -11,6 +11,7 @@ struct AddTransactionView: View {
     @State private var isSubtract = false
     @State private var date = Date()
     @State private var note = ""
+    @State private var savedTrigger = 0
 
     private var parsedAmount: Double? {
         guard let raw = Double(amount) ?? {
@@ -74,6 +75,7 @@ struct AddTransactionView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.bgPrimary)
+            .sensoryFeedback(.success, trigger: savedTrigger)
             .navigationTitle("Add Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -116,6 +118,7 @@ struct AddTransactionView: View {
         modelContext.insert(txn)
         try? modelContext.save()
         asset.amount = asset.currentAmount
+        savedTrigger += 1
         dismiss()
     }
 }

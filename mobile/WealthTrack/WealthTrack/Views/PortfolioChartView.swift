@@ -96,6 +96,7 @@ struct PortfolioChartView: View {
                 .buttonStyle(.plain)
             }
         }
+        .sensoryFeedback(.impact(.light), trigger: selectedRange)
     }
 
     private var chart: some View {

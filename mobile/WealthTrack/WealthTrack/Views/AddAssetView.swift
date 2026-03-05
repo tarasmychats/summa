@@ -13,6 +13,7 @@ struct AddAssetView: View {
     @State private var isSearching = false
     @State private var searchError: String?
     @State private var searchTask: Task<Void, Never>?
+    @State private var savedTrigger = 0
 
     var body: some View {
         NavigationStack {
@@ -26,6 +27,7 @@ struct AddAssetView: View {
                 }
             }
             .background(Theme.bgPrimary)
+            .sensoryFeedback(.success, trigger: savedTrigger)
             .navigationTitle("Add Asset")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -225,6 +227,7 @@ struct AddAssetView: View {
             amount: value
         )
         modelContext.insert(asset)
+        savedTrigger += 1
         dismiss()
     }
 }
