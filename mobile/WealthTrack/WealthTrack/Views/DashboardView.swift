@@ -35,13 +35,15 @@ struct DashboardView: View {
                             .cardAppearance(index: 0, appeared: cardsAppeared)
                         totalValueCard
                             .cardAppearance(index: 1, appeared: cardsAppeared)
-                        breakdownChart
+                        holdingsSection
                             .cardAppearance(index: 2, appeared: cardsAppeared)
-                        riskScoreCard
+                        breakdownChart
                             .cardAppearance(index: 3, appeared: cardsAppeared)
+                        riskScoreCard
+                            .cardAppearance(index: 4, appeared: cardsAppeared)
                         if let preview = viewModel.projectionPreview {
                             projectionPreviewCard(preview)
-                                .cardAppearance(index: 4, appeared: cardsAppeared)
+                                .cardAppearance(index: 5, appeared: cardsAppeared)
                         }
                     }
                     .padding()
@@ -173,6 +175,52 @@ struct DashboardView: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .themeCard()
+    }
+
+    private var holdingsSection: some View {
+        let sortedHoldings = viewModel.holdings
+            .sorted { $0.totalValue > $1.totalValue }
+        let topHoldings = Array(sortedHoldings.prefix(5))
+        let hasMore = viewModel.holdings.count > 5
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Holdings")
+                .font(Theme.headlineFont)
+
+            ForEach(topHoldings, id: \.name) { holding in
+                if let asset = assets.first(where: { $0.name == holding.name }) {
+                    NavigationLink(destination: AssetDetailView(asset: asset)) {
+                        HStack(spacing: 12) {
+                            Image(systemName: holding.category.iconName)
+                                .foregroundStyle(Theme.categoryColor(holding.category))
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(holding.name)
+                                    .font(Theme.bodyFont)
+                                Text("\(holding.amount.formatted(.number.precision(.fractionLength(0...4)))) \(asset.displayTicker)")
+                                    .font(Theme.captionFont)
+                                    .foregroundStyle(Theme.textMuted)
+                            }
+                            Spacer()
+                            Text(holding.totalValue, format: .currency(code: viewModel.currencyCode).precision(.fractionLength(0...2)))
+                                .font(Theme.bodyFont)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+
+            if hasMore {
+                NavigationLink(destination: AssetListView(viewModel: viewModel)) {
+                    Text("View All")
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.sage)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 4)
+                }
+            }
+        }
         .themeCard()
     }
 

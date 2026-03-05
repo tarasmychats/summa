@@ -110,10 +110,10 @@
 - [x] Write tests for change calculation logic (positive, negative, zero, no data)
 
 ### Task 11: Add top holdings section to Dashboard for quick navigation
-- [ ] Add a "Holdings" section below the total value card in `DashboardView`
-- [ ] Show each asset as a tappable row with name, amount, and fiat value
-- [ ] Each row navigates directly to `AssetDetailView` via `NavigationLink`
-- [ ] Limit to top 5 assets by value; show "View All" link to `AssetListView` if more
+- [x] Add a "Holdings" section below the total value card in `DashboardView`
+- [x] Show each asset as a tappable row with name, amount, and fiat value
+- [x] Each row navigates directly to `AssetDetailView` via `NavigationLink`
+- [x] Limit to top 5 assets by value; show "View All" link to `AssetListView` if more
 
 ### Phase 3: Accessibility
 
