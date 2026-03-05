@@ -50,18 +50,31 @@ struct AssetDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 8)
                 } else {
-                    ForEach(sortedTransactions) { txn in
+                    ForEach(sortedTransactions.prefix(5)) { txn in
                         TransactionRow(transaction: txn, asset: asset)
                     }
                     .onDelete { indexSet in
+                        let previewTransactions = Array(sortedTransactions.prefix(5))
                         for index in indexSet {
-                            let txn = sortedTransactions[index]
+                            let txn = previewTransactions[index]
                             modelContext.delete(txn)
                         }
                         // Persist deletion before recomputing to ensure currentAmount
                         // doesn't include the deleted transaction
                         try? modelContext.save()
                         asset.amount = asset.currentAmount
+                    }
+
+                    if sortedTransactions.count > 5 {
+                        NavigationLink {
+                            TransactionListView(asset: asset)
+                        } label: {
+                            Text("View All Transactions (\(sortedTransactions.count))")
+                                .font(Theme.bodyFont)
+                                .foregroundStyle(Theme.accent)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
+                        .listRowBackground(Theme.bgCard)
                     }
                 }
             } header: {

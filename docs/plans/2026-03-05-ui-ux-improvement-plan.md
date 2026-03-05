@@ -158,8 +158,8 @@
 - [x] Write tests for error message mapping logic (extract to testable helper)
 
 ### Task 19: Wire up or remove unused TransactionListView
-- [ ] Decide: either add a navigation link to `TransactionListView` from `AssetDetailView` (e.g., "View All Transactions" row) or delete the unused file
-- [ ] If keeping, ensure it uses the same styling (`.scrollContentBackground(.hidden)`, `.background(Theme.bgPrimary)`, `.listRowBackground(Theme.bgCard)`)
+- [x] Decide: either add a navigation link to `TransactionListView` from `AssetDetailView` (e.g., "View All Transactions" row) or delete the unused file
+- [x] If keeping, ensure it uses the same styling (`.scrollContentBackground(.hidden)`, `.background(Theme.bgPrimary)`, `.listRowBackground(Theme.bgCard)`)
 
 ### Verification
 
