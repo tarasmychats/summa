@@ -36,14 +36,17 @@ export async function initDb(): Promise<void> {
   const db = getPool();
 
   await db.query(`
-    CREATE TABLE IF NOT EXISTS tracked_assets (
-      id SERIAL PRIMARY KEY,
-      asset_id VARCHAR(100) NOT NULL,
+    CREATE TABLE IF NOT EXISTS assets (
+      id VARCHAR(100) NOT NULL,
       category VARCHAR(20) NOT NULL,
-      first_seen TIMESTAMP DEFAULT NOW(),
-      UNIQUE(asset_id, category)
+      name VARCHAR(200) NOT NULL,
+      symbol VARCHAR(20) NOT NULL,
+      PRIMARY KEY (id, category)
     )
   `);
+
+  // Drop legacy table (data now lives in seed file)
+  await db.query(`DROP TABLE IF EXISTS tracked_assets`);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS daily_prices (

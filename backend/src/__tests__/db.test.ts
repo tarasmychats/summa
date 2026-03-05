@@ -75,21 +75,22 @@ describe("db", () => {
   });
 
   describe("initDb", () => {
-    it("creates all three tables", async () => {
+    it("creates assets table and drops legacy tracked_assets", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
-      expect(mockQuery).toHaveBeenCalledTimes(3);
+      expect(mockQuery).toHaveBeenCalledTimes(4);
       const calls = mockQuery.mock.calls.map((c: string[][]) => c[0]);
-      expect(calls[0]).toContain("tracked_assets");
-      expect(calls[1]).toContain("daily_prices");
-      expect(calls[2]).toContain("backfill_status");
+      expect(calls[0]).toContain("assets");
+      expect(calls[1]).toContain("DROP TABLE IF EXISTS tracked_assets");
+      expect(calls[2]).toContain("daily_prices");
+      expect(calls[3]).toContain("backfill_status");
     });
 
     it("is idempotent (uses IF NOT EXISTS)", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
       await initDb();
-      expect(mockQuery).toHaveBeenCalledTimes(6);
+      expect(mockQuery).toHaveBeenCalledTimes(8);
     });
 
     it("propagates database errors", async () => {
