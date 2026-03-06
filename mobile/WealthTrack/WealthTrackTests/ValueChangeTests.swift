@@ -25,12 +25,9 @@ final class ValueChangeTests: XCTestCase {
 
     // MARK: - Zero change
 
-    func testZeroChange() {
+    func testZeroChangeReturnsNil() {
         let change = PortfolioCalculator.valueChange(currentValue: 10000, previousValue: 10000)
-        XCTAssertNotNil(change)
-        XCTAssertEqual(change!.amount, 0, accuracy: 0.01)
-        XCTAssertEqual(change!.percent, 0, accuracy: 0.01)
-        XCTAssertTrue(change!.isPositive)
+        XCTAssertNil(change)
     }
 
     // MARK: - No previous data

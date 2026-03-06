@@ -17,8 +17,8 @@ final class ThemeFontTests: XCTestCase {
     }
 
     func testRiskColorBoundaries() {
-        // 0 and negative fall through to default (coral)
-        XCTAssertEqual(Theme.riskColor(0), Theme.coral)
+        // 0-3: sage (no assets / conservative)
+        XCTAssertEqual(Theme.riskColor(0), Theme.sage)
         // 1-3: sage (conservative)
         XCTAssertEqual(Theme.riskColor(1), Theme.sage)
         XCTAssertEqual(Theme.riskColor(3), Theme.sage)

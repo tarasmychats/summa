@@ -55,6 +55,7 @@ enum PortfolioCalculator {
     static func valueChange(currentValue: Double, previousValue: Double?) -> ValueChange? {
         guard let previousValue, previousValue > 0 else { return nil }
         let change = currentValue - previousValue
+        guard change != 0 else { return nil }
         let percentChange = (change / previousValue) * 100
         return ValueChange(amount: change, percent: percentChange)
     }
@@ -72,7 +73,7 @@ enum PortfolioCalculator {
         guard !transactions.isEmpty else { return fallbackAmount }
 
         let relevant = transactions.filter { utcCalendar.startOfDay(for: $0.date) <= utcCalendar.startOfDay(for: date) }
-        guard !relevant.isEmpty else { return 0.0 }
+        guard !relevant.isEmpty else { return fallbackAmount }
 
         var balance = 0.0
         for txn in relevant {
@@ -91,5 +92,5 @@ struct ValueChange {
     let amount: Double
     let percent: Double
 
-    var isPositive: Bool { amount >= 0 }
+    var isPositive: Bool { amount > 0 }
 }

@@ -52,7 +52,7 @@ enum Theme {
 
     static func riskColor(_ value: Int) -> Color {
         switch value {
-        case 1...3: return sage
+        case 0...3: return sage
         case 4...6: return amber
         default: return coral
         }
