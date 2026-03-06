@@ -103,58 +103,51 @@ struct AddAssetView: View {
                 }
                 .listRowBackground(Theme.bgCard)
             } else {
-                ForEach(AssetCategory.allCases, id: \.self) { category in
-                    let assets = searchResults.filter { $0.category == category }
-                    if !assets.isEmpty {
-                        Section(category.displayName) {
-                            ForEach(assets) { asset in
-                                let alreadyAdded = DuplicateAssetDetector.isAlreadyAdded(asset, existingIDs: existingAssetIDs)
-                                Button {
-                                    if alreadyAdded {
-                                        duplicateAsset = asset
-                                    } else {
-                                        selectedAsset = asset
-                                    }
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: category.iconName)
-                                            .font(.system(size: 16))
-                                            .foregroundStyle(Theme.categoryColor(category))
-                                            .frame(width: 36, height: 36)
-                                            .background(Theme.categoryTint(category))
-                                            .clipShape(Circle())
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(asset.name)
-                                                .font(Theme.bodyFont)
-                                            HStack(spacing: 6) {
-                                                Text(asset.symbol)
-                                                    .font(Theme.captionFont)
-                                                    .foregroundStyle(Theme.textMuted)
-                                                Text(category.displayName)
-                                                    .font(Theme.captionFont.weight(.medium))
-                                                    .foregroundStyle(Theme.categoryColor(category))
-                                                    .padding(.horizontal, 6)
-                                                    .padding(.vertical, 2)
-                                                    .background(Theme.categoryTint(category))
-                                                    .clipShape(Capsule())
-                                            }
-                                        }
-                                        if alreadyAdded {
-                                            Spacer()
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundStyle(Theme.sage)
-                                                Text("Added")
-                                                    .font(Theme.captionFont)
-                                                    .foregroundStyle(Theme.textMuted)
-                                            }
-                                        }
-                                    }
+                ForEach(searchResults) { asset in
+                    let alreadyAdded = DuplicateAssetDetector.isAlreadyAdded(asset, existingIDs: existingAssetIDs)
+                    Button {
+                        if alreadyAdded {
+                            duplicateAsset = asset
+                        } else {
+                            selectedAsset = asset
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: asset.category.iconName)
+                                .font(.system(size: 16))
+                                .foregroundStyle(Theme.categoryColor(asset.category))
+                                .frame(width: 36, height: 36)
+                                .background(Theme.categoryTint(asset.category))
+                                .clipShape(Circle())
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(asset.name)
+                                    .font(Theme.bodyFont)
+                                HStack(spacing: 6) {
+                                    Text(asset.symbol)
+                                        .font(Theme.captionFont)
+                                        .foregroundStyle(Theme.textMuted)
+                                    Text(asset.category.displayName)
+                                        .font(Theme.captionFont.weight(.medium))
+                                        .foregroundStyle(Theme.categoryColor(asset.category))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Theme.categoryTint(asset.category))
+                                        .clipShape(Capsule())
                                 }
-                                .listRowBackground(Theme.bgCard)
+                            }
+                            if alreadyAdded {
+                                Spacer()
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(Theme.sage)
+                                    Text("Added")
+                                        .font(Theme.captionFont)
+                                        .foregroundStyle(Theme.textMuted)
+                                }
                             }
                         }
                     }
+                    .listRowBackground(Theme.bgCard)
                 }
             }
         }
@@ -274,6 +267,11 @@ struct AddAssetView: View {
             amount: value
         )
         modelContext.insert(asset)
+
+        let txn = Transaction(date: Date(), type: .snapshot, amount: value)
+        txn.asset = asset
+        modelContext.insert(txn)
+
         try? modelContext.save()
         savedTrigger += 1
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
