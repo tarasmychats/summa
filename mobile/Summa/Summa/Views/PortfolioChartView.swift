@@ -32,10 +32,40 @@ enum ChartTimeRange: String, CaseIterable, Identifiable {
         case .fiveYears: return calendar.date(byAdding: .year, value: -5, to: now)!
         }
     }
+
+    var xAxisStride: Calendar.Component {
+        switch self {
+        case .oneMonth: return .weekOfYear
+        case .threeMonths, .sixMonths: return .month
+        case .oneYear: return .month
+        case .fiveYears: return .year
+        }
+    }
+
+    var xAxisStrideCount: Int {
+        switch self {
+        case .oneMonth: return 1
+        case .threeMonths: return 1
+        case .sixMonths: return 2
+        case .oneYear: return 3
+        case .fiveYears: return 1
+        }
+    }
+
+    var xAxisDateFormat: Date.FormatStyle {
+        switch self {
+        case .oneMonth:
+            return .dateTime.day().month(.abbreviated)
+        case .threeMonths, .sixMonths, .oneYear:
+            return .dateTime.month(.abbreviated)
+        case .fiveYears:
+            return .dateTime.year()
+        }
+    }
 }
 
 struct PortfolioDataPoint: Identifiable {
-    let id = UUID()
+    let id: Int
     let date: Date
     let value: Double
 }
@@ -48,7 +78,7 @@ struct PortfolioChartView: View {
     @State private var dataPoints: [PortfolioDataPoint] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @State private var selectedPoint: PortfolioDataPoint?
+    @State private var selectedIndex: Int?
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -57,6 +87,28 @@ struct PortfolioChartView: View {
         f.timeZone = TimeZone(identifier: "UTC")
         return f
     }()
+
+    private var yDomain: ClosedRange<Double> {
+        guard let minVal = dataPoints.map(\.value).min(),
+              let maxVal = dataPoints.map(\.value).max(),
+              maxVal > minVal else {
+            return 0...1
+        }
+        let padding = (maxVal - minVal) * 0.1
+        return (minVal - padding)...(maxVal + padding)
+    }
+
+    private var yTickValues: [Double] {
+        let domain = yDomain
+        let tickCount = 4
+        let step = (domain.upperBound - domain.lowerBound) / Double(tickCount - 1)
+        return (0..<tickCount).map { domain.lowerBound + step * Double($0) }
+    }
+
+    private var selectedPoint: PortfolioDataPoint? {
+        guard let idx = selectedIndex, dataPoints.indices.contains(idx) else { return nil }
+        return dataPoints[idx]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -113,86 +165,77 @@ struct PortfolioChartView: View {
     }
 
     private var chart: some View {
-        Chart(dataPoints) { point in
-            LineMark(
-                x: .value("Date", point.date),
-                y: .value("Value", point.value)
-            )
-            .foregroundStyle(Theme.sage)
-            .interpolationMethod(.catmullRom)
-
-            AreaMark(
-                x: .value("Date", point.date),
-                y: .value("Value", point.value)
-            )
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [Theme.sage.opacity(0.3), Theme.sage.opacity(0.0)],
-                    startPoint: .top,
-                    endPoint: .bottom
+        ZStack(alignment: .topLeading) {
+            Chart(dataPoints) { point in
+                LineMark(
+                    x: .value("Date", point.date),
+                    y: .value("Value", point.value)
                 )
-            )
-            .interpolationMethod(.catmullRom)
+                .foregroundStyle(Theme.sage)
+                .interpolationMethod(.catmullRom)
+
+                AreaMark(
+                    x: .value("Date", point.date),
+                    y: .value("Value", point.value)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Theme.sage.opacity(0.3), Theme.sage.opacity(0.0)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .interpolationMethod(.catmullRom)
+            }
+            .chartYScale(domain: yDomain)
+            .chartPlotStyle { plot in
+                plot.padding(.trailing, 20).clipped()
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: yTickValues) { value in
+                    AxisValueLabel {
+                        if let val = value.as(Double.self) {
+                            Text(AssetValueFormatter.compactPrice(val, code: currency))
+                                .font(Theme.captionFont)
+                        }
+                    }
+                }
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: selectedRange.xAxisStride, count: selectedRange.xAxisStrideCount)) { value in
+                    AxisValueLabel {
+                        if let date = value.as(Date.self) {
+                            Text(date, format: selectedRange.xAxisDateFormat)
+                                .font(Theme.captionFont)
+                        }
+                    }
+                }
+            }
+            .chartOverlay { proxy in
+                GeometryReader { geometry in
+                    Rectangle()
+                        .fill(Color.clear)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    let xPosition = value.location.x - geometry[proxy.plotAreaFrame].origin.x
+                                    guard let date: Date = proxy.value(atX: xPosition) else { return }
+                                    if let index = ChartSelectionHelper.nearestIndex(in: dataPoints, to: date, dateOf: \.date) {
+                                        if selectedIndex != index {
+                                            selectedIndex = index
+                                        }
+                                    }
+                                }
+                                .onEnded { _ in
+                                    selectedIndex = nil
+                                }
+                        )
+                }
+            }
 
             if let selected = selectedPoint {
-                RuleMark(x: .value("Selected", selected.date))
-                    .foregroundStyle(Theme.textMuted.opacity(0.5))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .annotation(position: .top, alignment: .center) {
-                        VStack(spacing: 2) {
-                            Text(selected.value, format: .currency(code: currency).precision(.fractionLength(0)))
-                                .font(Theme.captionFont.weight(.semibold))
-                                .foregroundStyle(Theme.textPrimary)
-                            Text(selected.date, format: .dateTime.month(.abbreviated).day())
-                                .font(Theme.captionFont)
-                                .foregroundStyle(Theme.textMuted)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Theme.bgCard, in: RoundedRectangle(cornerRadius: 6))
-                        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-                    }
-            }
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading) { value in
-                AxisValueLabel {
-                    if let val = value.as(Double.self) {
-                        Text(val, format: .currency(code: currency).precision(.fractionLength(0)))
-                            .font(Theme.captionFont)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let date = value.as(Date.self) {
-                        Text(date, format: .dateTime.month(.abbreviated))
-                            .font(Theme.captionFont)
-                    }
-                }
-            }
-        }
-        .chartOverlay { proxy in
-            GeometryReader { geometry in
-                Rectangle()
-                    .fill(Color.clear)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                let xPosition = value.location.x - geometry[proxy.plotAreaFrame].origin.x
-                                guard let date: Date = proxy.value(atX: xPosition) else { return }
-                                let dates = dataPoints.map(\.date)
-                                if let index = ChartSelectionHelper.nearestIndex(in: dates, to: date) {
-                                    selectedPoint = dataPoints[index]
-                                }
-                            }
-                            .onEnded { _ in
-                                selectedPoint = nil
-                            }
-                    )
+                selectionOverlay(for: selected)
             }
         }
         .frame(height: 200)
@@ -200,9 +243,33 @@ struct PortfolioChartView: View {
         .accessibilityLabel("Portfolio value chart showing \(selectedRange.accessibilityName) history")
     }
 
+    private func selectionOverlay(for point: PortfolioDataPoint) -> some View {
+        VStack(spacing: 2) {
+            Text(point.value, format: .currency(code: currency).precision(.fractionLength(0)))
+                .font(Theme.captionFont.weight(.semibold))
+                .foregroundStyle(Theme.textPrimary)
+            Text(point.date, format: .dateTime.month(.abbreviated).day())
+                .font(Theme.captionFont)
+                .foregroundStyle(Theme.textMuted)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Theme.bgCard, in: RoundedRectangle(cornerRadius: 6))
+        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+    }
+
     private func loadHistory() async {
         guard !assets.isEmpty else {
             dataPoints = []
+            return
+        }
+
+        // For fiat-only portfolios matching display currency, generate data locally
+        let holdings = assets.map {
+            PortfolioHolding(name: $0.name, symbol: $0.symbol, amount: $0.currentAmount, pricePerUnit: 1, category: $0.assetCategory)
+        }
+        if PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: currency) {
+            dataPoints = generateFiatDataPoints(assets: assets)
             return
         }
 
@@ -267,7 +334,7 @@ struct PortfolioChartView: View {
 
         var results: [PortfolioDataPoint] = []
 
-        for dateString in sortedDateStrings {
+        for (index, dateString) in sortedDateStrings.enumerated() {
             guard let date = Self.dateFormatter.date(from: dateString) else { continue }
 
             var dayTotal = 0.0
@@ -280,7 +347,39 @@ struct PortfolioChartView: View {
                 dayTotal += price * amount
             }
 
-            results.append(PortfolioDataPoint(date: date, value: dayTotal))
+            results.append(PortfolioDataPoint(id: index, date: date, value: dayTotal))
+        }
+
+        return results
+    }
+
+    /// Generate daily data points for fiat-only portfolios (price = 1.0, value = amount).
+    private func generateFiatDataPoints(assets: [Asset]) -> [PortfolioDataPoint] {
+        let calendar = PortfolioCalculator.utcCalendar
+        let fromDate = calendar.startOfDay(for: selectedRange.startDate)
+        let toDate = calendar.startOfDay(for: Date())
+
+        let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
+            let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+            return (asset, txns)
+        }
+
+        var results: [PortfolioDataPoint] = []
+        var current = fromDate
+        var index = 0
+
+        while current <= toDate {
+            var dayTotal = 0.0
+            for (asset, sortedTxns) in assetTransactions {
+                dayTotal += PortfolioCalculator.amountAtDate(
+                    date: current,
+                    transactions: sortedTxns,
+                    fallbackAmount: asset.amount
+                )
+            }
+            results.append(PortfolioDataPoint(id: index, date: current, value: dayTotal))
+            index += 1
+            current = calendar.date(byAdding: .day, value: 1, to: current)!
         }
 
         return results
