@@ -43,7 +43,10 @@ export class CircuitBreaker {
   async fetch(url: string, init?: RequestInit): Promise<Response> {
     this.checkCircuit();
 
-    const response = await fetch(url, init);
+    const response = await fetch(url, {
+      ...init,
+      signal: init?.signal ?? AbortSignal.timeout(15_000),
+    });
 
     if (response.status === 429) {
       this.recordFailure(response);
@@ -179,3 +182,6 @@ export class CircuitOpenError extends Error {
 
 /** Shared circuit breaker instance for all CoinGecko calls. */
 export const coingeckoCircuit = new CircuitBreaker({ name: "coingecko" });
+
+/** Shared circuit breaker instance for all CryptoCompare calls. */
+export const cryptoCompareCircuit = new CircuitBreaker({ name: "cryptocompare" });
