@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Apply the "Soft & Approachable" design system to all WealthTrack iOS views.
+**Goal:** Apply the "Soft & Approachable" design system to all Summa iOS views.
 
 **Architecture:** Create a centralized `Theme.swift` with all design tokens (colors, typography, spacing), a reusable `CardModifier`, then update each view to use the theme. Animations added last.
 
@@ -13,7 +13,7 @@
 ### Task 1: Create Theme.swift
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Theme/Theme.swift`
+- Create: `mobile/Summa/Summa/Theme/Theme.swift`
 
 **Step 1: Create the theme file**
 
@@ -123,7 +123,7 @@ extension View {
 
 Add two Color Sets to `Assets.xcassets`:
 
-In `mobile/WealthTrack/WealthTrack/Assets.xcassets/BgPrimary.colorset/Contents.json`:
+In `mobile/Summa/Summa/Assets.xcassets/BgPrimary.colorset/Contents.json`:
 ```json
 {
   "colors": [
@@ -141,7 +141,7 @@ In `mobile/WealthTrack/WealthTrack/Assets.xcassets/BgPrimary.colorset/Contents.j
 }
 ```
 
-In `mobile/WealthTrack/WealthTrack/Assets.xcassets/BgCard.colorset/Contents.json`:
+In `mobile/Summa/Summa/Assets.xcassets/BgCard.colorset/Contents.json`:
 ```json
 {
   "colors": [
@@ -179,14 +179,14 @@ Update `AccentColor.colorset/Contents.json` to sage green:
 
 **Step 3: Build**
 
-Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme WealthTrack -project /Users/taras/Git/finance_track/mobile/WealthTrack/WealthTrack.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | tail -5`
+Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme Summa -project /Users/taras/Git/summa/mobile/Summa/Summa.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | tail -5`
 
 Expected: BUILD SUCCEEDED
 
 **Step 4: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Theme/Theme.swift mobile/WealthTrack/WealthTrack/Assets.xcassets/
+git add mobile/Summa/Summa/Theme/Theme.swift mobile/Summa/Summa/Assets.xcassets/
 git commit -m "feat(ios): add Theme.swift design system with color palette and card modifier"
 ```
 
@@ -195,12 +195,12 @@ git commit -m "feat(ios): add Theme.swift design system with color palette and c
 ### Task 2: Apply theme to ContentView and app background
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/WealthTrackApp.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/ContentView.swift`
+- Modify: `mobile/Summa/Summa/SummaApp.swift`
+- Modify: `mobile/Summa/Summa/ContentView.swift`
 
-**Step 1: Update WealthTrackApp to set global tint**
+**Step 1: Update SummaApp to set global tint**
 
-In `WealthTrackApp.swift`, add `.tint(Theme.sage)` to the WindowGroup's ContentView.
+In `SummaApp.swift`, add `.tint(Theme.sage)` to the WindowGroup's ContentView.
 
 **Step 2: Update ContentView background**
 
@@ -239,14 +239,14 @@ struct ContentView: View {
 
 **Step 3: Build**
 
-Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme WealthTrack -project /Users/taras/Git/finance_track/mobile/WealthTrack/WealthTrack.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | tail -5`
+Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme Summa -project /Users/taras/Git/summa/mobile/Summa/Summa.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | tail -5`
 
 Expected: BUILD SUCCEEDED
 
 **Step 4: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/WealthTrackApp.swift mobile/WealthTrack/WealthTrack/ContentView.swift
+git add mobile/Summa/Summa/SummaApp.swift mobile/Summa/Summa/ContentView.swift
 git commit -m "feat(ios): apply theme tint and background to ContentView"
 ```
 
@@ -255,7 +255,7 @@ git commit -m "feat(ios): apply theme tint and background to ContentView"
 ### Task 3: Apply theme to DashboardView
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Views/DashboardView.swift`
+- Modify: `mobile/Summa/Summa/Views/DashboardView.swift`
 
 **Step 1: Update DashboardView**
 
@@ -285,14 +285,14 @@ Add warm background to ScrollView: `.background(Theme.bgPrimary)`
 
 **Step 2: Build**
 
-Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme WealthTrack -project /Users/taras/Git/finance_track/mobile/WealthTrack/WealthTrack.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | tail -5`
+Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme Summa -project /Users/taras/Git/summa/mobile/Summa/Summa.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | tail -5`
 
 Expected: BUILD SUCCEEDED
 
 **Step 3: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Views/DashboardView.swift
+git add mobile/Summa/Summa/Views/DashboardView.swift
 git commit -m "feat(ios): apply Soft theme to DashboardView"
 ```
 
@@ -301,7 +301,7 @@ git commit -m "feat(ios): apply Soft theme to DashboardView"
 ### Task 4: Apply theme to ProjectionsView
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Views/ProjectionsView.swift`
+- Modify: `mobile/Summa/Summa/Views/ProjectionsView.swift`
 
 **Step 1: Update ProjectionsView**
 
@@ -329,7 +329,7 @@ Expected: BUILD SUCCEEDED
 **Step 3: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Views/ProjectionsView.swift
+git add mobile/Summa/Summa/Views/ProjectionsView.swift
 git commit -m "feat(ios): apply Soft theme to ProjectionsView"
 ```
 
@@ -338,7 +338,7 @@ git commit -m "feat(ios): apply Soft theme to ProjectionsView"
 ### Task 5: Apply theme to InsightsView
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Views/InsightsView.swift`
+- Modify: `mobile/Summa/Summa/Views/InsightsView.swift`
 
 **Step 1: Update InsightsView**
 
@@ -364,7 +364,7 @@ Expected: BUILD SUCCEEDED
 **Step 3: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Views/InsightsView.swift
+git add mobile/Summa/Summa/Views/InsightsView.swift
 git commit -m "feat(ios): apply Soft theme to InsightsView"
 ```
 
@@ -373,8 +373,8 @@ git commit -m "feat(ios): apply Soft theme to InsightsView"
 ### Task 6: Apply theme to AddAssetView and AssetListView
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Views/AddAssetView.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/Views/AssetListView.swift`
+- Modify: `mobile/Summa/Summa/Views/AddAssetView.swift`
+- Modify: `mobile/Summa/Summa/Views/AssetListView.swift`
 
 **Step 1: Update AddAssetView**
 
@@ -419,7 +419,7 @@ Expected: BUILD SUCCEEDED
 **Step 4: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Views/AddAssetView.swift mobile/WealthTrack/WealthTrack/Views/AssetListView.swift
+git add mobile/Summa/Summa/Views/AddAssetView.swift mobile/Summa/Summa/Views/AssetListView.swift
 git commit -m "feat(ios): apply Soft theme to AddAssetView and AssetListView"
 ```
 
@@ -428,7 +428,7 @@ git commit -m "feat(ios): apply Soft theme to AddAssetView and AssetListView"
 ### Task 7: Add animations
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Views/DashboardView.swift`
+- Modify: `mobile/Summa/Summa/Views/DashboardView.swift`
 
 **Step 1: Add staggered card animations to DashboardView**
 
@@ -453,13 +453,13 @@ Expected: BUILD SUCCEEDED
 
 **Step 3: Run all tests**
 
-Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -scheme WealthTrack -project /Users/taras/Git/finance_track/mobile/WealthTrack/WealthTrack.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:WealthTrackTests 2>&1 | tail -25`
+Run: `/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -scheme Summa -project /Users/taras/Git/summa/mobile/Summa/Summa.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:SummaTests 2>&1 | tail -25`
 
 Expected: TEST SUCCEEDED, 15/15 pass
 
 **Step 4: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Views/DashboardView.swift
+git add mobile/Summa/Summa/Views/DashboardView.swift
 git commit -m "feat(ios): add staggered card animations to dashboard"
 ```

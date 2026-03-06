@@ -1,4 +1,4 @@
-# WealthTrack Design System: Soft & Approachable
+# Summa Design System: Soft & Approachable
 
 **Goal:** Replace default iOS styling with a warm, welcoming design system that makes finance feel friendly.
 

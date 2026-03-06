@@ -1,8 +1,8 @@
-# WealthTrack Portfolio Overhaul — Design Document
+# Summa Portfolio Overhaul — Design Document
 
 ## Problem
 
-WealthTrack currently shows only current prices. Users want to:
+Summa currently shows only current prices. Users want to:
 - Track transactions (buy/sell/adjust amounts) per asset
 - See how their total portfolio value changed over time (daily chart)
 - See individual asset price charts

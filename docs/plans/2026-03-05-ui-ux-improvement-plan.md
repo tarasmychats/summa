@@ -1,10 +1,10 @@
-# WealthTrack UI/UX Improvements
+# Summa UI/UX Improvements
 
 ## Overview
-- Comprehensive UI/UX polish pass across the WealthTrack iOS app
+- Comprehensive UI/UX polish pass across the Summa iOS app
 - Addresses missing feedback, discoverability gaps, chart interactivity, accessibility, and visual delight
 - Improves the app from "works correctly" to "feels great" — covering 4 phases across quick wins, core UX, accessibility, and information density
-- All changes are in `mobile/WealthTrack/WealthTrack/`
+- All changes are in `mobile/Summa/Summa/`
 
 ## Context (from discovery)
 - Files/components involved:
@@ -56,7 +56,7 @@
 - [x] Add price data to `AssetListView` — fetch prices via `DashboardViewModel` or a shared price state, display fiat value right-aligned in each asset row
 - [x] Show formatted currency value (e.g., "$45,230") next to each asset in the list
 - [x] Handle loading/error states gracefully (show "—" if price unavailable)
-- [x] Write tests for the value formatting logic in `WealthTrackTests/AssetValueFormatterTests.swift`
+- [x] Write tests for the value formatting logic in `SummaTests/AssetValueFormatterTests.swift`
 
 ### Task 2: Add loading skeleton to Dashboard
 - [x] In `DashboardView`, show placeholder cards with `.redacted(reason: .placeholder)` while `viewModel.isLoading` is true and no data exists yet

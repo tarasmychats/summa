@@ -1,11 +1,11 @@
-# WealthTrack
+# Summa
 
 Multi-asset wealth tracking app — monorepo with Node.js backend and iOS app.
 
 ## Structure
 
 - `backend/` — Node.js/TypeScript price API server with PostgreSQL
-- `mobile/WealthTrack/` — SwiftUI iOS app
+- `mobile/Summa/` — SwiftUI iOS app
 - `docs/plans/` — Design and implementation documents
 
 ## Backend architecture
@@ -17,11 +17,11 @@ Multi-asset wealth tracking app — monorepo with Node.js backend and iOS app.
 
 ## iOS architecture
 
-- `mobile/WealthTrack/WealthTrack/Models/` — SwiftData models (Asset, Transaction, UserSettings, AssetCategory)
-- `mobile/WealthTrack/WealthTrack/Views/` — SwiftUI views (Dashboard, AssetList, AssetDetail, AssetChart, PortfolioChart, Settings, Transactions)
-- `mobile/WealthTrack/WealthTrack/ViewModels/` — view models (DashboardViewModel)
-- `mobile/WealthTrack/WealthTrack/Logic/` — testable business logic helpers (AssetValueFormatter, ChartSelectionHelper, DuplicateAssetDetector, PortfolioCalculator, RiskCalculator, ProjectionEngine, InsightsEngine)
-- `mobile/WealthTrack/WealthTrack/Services/` — API client, response models, and error helpers (PriceAPIClient, PriceModels, ErrorMessageHelper)
+- `mobile/Summa/Summa/Models/` — SwiftData models (Asset, Transaction, UserSettings, AssetCategory)
+- `mobile/Summa/Summa/Views/` — SwiftUI views (Dashboard, AssetList, AssetDetail, AssetChart, PortfolioChart, Settings, Transactions)
+- `mobile/Summa/Summa/ViewModels/` — view models (DashboardViewModel)
+- `mobile/Summa/Summa/Logic/` — testable business logic helpers (AssetValueFormatter, ChartSelectionHelper, DuplicateAssetDetector, PortfolioCalculator, RiskCalculator, ProjectionEngine, InsightsEngine)
+- `mobile/Summa/Summa/Services/` — API client, response models, and error helpers (PriceAPIClient, PriceModels, ErrorMessageHelper)
 
 ## Backend commands
 

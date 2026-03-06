@@ -667,7 +667,7 @@ app.use("/api", createPricesRouter());
 app.use("/api", createSearchRouter());
 
 app.listen(PORT, () => {
-  console.log(`WealthTrack API running on port ${PORT}`);
+  console.log(`Summa API running on port ${PORT}`);
 });
 
 export default app;
@@ -695,8 +695,8 @@ git commit -m "feat(backend): add unified /api/search endpoint with caching"
 ### Task 6: Add search API to PriceAPIClient
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Services/PriceModels.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/Services/PriceAPIClient.swift`
+- Modify: `mobile/Summa/Summa/Services/PriceModels.swift`
+- Modify: `mobile/Summa/Summa/Services/PriceAPIClient.swift`
 
 **Step 1: Add search response model to PriceModels.swift**
 
@@ -747,7 +747,7 @@ Add inside the `PriceAPIClient` class, after the existing `fetchPrices` method:
 **Step 3: Build**
 
 ```bash
-cd mobile/WealthTrack && /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme WealthTrack -destination 'platform=iOS Simulator,name=iPhone 17' build
+cd mobile/Summa && /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme Summa -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
 Expected: BUILD SUCCEEDED
@@ -755,7 +755,7 @@ Expected: BUILD SUCCEEDED
 **Step 4: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Services/
+git add mobile/Summa/Summa/Services/
 git commit -m "feat(ios): add asset search API to PriceAPIClient"
 ```
 
@@ -764,8 +764,8 @@ git commit -m "feat(ios): add asset search API to PriceAPIClient"
 ### Task 7: Replace AssetCatalog with API-driven search in AddAssetView
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Data/AssetCatalog.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/Views/AddAssetView.swift`
+- Modify: `mobile/Summa/Summa/Data/AssetCatalog.swift`
+- Modify: `mobile/Summa/Summa/Views/AddAssetView.swift`
 
 **Step 1: Simplify AssetCatalog — remove hardcoded data, keep only the struct**
 
@@ -996,7 +996,7 @@ struct AddAssetView: View {
 **Step 3: Build**
 
 ```bash
-cd mobile/WealthTrack && /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme WealthTrack -destination 'platform=iOS Simulator,name=iPhone 17' build
+cd mobile/Summa && /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme Summa -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
 Expected: BUILD SUCCEEDED
@@ -1004,7 +1004,7 @@ Expected: BUILD SUCCEEDED
 **Step 4: Run all tests**
 
 ```bash
-cd mobile/WealthTrack && /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -scheme WealthTrack -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:WealthTrackTests
+cd mobile/Summa && /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -scheme Summa -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:SummaTests
 ```
 
 Expected: ALL PASS (existing logic tests unaffected)
@@ -1012,6 +1012,6 @@ Expected: ALL PASS (existing logic tests unaffected)
 **Step 5: Commit**
 
 ```bash
-git add mobile/WealthTrack/WealthTrack/Data/AssetCatalog.swift mobile/WealthTrack/WealthTrack/Views/AddAssetView.swift
+git add mobile/Summa/Summa/Data/AssetCatalog.swift mobile/Summa/Summa/Views/AddAssetView.swift
 git commit -m "feat(ios): replace hardcoded asset catalog with API-driven search"
 ```

@@ -1,4 +1,4 @@
-# WealthTrack Backend
+# Summa Backend
 
 Node.js/TypeScript price API server with PostgreSQL for historical price caching.
 

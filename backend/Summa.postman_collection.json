@@ -1,0 +1,265 @@
+{
+  "info": {
+    "name": "Summa API",
+    "description": "Summa backend price API — stateless proxy for crypto, stock, and fiat prices.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Prices",
+      "item": [
+        {
+          "name": "Get Prices — Mixed Assets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assets\": [\n    { \"id\": \"bitcoin\", \"category\": \"crypto\" },\n    { \"id\": \"ethereum\", \"category\": \"crypto\" },\n    { \"id\": \"AAPL\", \"category\": \"stock\" },\n    { \"id\": \"EUR\", \"category\": \"fiat\" }\n  ],\n  \"baseCurrency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"]
+            },
+            "description": "Fetch prices for a mix of crypto, stock, and fiat assets."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prices — Crypto Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assets\": [\n    { \"id\": \"bitcoin\", \"category\": \"crypto\" },\n    { \"id\": \"ethereum\", \"category\": \"crypto\" },\n    { \"id\": \"solana\", \"category\": \"crypto\" }\n  ],\n  \"baseCurrency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"]
+            },
+            "description": "Fetch prices for crypto assets only."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prices — Stocks Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assets\": [\n    { \"id\": \"AAPL\", \"category\": \"stock\" },\n    { \"id\": \"MSFT\", \"category\": \"stock\" },\n    { \"id\": \"GOOGL\", \"category\": \"stock\" }\n  ],\n  \"baseCurrency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"]
+            },
+            "description": "Fetch prices for stock assets only."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prices — EUR base currency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assets\": [\n    { \"id\": \"bitcoin\", \"category\": \"crypto\" },\n    { \"id\": \"USD\", \"category\": \"fiat\" }\n  ],\n  \"baseCurrency\": \"EUR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"]
+            },
+            "description": "Fetch prices with a non-USD base currency."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prices — Invalid Request (no assets)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"baseCurrency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prices"]
+            },
+            "description": "Should return 400 — missing assets array."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search — All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=bitcoin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "bitcoin"
+                }
+              ]
+            },
+            "description": "Search across all asset categories."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — Crypto Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=eth&category=crypto",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "eth"
+                },
+                {
+                  "key": "category",
+                  "value": "crypto"
+                }
+              ]
+            },
+            "description": "Search for crypto assets only."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — Stocks Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=apple&category=stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "apple"
+                },
+                {
+                  "key": "category",
+                  "value": "stock"
+                }
+              ]
+            },
+            "description": "Search for stock assets only."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — Fiat Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=eur&category=fiat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "eur"
+                },
+                {
+                  "key": "category",
+                  "value": "fiat"
+                }
+              ]
+            },
+            "description": "Search for fiat currencies only."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — Missing Query (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"]
+            },
+            "description": "Should return 400 — missing q parameter."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

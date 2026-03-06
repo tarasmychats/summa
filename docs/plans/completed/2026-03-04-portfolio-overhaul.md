@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Transform WealthTrack from a current-price viewer into a full portfolio tracker with transactions, historical price charts, base currency selection, and improved search ranking.
+**Goal:** Transform Summa from a current-price viewer into a full portfolio tracker with transactions, historical price charts, base currency selection, and improved search ranking.
 
 **Architecture:** PostgreSQL for historical price cache (user data stays on-device in SwiftData). Background cron job populates daily prices. iOS computes portfolio charts locally from price history + transaction data.
 
@@ -226,8 +226,8 @@
 ### Task 14: Add Transaction SwiftData model
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Models/Transaction.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/Models/Asset.swift` (add relationship)
+- Create: `mobile/Summa/Summa/Models/Transaction.swift`
+- Modify: `mobile/Summa/Summa/Models/Asset.swift` (add relationship)
 
 - [x] Create `Transaction` model with fields: `id` (UUID), `date` (Date), `type` (TransactionType enum: `.delta`, `.snapshot`), `amount` (Double), `note` (String?), `createdAt` (Date)
 - [x] Add `@Relationship` from Asset to Transaction (cascade delete)
@@ -238,7 +238,7 @@
 ### Task 15: Create TransactionListView
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Views/TransactionListView.swift`
+- Create: `mobile/Summa/Summa/Views/TransactionListView.swift`
 
 - [x] List all transactions for a given asset, sorted by date descending
 - [x] Show date, type badge (delta/snapshot), amount, and optional note
@@ -249,7 +249,7 @@
 ### Task 16: Create AddTransactionView
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Views/AddTransactionView.swift`
+- Create: `mobile/Summa/Summa/Views/AddTransactionView.swift`
 
 - [x] Date picker (default: today)
 - [x] Segmented picker for type: "Add/Subtract Amount" (delta) vs "Set New Total" (snapshot)
@@ -261,7 +261,7 @@
 ### Task 17: Integrate transactions into AssetListView
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Views/AssetListView.swift`
+- Modify: `mobile/Summa/Summa/Views/AssetListView.swift`
 
 - [x] Tap on asset row → navigate to asset detail (new view or sheet)
 - [x] Asset detail shows: current amount (from transactions), current value, transaction list
@@ -275,8 +275,8 @@
 ### Task 18: Create SettingsView with currency picker
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Views/SettingsView.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/Models/UserSettings.swift`
+- Create: `mobile/Summa/Summa/Views/SettingsView.swift`
+- Modify: `mobile/Summa/Summa/Models/UserSettings.swift`
 
 - [x] Create SettingsView with a Picker for base currency: USD, EUR
 - [x] Read/write `UserSettings.displayCurrency` via SwiftData
@@ -286,7 +286,7 @@
 ### Task 19: Pass base currency through price fetching
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Services/PriceAPIClient.swift`
+- Modify: `mobile/Summa/Summa/Services/PriceAPIClient.swift`
 - Modify views that call `fetchPrices`
 
 - [x] Read `displayCurrency` from UserSettings
@@ -301,7 +301,7 @@
 ### Task 20: Add history endpoint to PriceAPIClient
 
 **Files:**
-- Modify: `mobile/WealthTrack/WealthTrack/Services/PriceAPIClient.swift`
+- Modify: `mobile/Summa/Summa/Services/PriceAPIClient.swift`
 
 - [x] Add `fetchHistory(assets: [(id: String, category: String)], from: Date, to: Date, currency: String) async throws -> [String: [(date: String, price: Double)]]`
 - [x] Call `GET /api/history` with query parameters
@@ -310,8 +310,8 @@
 ### Task 21: Create PortfolioChartView on DashboardView
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Views/PortfolioChartView.swift`
-- Modify: `mobile/WealthTrack/WealthTrack/Views/DashboardView.swift`
+- Create: `mobile/Summa/Summa/Views/PortfolioChartView.swift`
+- Modify: `mobile/Summa/Summa/Views/DashboardView.swift`
 
 - [x] Create `PortfolioChartView` using Swift Charts `LineMark`
 - [x] On appear: fetch history for all held assets via `PriceAPIClient.fetchHistory()`
@@ -324,7 +324,7 @@
 ### Task 22: Create AssetChartView for individual assets
 
 **Files:**
-- Create: `mobile/WealthTrack/WealthTrack/Views/AssetChartView.swift`
+- Create: `mobile/Summa/Summa/Views/AssetChartView.swift`
 
 - [x] Line chart showing single asset price over time
 - [x] Time range selector: 1M, 3M, 6M, 1Y, 5Y
