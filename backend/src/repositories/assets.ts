@@ -93,3 +93,19 @@ export async function searchAssets(
     category: row.category,
   }));
 }
+
+/**
+ * Looks up the symbol for an asset by its ID and category.
+ * Returns null if the asset is not found.
+ */
+export async function getAssetSymbol(
+  assetId: string,
+  category: string
+): Promise<string | null> {
+  const pool = getPool();
+  const result = await pool.query(
+    `SELECT symbol FROM assets WHERE id = $1 AND category = $2`,
+    [assetId, category]
+  );
+  return result.rows.length > 0 ? result.rows[0].symbol : null;
+}
