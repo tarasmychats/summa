@@ -64,4 +64,47 @@ final class PortfolioCalculatorTests: XCTestCase {
         let percentages = PortfolioCalculator.categoryPercentages(breakdown: breakdown)
         XCTAssertEqual(percentages[.crypto], 100)
     }
+
+    // MARK: - Fiat-Only Detection
+
+    func testAllFiatMatchingCurrency_singleUSD() {
+        let holdings = [
+            PortfolioHolding(name: "USD", symbol: "USD", amount: 5000, pricePerUnit: 1, category: .fiat)
+        ]
+        XCTAssertTrue(PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: "USD"))
+    }
+
+    func testAllFiatMatchingCurrency_multipleUSD() {
+        let holdings = [
+            PortfolioHolding(name: "USD Cash", symbol: "USD", amount: 5000, pricePerUnit: 1, category: .fiat),
+            PortfolioHolding(name: "USD Savings", symbol: "USD", amount: 3000, pricePerUnit: 1, category: .fiat)
+        ]
+        XCTAssertTrue(PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: "USD"))
+    }
+
+    func testAllFiatMatchingCurrency_eurWithEurDisplay() {
+        let holdings = [
+            PortfolioHolding(name: "EUR", symbol: "EUR", amount: 1000, pricePerUnit: 1, category: .fiat)
+        ]
+        XCTAssertTrue(PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: "EUR"))
+    }
+
+    func testAllFiatMatchingCurrency_mixedPortfolio() {
+        let holdings = [
+            PortfolioHolding(name: "USD", symbol: "USD", amount: 5000, pricePerUnit: 1, category: .fiat),
+            PortfolioHolding(name: "Bitcoin", symbol: "bitcoin", amount: 1, pricePerUnit: 95000, category: .crypto)
+        ]
+        XCTAssertFalse(PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: "USD"))
+    }
+
+    func testAllFiatMatchingCurrency_fiatNotMatchingCurrency() {
+        let holdings = [
+            PortfolioHolding(name: "EUR", symbol: "EUR", amount: 1000, pricePerUnit: 1, category: .fiat)
+        ]
+        XCTAssertFalse(PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: "USD"))
+    }
+
+    func testAllFiatMatchingCurrency_emptyPortfolio() {
+        XCTAssertFalse(PortfolioCalculator.allFiatMatchingCurrency(holdings: [], currency: "USD"))
+    }
 }

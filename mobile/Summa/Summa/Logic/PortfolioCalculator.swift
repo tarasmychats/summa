@@ -86,6 +86,13 @@ enum PortfolioCalculator {
         }
         return balance
     }
+
+    /// Returns true when every holding is fiat with a symbol matching the display currency.
+    static func allFiatMatchingCurrency(holdings: [PortfolioHolding], currency: String) -> Bool {
+        guard !holdings.isEmpty else { return false }
+        let uppercased = currency.uppercased()
+        return holdings.allSatisfy { $0.category == .fiat && $0.symbol.uppercased() == uppercased }
+    }
 }
 
 struct ValueChange {
