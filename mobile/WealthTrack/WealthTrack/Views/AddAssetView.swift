@@ -275,6 +275,8 @@ struct AddAssetView: View {
         )
         modelContext.insert(asset)
         savedTrigger += 1
-        dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            dismiss()
+        }
     }
 }

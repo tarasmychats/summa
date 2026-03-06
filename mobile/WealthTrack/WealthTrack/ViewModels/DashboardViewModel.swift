@@ -34,6 +34,7 @@ class DashboardViewModel {
             riskScore = RiskScore(value: 0, label: "No Assets")
             projectionPreview = nil
             lastUpdated = nil
+            priceError = nil
             isLoading = false
             return
         }

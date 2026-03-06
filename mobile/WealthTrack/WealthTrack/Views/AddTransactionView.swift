@@ -119,6 +119,8 @@ struct AddTransactionView: View {
         try? modelContext.save()
         asset.amount = asset.currentAmount
         savedTrigger += 1
-        dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            dismiss()
+        }
     }
 }

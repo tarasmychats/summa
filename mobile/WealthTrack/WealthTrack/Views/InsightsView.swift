@@ -90,7 +90,17 @@ struct InsightsView: View {
             }
         } catch {
             priceError = PriceErrorMessage.userMessage(from: error)
-            holdings = []
+            if holdings.isEmpty {
+                holdings = assets.map { asset in
+                    PortfolioHolding(
+                        name: asset.name,
+                        symbol: asset.symbol,
+                        amount: asset.currentAmount,
+                        pricePerUnit: 0,
+                        category: asset.assetCategory
+                    )
+                }
+            }
         }
     }
 }
