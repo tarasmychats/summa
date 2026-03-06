@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 import Observation
 
-@Observable
+@MainActor @Observable
 class DashboardViewModel {
     var holdings: [PortfolioHolding] = []
     var totalValue: Double = 0
@@ -142,10 +142,10 @@ class DashboardViewModel {
                 return (asset, sortedTxns, priceMap)
             }
 
-            // If any asset has no history at all, we can't compute previous value
-            guard assetPriceMaps.count == assets.count else { return nil }
+            // Skip assets without history (e.g. fiat) rather than aborting entirely
+            guard !assetPriceMaps.isEmpty else { return nil }
 
-            // Find the most recent date where ALL assets have a price
+            // Find the most recent date where all assets with history have a price
             for candidateDate in sortedDates {
                 guard let candidateDateParsed = Self.dateFormatter.date(from: candidateDate) else { continue }
 
@@ -165,7 +165,7 @@ class DashboardViewModel {
                 }
             }
 
-            // No date found where all assets have prices
+            // No date found where assets with history all have prices
             return nil
         } catch {
             print("[WealthTrack] History fetch for change indicator failed: \(error)")
