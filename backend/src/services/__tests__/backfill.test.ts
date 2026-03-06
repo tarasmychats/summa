@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockGetBackfillStatus = vi.fn();
 const mockUpsertBackfillStatus = vi.fn();
 const mockInsertDailyPrices = vi.fn();
+const mockGetAssetSymbol = vi.fn();
 
 vi.mock("../../repositories/backfillStatus.js", () => ({
   getBackfillStatus: (...args: unknown[]) => mockGetBackfillStatus(...args),
@@ -13,6 +14,10 @@ vi.mock("../../repositories/backfillStatus.js", () => ({
 
 vi.mock("../../repositories/dailyPrices.js", () => ({
   insertDailyPrices: (...args: unknown[]) => mockInsertDailyPrices(...args),
+}));
+
+vi.mock("../../repositories/assets.js", () => ({
+  getAssetSymbol: (...args: unknown[]) => mockGetAssetSymbol(...args),
 }));
 
 // Mock history services
@@ -47,6 +52,7 @@ describe("backfillAsset", () => {
     mockUpsertBackfillStatus.mockResolvedValue(undefined);
     // Default: stocks trade in USD
     mockGetStockCurrency.mockResolvedValue("USD");
+    mockGetAssetSymbol.mockResolvedValue("BTC");
   });
 
   describe("skip logic", () => {
@@ -71,6 +77,7 @@ describe("backfillAsset", () => {
         oldestDate: new Date("2023-01-01"),
         lastUpdated: yesterday,
       });
+      mockGetAssetSymbol.mockResolvedValueOnce("BTC");
       mockFetchCryptoHistory.mockResolvedValueOnce([
         { date: "2024-01-01", price: 42000 },
       ]);
@@ -83,8 +90,9 @@ describe("backfillAsset", () => {
   });
 
   describe("new asset - full backfill", () => {
-    it("fetches crypto history (365 days) for new crypto asset", async () => {
+    it("fetches crypto history (1825 days) for new crypto asset", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetAssetSymbol.mockResolvedValueOnce("BTC");
       mockFetchCryptoHistory.mockResolvedValueOnce([
         { date: "2024-01-01", price: 42000 },
         { date: "2024-01-02", price: 43000 },
@@ -92,7 +100,8 @@ describe("backfillAsset", () => {
 
       await backfillAsset("bitcoin", "crypto");
 
-      expect(mockFetchCryptoHistory).toHaveBeenCalledWith("bitcoin", 365);
+      expect(mockFetchCryptoHistory).toHaveBeenCalledWith("BTC", 1825);
+      expect(mockGetAssetSymbol).toHaveBeenCalledWith("bitcoin", "crypto");
       expect(mockInsertDailyPrices).toHaveBeenCalledWith([
         {
           assetId: "bitcoin",
@@ -113,6 +122,20 @@ describe("backfillAsset", () => {
         "bitcoin",
         "crypto",
         new Date("2024-01-01")
+      );
+    });
+
+    it("returns empty prices when symbol not found in DB", async () => {
+      mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetAssetSymbol.mockResolvedValueOnce(null);
+
+      await backfillAsset("unknown-coin", "crypto");
+
+      expect(mockFetchCryptoHistory).not.toHaveBeenCalled();
+      expect(mockUpsertBackfillStatus).toHaveBeenCalledWith(
+        "unknown-coin",
+        "crypto",
+        expect.any(Date)
       );
     });
 
@@ -345,6 +368,7 @@ describe("backfillAsset", () => {
   describe("error recovery", () => {
     it("throws when fetch service throws", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetAssetSymbol.mockResolvedValueOnce("BTC");
       mockFetchCryptoHistory.mockRejectedValueOnce(
         new Error("API exploded")
       );
@@ -359,6 +383,7 @@ describe("backfillAsset", () => {
 
     it("throws when insertDailyPrices fails", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetAssetSymbol.mockResolvedValueOnce("BTC");
       mockFetchCryptoHistory.mockResolvedValueOnce([
         { date: "2024-01-01", price: 42000 },
       ]);
@@ -392,6 +417,7 @@ describe("backfillAsset", () => {
   describe("oldest date tracking", () => {
     it("uses the earliest date from fetched prices for backfill status", async () => {
       mockGetBackfillStatus.mockResolvedValueOnce(null);
+      mockGetAssetSymbol.mockResolvedValueOnce("BTC");
       mockFetchCryptoHistory.mockResolvedValueOnce([
         { date: "2024-03-15", price: 65000 },
         { date: "2024-01-01", price: 42000 },
