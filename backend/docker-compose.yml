@@ -5,8 +5,8 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: wealthtrack
-      POSTGRES_USER: wealthtrack
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthtrack}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - pgdata:/var/lib/postgresql/data
 

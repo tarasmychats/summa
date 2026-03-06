@@ -20,6 +20,7 @@ struct DashboardView: View {
     @State private var viewModel = DashboardViewModel()
     @State private var activeSheet: DashboardSheet?
     @State private var cardsAppeared = false
+    @State private var transactionAsset: Asset?
 
     static let suggestedAssets: [AssetDefinition] = [
         AssetDefinition(id: "bitcoin", name: "Bitcoin", symbol: "BTC", category: .crypto),
@@ -100,6 +101,9 @@ struct DashboardView: View {
                 case .suggestedAsset(let asset):
                     AddAssetView(initialAsset: asset)
                 }
+            }
+            .sheet(item: $transactionAsset) { asset in
+                AddTransactionView(asset: asset)
             }
             .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
                 await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
@@ -269,6 +273,13 @@ struct DashboardView: View {
                                 .font(Theme.bodyFont)
                         }
                         .padding(.vertical, 4)
+                    }
+                    .contextMenu {
+                        Button {
+                            transactionAsset = asset
+                        } label: {
+                            Label("Add Transaction", systemImage: "plus.circle")
+                        }
                     }
                 }
             }

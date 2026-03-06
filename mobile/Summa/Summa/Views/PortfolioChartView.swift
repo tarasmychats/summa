@@ -219,7 +219,8 @@ struct PortfolioChartView: View {
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
-                                    let xPosition = value.location.x - geometry[proxy.plotAreaFrame].origin.x
+                                    guard let plotFrame = proxy.plotFrame else { return }
+                                    let xPosition = value.location.x - geometry[plotFrame].origin.x
                                     guard let date: Date = proxy.value(atX: xPosition) else { return }
                                     if let index = ChartSelectionHelper.nearestIndex(in: dataPoints, to: date, dateOf: \.date) {
                                         if selectedIndex != index {

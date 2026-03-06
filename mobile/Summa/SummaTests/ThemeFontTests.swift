@@ -7,12 +7,14 @@ final class ThemeFontTests: XCTestCase {
     func testCategoryColorMapping() {
         XCTAssertEqual(Theme.categoryColor(.crypto), Theme.lavender)
         XCTAssertEqual(Theme.categoryColor(.stock), Theme.sage)
+        XCTAssertEqual(Theme.categoryColor(.etf), Theme.sky)
         XCTAssertEqual(Theme.categoryColor(.fiat), Theme.amber)
     }
 
     func testCategoryTintMapping() {
         XCTAssertEqual(Theme.categoryTint(.crypto), Theme.cryptoTint)
         XCTAssertEqual(Theme.categoryTint(.stock), Theme.stockTint)
+        XCTAssertEqual(Theme.categoryTint(.etf), Theme.etfTint)
         XCTAssertEqual(Theme.categoryTint(.fiat), Theme.fiatTint)
     }
 

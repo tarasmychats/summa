@@ -24,7 +24,7 @@ export async function fetchFiatHistory(
 
   try {
     const url = `${FRANKFURTER_BASE}/${from}..${to}?base=USD&symbols=${symbols}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
 
     if (!response.ok) {
       const msg = `Frankfurter API returned ${response.status}`;

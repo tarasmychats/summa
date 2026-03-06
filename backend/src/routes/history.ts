@@ -55,10 +55,10 @@ export function createHistoryRouter(): Router {
     }
 
     // Validate categories
-    const validCategories = new Set(["crypto", "stock", "fiat"]);
+    const validCategories = new Set(["crypto", "stock", "etf", "fiat"]);
     if (categoryList.some((c) => !validCategories.has(c))) {
       res.status(400).json({
-        error: "Invalid category. Must be one of: crypto, stock, fiat",
+        error: "Invalid category. Must be one of: crypto, stock, etf, fiat",
       });
       return;
     }

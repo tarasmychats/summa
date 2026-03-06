@@ -5,6 +5,19 @@ const yahooFinance = new YahooFinance({
   suppressNotices: ["ripHistorical", "yahooSurvey"],
 });
 
+/** Timeout in ms for Yahoo Finance API calls */
+const YAHOO_TIMEOUT_MS = 30_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); },
+    );
+  });
+}
+
 export interface StockHistoryPoint {
   date: string; // YYYY-MM-DD
   price: number;
@@ -23,14 +36,18 @@ export async function fetchStockHistory(
   period1.setFullYear(period1.getFullYear() - years);
 
   try {
-    const result = await yahooFinance.chart(
-      symbol,
-      {
-        period1: period1.toISOString().split("T")[0],
-        period2: period2.toISOString().split("T")[0],
-        interval: "1d",
-      },
-      { validateResult: false }
+    const result = await withTimeout(
+      yahooFinance.chart(
+        symbol,
+        {
+          period1: period1.toISOString().split("T")[0],
+          period2: period2.toISOString().split("T")[0],
+          interval: "1d",
+        },
+        { validateResult: false }
+      ),
+      YAHOO_TIMEOUT_MS,
+      `yahooFinance.chart(${symbol})`
     );
 
     const quotes = (result as any)?.quotes;
@@ -65,7 +82,11 @@ export async function fetchStockHistory(
  * backfill retry on the next run.
  */
 export async function getStockCurrency(symbol: string): Promise<string> {
-  const result = await yahooFinance.quote(symbol, {}, { validateResult: false });
+  const result = await withTimeout(
+    yahooFinance.quote(symbol, {}, { validateResult: false }),
+    YAHOO_TIMEOUT_MS,
+    `yahooFinance.quote(${symbol})`
+  );
   const quote = Array.isArray(result) ? result[0] : result;
   const currency = (quote as any)?.currency;
   if (!currency) {

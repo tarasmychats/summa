@@ -29,21 +29,24 @@
 		76CCDA2C2F523D8A000D8402 /* SummaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SummaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		76CCDA152F523D87000D8402 /* Summa */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				76CCDA502F523D8A000D8402 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
-			path = Summa;
-			sourceTree = "<group>";
-		};
-		76CCDA502F523D8A000D8402 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		76CCDA502F523D8A000D8402 /* Exceptions for "Summa" folder in "Summa" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 76CCDA122F523D87000D8402 /* Summa */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		76CCDA152F523D87000D8402 /* Summa */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				76CCDA502F523D8A000D8402 /* Exceptions for "Summa" folder in "Summa" target */,
+			);
+			path = Summa;
+			sourceTree = "<group>";
 		};
 		76CCDA252F523D8A000D8402 /* SummaTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -405,6 +408,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YG87328UF8;
@@ -423,6 +427,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.taras.Summa;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -438,6 +443,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YG87328UF8;
@@ -456,6 +462,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.taras.Summa;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

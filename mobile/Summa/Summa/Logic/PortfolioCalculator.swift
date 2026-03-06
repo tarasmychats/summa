@@ -75,16 +75,7 @@ enum PortfolioCalculator {
         let relevant = transactions.filter { utcCalendar.startOfDay(for: $0.date) <= utcCalendar.startOfDay(for: date) }
         guard !relevant.isEmpty else { return 0.0 }
 
-        var balance = 0.0
-        for txn in relevant {
-            switch txn.type {
-            case .delta:
-                balance += txn.amount
-            case .snapshot:
-                balance = txn.amount
-            }
-        }
-        return balance
+        return relevant.reduce(0.0) { $0 + $1.amount }
     }
 
     /// Returns true when every holding is fiat with a symbol matching the display currency.

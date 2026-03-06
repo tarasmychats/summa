@@ -3,7 +3,6 @@ import SwiftData
 
 enum TransactionType: String, Codable {
     case delta    // Add or subtract from current amount
-    case snapshot // Set absolute total
 }
 
 @Model

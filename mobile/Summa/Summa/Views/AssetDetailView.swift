@@ -5,8 +5,8 @@ struct AssetDetailView: View {
     let asset: Asset
     @Environment(\.modelContext) private var modelContext
     @Query private var allSettings: [UserSettings]
-    @State private var showingEditSheet = false
     @State private var showingAddTransaction = false
+    @State private var showingSetTotal = false
 
     private var displayCurrency: String {
         allSettings.first?.displayCurrency ?? "USD"
@@ -89,7 +89,7 @@ struct AssetDetailView: View {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 16) {
                     Button {
-                        showingEditSheet = true
+                        showingSetTotal = true
                     } label: {
                         Text("Edit")
                     }
@@ -101,8 +101,8 @@ struct AssetDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingEditSheet) {
-            EditAssetView(asset: asset)
+        .sheet(isPresented: $showingSetTotal) {
+            AddTransactionView(asset: asset, initialMode: .setTotal)
         }
         .sheet(isPresented: $showingAddTransaction) {
             AddTransactionView(asset: asset)
@@ -148,23 +148,19 @@ struct TransactionRow: View {
     }
 
     private var typeBadge: some View {
-        Text(transaction.type == .delta ? "Δ" : "S")
+        let isPositive = transaction.amount >= 0
+        return Text(isPositive ? "+" : "−")
             .font(Theme.captionFont.weight(.bold))
             .foregroundStyle(.white)
             .frame(width: 28, height: 28)
             .background(
-                Circle().fill(transaction.type == .delta ? Theme.sage : Theme.lavender)
+                Circle().fill(isPositive ? Theme.sage : Theme.coral)
             )
     }
 
     private var amountText: String {
         let formatted = transaction.amount.formatted(.number.precision(.fractionLength(0...8)))
-        switch transaction.type {
-        case .delta:
-            let sign = transaction.amount >= 0 ? "+" : ""
-            return "\(sign)\(formatted) \(asset.displayTicker)"
-        case .snapshot:
-            return "→ \(formatted) \(asset.displayTicker)"
-        }
+        let sign = transaction.amount >= 0 ? "+" : ""
+        return "\(sign)\(formatted) \(asset.displayTicker)"
     }
 }

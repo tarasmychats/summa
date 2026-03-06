@@ -36,7 +36,8 @@ export async function fetchExchangeRates(
 
   try {
     const response = await fetch(
-      `${EXCHANGERATE_BASE}/${apiKey}/latest/${base}`
+      `${EXCHANGERATE_BASE}/${apiKey}/latest/${base}`,
+      { signal: AbortSignal.timeout(15_000) }
     );
     if (!response.ok) {
       logger.warn("fiat rate fetch failed", { status: response.status, baseCurrency });

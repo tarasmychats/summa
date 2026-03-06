@@ -25,9 +25,9 @@ struct TransactionListView: View {
                             .listRowBackground(Theme.bgCard)
                     }
                     .onDelete { indexSet in
-                        let snapshot = sortedTransactions
+                        let allTxns = sortedTransactions
                         for index in indexSet {
-                            modelContext.delete(snapshot[index])
+                            modelContext.delete(allTxns[index])
                         }
                         try? modelContext.save()
                         asset.amount = asset.currentAmount

@@ -10,12 +10,14 @@ enum Theme {
     static let coral = Color(light: .init(hex: 0xE8836B), dark: .init(hex: 0xF09580))
     static let lavender = Color(light: .init(hex: 0x9B8EC4), dark: .init(hex: 0xB0A4D4))
     static let amber = Color(light: .init(hex: 0xE8B44C), dark: .init(hex: 0xF0C460))
+    static let sky = Color(light: .init(hex: 0x5B9BD5), dark: .init(hex: 0x6FAEE0))
     static let textPrimary = Color(light: .init(hex: 0x2C2926), dark: .init(hex: 0xF5F3F0))
     static let textMuted = Color(light: .init(hex: 0x6B6660), dark: .init(hex: 0x9E99A8))
     static let accent = sage
 
     static let cryptoTint = Color(light: .init(hex: 0xF3F0FA), dark: .init(hex: 0x2E2A3A))
     static let stockTint = Color(light: .init(hex: 0xEFF6F2), dark: .init(hex: 0x242E29))
+    static let etfTint = Color(light: .init(hex: 0xEDF4FA), dark: .init(hex: 0x232A32))
     static let fiatTint = Color(light: .init(hex: 0xFBF6EC), dark: .init(hex: 0x302C22))
 
     // MARK: - Typography (Dynamic Type)
@@ -38,6 +40,7 @@ enum Theme {
         switch category {
         case .crypto: return lavender
         case .stock: return sage
+        case .etf: return sky
         case .fiat: return amber
         }
     }
@@ -46,6 +49,7 @@ enum Theme {
         switch category {
         case .crypto: return cryptoTint
         case .stock: return stockTint
+        case .etf: return etfTint
         case .fiat: return fiatTint
         }
     }

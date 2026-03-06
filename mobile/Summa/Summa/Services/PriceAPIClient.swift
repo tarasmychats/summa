@@ -8,7 +8,7 @@ class PriceAPIClient {
     #if targetEnvironment(simulator)
     private let baseURL = "http://localhost:3001/api"
     #else
-    private let baseURL = "http://192.168.1.154:3001/api"
+    private let baseURL = "http://192.168.1.171:3001/api"
     #endif
 
     func fetchPrices(

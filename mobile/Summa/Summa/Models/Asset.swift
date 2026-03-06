@@ -20,17 +20,7 @@ final class Asset {
         guard let txns = transactions, !txns.isEmpty else {
             return amount
         }
-        let sorted = txns.sorted { $0.date < $1.date }
-        var balance = 0.0
-        for txn in sorted {
-            switch txn.type {
-            case .delta:
-                balance += txn.amount
-            case .snapshot:
-                balance = txn.amount
-            }
-        }
-        return balance
+        return txns.reduce(0.0) { $0 + $1.amount }
     }
 
     var assetCategory: AssetCategory {

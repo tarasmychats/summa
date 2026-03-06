@@ -17,6 +17,8 @@ struct AddAssetView: View {
     @State private var searchTask: Task<Void, Never>?
     @State private var savedTrigger = 0
     @State private var duplicateAsset: AssetDefinition?
+    @State private var transactionDate = Date()
+    @State private var note = ""
 
     private var existingAssetIDs: Set<String> {
         DuplicateAssetDetector.existingAssetIDs(from: allAssets)
@@ -202,38 +204,63 @@ struct AddAssetView: View {
     }
 
     private func amountInput(for asset: AssetDefinition) -> some View {
-        VStack(spacing: 24) {
-            Spacer()
+        Form {
+            Section {
+                HStack {
+                    Image(systemName: asset.category.iconName)
+                        .font(.system(size: 16))
+                        .foregroundStyle(Theme.categoryColor(asset.category))
+                    Text(asset.name)
+                        .font(Theme.headlineFont)
+                    Spacer()
+                    Text(asset.symbol)
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textMuted)
+                }
+            }
+            .listRowBackground(Theme.bgCard)
 
-            Text(asset.name)
-                .font(Theme.titleFont)
+            Section {
+                HStack {
+                    Text("Amount")
+                        .font(Theme.bodyFont)
+                    Spacer()
+                    TextField("0", text: $amount)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .font(Theme.bodyFont)
+                }
 
-            TextField("Amount", text: $amount)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(.roundedBorder)
-                .font(Theme.largeValue)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                DatePicker("Date", selection: $transactionDate, displayedComponents: .date)
 
-            Text("How much \(asset.symbol) do you own?")
+                TextField("Note (optional)", text: $note)
+            }
+            .listRowBackground(Theme.bgCard)
+
+            Section {
+                Button("Add to Portfolio") {
+                    saveAsset(asset)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .disabled(parsedAmount == nil || parsedAmount! <= 0)
+            }
+            .listRowBackground(Theme.bgCard)
+
+            Section {
+                Button("Back") {
+                    selectedAsset = nil
+                    amount = ""
+                    note = ""
+                    transactionDate = Date()
+                }
                 .font(Theme.bodyFont)
                 .foregroundStyle(Theme.textMuted)
-
-            Button("Add to Portfolio") {
-                saveAsset(asset)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(parsedAmount == nil || parsedAmount! <= 0)
-
-            Button("Back") {
-                selectedAsset = nil
-                amount = ""
-            }
-            .font(Theme.bodyFont)
-            .foregroundStyle(Theme.textMuted)
-
-            Spacer()
+            .listRowBackground(Color.clear)
         }
+        .scrollContentBackground(.hidden)
+        .background(Theme.bgPrimary)
     }
 
     private var upgradePrompt: some View {
@@ -268,7 +295,7 @@ struct AddAssetView: View {
         )
         modelContext.insert(asset)
 
-        let txn = Transaction(date: Date(), type: .snapshot, amount: value)
+        let txn = Transaction(date: transactionDate, type: .delta, amount: value, note: note.isEmpty ? nil : note)
         txn.asset = asset
         modelContext.insert(txn)
 
