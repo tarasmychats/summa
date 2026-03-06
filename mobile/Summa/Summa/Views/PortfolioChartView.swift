@@ -270,6 +270,8 @@ struct PortfolioChartView: View {
         }
         if PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: currency) {
             dataPoints = generateFiatDataPoints(assets: assets)
+            isLoading = false
+            errorMessage = nil
             return
         }
 
