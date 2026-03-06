@@ -107,12 +107,12 @@ struct ProjectionsView: View {
 
     private func refreshHoldings() async {
         priceError = nil
+        currencyCode = displayCurrency
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
                 baseCurrency: displayCurrency
             )
-            currencyCode = displayCurrency
             let priceMap = Dictionary(prices.map { ($0.id, $0.price) }, uniquingKeysWith: { _, last in last })
             holdings = assets.map { asset in
                 PortfolioHolding(
