@@ -1,8 +1,8 @@
 import { logger } from "../logger.js";
 import { config } from "../config.js";
-import { coingeckoCircuit } from "./circuitBreaker.js";
+import { cryptoCompareCircuit } from "./circuitBreaker.js";
 
-const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
+const CRYPTOCOMPARE_BASE = "https://min-api.cryptocompare.com/data/v2";
 
 export interface CryptoHistoryPoint {
   date: string; // YYYY-MM-DD
@@ -10,51 +10,99 @@ export interface CryptoHistoryPoint {
 }
 
 /**
- * Fetches historical daily prices for a cryptocurrency from CoinGecko.
- * Free tier supports up to 365 days of history.
+ * Fetches historical daily prices for a cryptocurrency from CryptoCompare.
+ * Paginates backwards using `toTs` when days > 2000.
  */
 export async function fetchCryptoHistory(
-  coinId: string,
+  symbol: string,
   days: number
 ): Promise<CryptoHistoryPoint[]> {
-  const apiKey = config.coingeckoApiKey;
+  const allPoints: CryptoHistoryPoint[] = [];
+  let remaining = days;
+  let toTs: number | undefined;
+
+  while (remaining > 0) {
+    const limit = Math.min(remaining, 2000);
+    const points = await fetchPage(symbol, limit, toTs);
+
+    if (points.length === 0) break;
+
+    allPoints.push(...points);
+    remaining -= points.length;
+
+    // Set toTs to the day before the oldest point for next page
+    const oldestDate = points[points.length - 1].date;
+    toTs = Math.floor(new Date(oldestDate).getTime() / 1000) - 86400;
+  }
+
+  // Sort chronologically and deduplicate by date
+  const seen = new Set<string>();
+  return allPoints
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .filter((p) => {
+      if (seen.has(p.date)) return false;
+      seen.add(p.date);
+      return true;
+    });
+}
+
+async function fetchPage(
+  symbol: string,
+  limit: number,
+  toTs?: number
+): Promise<CryptoHistoryPoint[]> {
   const params = new URLSearchParams({
-    vs_currency: "usd",
-    days: String(days),
-    interval: "daily",
+    fsym: symbol,
+    tsym: "USD",
+    limit: String(limit),
   });
+  if (toTs != null) {
+    params.set("toTs", String(toTs));
+  }
+  const apiKey = config.cryptoCompareApiKey;
   if (apiKey) {
-    params.set("x_cg_demo_api_key", apiKey);
+    params.set("api_key", apiKey);
   }
 
   try {
-    const response = await coingeckoCircuit.fetch(
-      `${COINGECKO_BASE}/coins/${encodeURIComponent(coinId)}/market_chart?${params}`
+    const response = await cryptoCompareCircuit.fetch(
+      `${CRYPTOCOMPARE_BASE}/histoday?${params}`
     );
     if (!response.ok) {
-      const msg = `CoinGecko API returned ${response.status}`;
+      const msg = `CryptoCompare API returned ${response.status}`;
       logger.warn("crypto history fetch failed", {
         status: response.status,
-        coinId,
-        days,
+        symbol,
+        limit,
       });
       throw new Error(msg);
     }
 
     const data = await response.json();
-    if (!data.prices || !Array.isArray(data.prices)) {
-      logger.warn("crypto history response missing prices array", { coinId });
+
+    if (data.Response === "Error") {
+      logger.warn("CryptoCompare API error response", {
+        symbol,
+        message: data.Message,
+      });
+      throw new Error(`CryptoCompare API error: ${data.Message}`);
+    }
+
+    if (!data.Data?.Data || !Array.isArray(data.Data.Data)) {
+      logger.warn("crypto history response missing Data.Data array", { symbol });
       return [];
     }
 
-    return data.prices.map(([timestamp, price]: [number, number]) => ({
-      date: new Date(timestamp).toISOString().split("T")[0],
-      price,
-    }));
+    return data.Data.Data
+      .filter((point: any) => point.close > 0)
+      .map((point: any) => ({
+        date: new Date(point.time * 1000).toISOString().split("T")[0],
+        price: point.close,
+      }));
   } catch (err) {
     logger.error("crypto history fetch error", {
-      coinId,
-      days,
+      symbol,
+      limit,
       error: String(err),
     });
     throw err;
@@ -62,9 +110,9 @@ export async function fetchCryptoHistory(
 }
 
 /**
- * Delays execution for rate limiting between CoinGecko API calls.
- * CoinGecko free tier: 30 req/min -> 2s between calls.
+ * Delays execution for rate limiting between CryptoCompare API calls.
+ * CryptoCompare free tier is generous (~50 req/sec), but we add a small delay.
  */
 export function rateLimitDelay(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 2000));
+  return new Promise((resolve) => setTimeout(resolve, 500));
 }
