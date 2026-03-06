@@ -131,7 +131,7 @@ struct AddAssetView: View {
                                                     .font(Theme.captionFont)
                                                     .foregroundStyle(Theme.textMuted)
                                                 Text(category.displayName)
-                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                                                    .font(Theme.captionFont.weight(.medium))
                                                     .foregroundStyle(Theme.categoryColor(category))
                                                     .padding(.horizontal, 6)
                                                     .padding(.vertical, 2)

@@ -11,7 +11,7 @@ class DashboardViewModel {
     var breakdown: [AssetCategory: Double] = [:]
     var riskScore: RiskScore = RiskScore(value: 0, label: "No Assets")
     var projectionPreview: Projection?
-    var isLoading = false
+    var isLoading = true
     var priceError: String?
     var currencyCode: String = "USD"
     var lastUpdated: Date?
@@ -134,16 +134,24 @@ class DashboardViewModel {
                 return (asset, txns)
             }
 
-            // Build per-asset price maps
-            let assetPriceMaps: [(asset: Asset, sortedTxns: [Transaction], priceMap: [String: Double])] = assetTransactions.compactMap { (asset, sortedTxns) in
+            // Build per-asset price maps for assets that have history
+            var assetsWithHistory: [(asset: Asset, sortedTxns: [Transaction], priceMap: [String: Double])] = []
+            var assetsWithoutHistory: [(asset: Asset, sortedTxns: [Transaction], currentPrice: Double)] = []
+
+            for (asset, sortedTxns) in assetTransactions {
                 let compositeKey = "\(asset.symbol):\(asset.category)"
-                guard let assetHistory = history[compositeKey] else { return nil }
-                let priceMap = Dictionary(assetHistory.map { ($0.date, $0.price) }, uniquingKeysWith: { _, last in last })
-                return (asset, sortedTxns, priceMap)
+                if let assetHistory = history[compositeKey] {
+                    let priceMap = Dictionary(assetHistory.map { ($0.date, $0.price) }, uniquingKeysWith: { _, last in last })
+                    assetsWithHistory.append((asset, sortedTxns, priceMap))
+                } else {
+                    // Assets without history (e.g. fiat) use current holding price
+                    let holding = holdings.first(where: { $0.id == asset.id })
+                    let price = holding?.pricePerUnit ?? 0
+                    assetsWithoutHistory.append((asset, sortedTxns, price))
+                }
             }
 
-            // Skip assets without history (e.g. fiat) rather than aborting entirely
-            guard !assetPriceMaps.isEmpty else { return nil }
+            guard !assetsWithHistory.isEmpty else { return nil }
 
             // Find the most recent date where all assets with history have a price
             for candidateDate in sortedDates {
@@ -151,7 +159,7 @@ class DashboardViewModel {
 
                 var dayTotal = 0.0
                 var allHavePrice = true
-                for (asset, sortedTxns, priceMap) in assetPriceMaps {
+                for (asset, sortedTxns, priceMap) in assetsWithHistory {
                     guard let price = priceMap[candidateDate] else {
                         allHavePrice = false
                         break
@@ -161,6 +169,11 @@ class DashboardViewModel {
                 }
 
                 if allHavePrice {
+                    // Include assets without history (e.g. fiat) at their current price
+                    for (asset, sortedTxns, currentPrice) in assetsWithoutHistory {
+                        let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns, fallbackAmount: asset.amount)
+                        dayTotal += currentPrice * amount
+                    }
                     return dayTotal > 0 ? dayTotal : nil
                 }
             }

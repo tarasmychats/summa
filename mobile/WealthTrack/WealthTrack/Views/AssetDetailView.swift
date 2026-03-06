@@ -149,7 +149,7 @@ struct TransactionRow: View {
 
     private var typeBadge: some View {
         Text(transaction.type == .delta ? "Δ" : "S")
-            .font(.system(size: 13, weight: .bold, design: .rounded))
+            .font(Theme.captionFont.weight(.bold))
             .foregroundStyle(.white)
             .frame(width: 28, height: 28)
             .background(
