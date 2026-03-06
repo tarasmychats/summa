@@ -21,9 +21,10 @@ import {
   rateLimitDelay as fiatRateLimit,
 } from "./fiatHistory.js";
 import { normalizeCurrency } from "../currency.js";
+import { getAssetSymbol } from "../repositories/assets.js";
 
-/** Maximum days for CoinGecko free tier */
-const CRYPTO_MAX_DAYS = 365;
+/** Maximum days for CryptoCompare history */
+const CRYPTO_MAX_DAYS = 1825;
 /** Years of history for stocks */
 const STOCK_YEARS = 5;
 /** Years of history for fiat */
@@ -122,7 +123,12 @@ export async function backfillAsset(
 }
 
 async function fetchAndMapCrypto(coinId: string): Promise<DailyPriceInput[]> {
-  const history = await fetchCryptoHistory(coinId, CRYPTO_MAX_DAYS);
+  const symbol = await getAssetSymbol(coinId, "crypto");
+  if (!symbol) {
+    logger.warn("no symbol found for crypto asset, skipping", { coinId });
+    return [];
+  }
+  const history = await fetchCryptoHistory(symbol, CRYPTO_MAX_DAYS);
   const usdPrices = history.map((point) => ({
     assetId: coinId,
     category: "crypto",
