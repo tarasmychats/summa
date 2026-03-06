@@ -2,12 +2,23 @@ import SwiftUI
 import SwiftData
 import Charts
 
+enum DashboardSheet: Identifiable {
+    case addAsset
+    case suggestedAsset(AssetDefinition)
+
+    var id: String {
+        switch self {
+        case .addAsset: return "addAsset"
+        case .suggestedAsset(let asset): return "suggested-\(asset.id)"
+        }
+    }
+}
+
 struct DashboardView: View {
     @Query private var assets: [Asset]
     @Query private var allSettings: [UserSettings]
     @State private var viewModel = DashboardViewModel()
-    @State private var showingAddAsset = false
-    @State private var suggestedAsset: AssetDefinition?
+    @State private var activeSheet: DashboardSheet?
     @State private var cardsAppeared = false
 
     static let suggestedAssets: [AssetDefinition] = [
@@ -75,18 +86,20 @@ struct DashboardView: View {
                             Image(systemName: "gearshape")
                         }
                         Button {
-                            showingAddAsset = true
+                            activeSheet = .addAsset
                         } label: {
                             Image(systemName: "plus")
                         }
                     }
                 }
             }
-            .sheet(isPresented: $showingAddAsset) {
-                AddAssetView()
-            }
-            .sheet(item: $suggestedAsset) { asset in
-                AddAssetView(initialAsset: asset)
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .addAsset:
+                    AddAssetView()
+                case .suggestedAsset(let asset):
+                    AddAssetView(initialAsset: asset)
+                }
             }
             .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
                 await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
@@ -156,7 +169,7 @@ struct DashboardView: View {
                 .foregroundStyle(Theme.textMuted)
                 .multilineTextAlignment(.center)
             Button("Add Asset") {
-                showingAddAsset = true
+                activeSheet = .addAsset
             }
             .buttonStyle(.borderedProminent)
 
@@ -167,7 +180,7 @@ struct DashboardView: View {
                 HStack(spacing: 10) {
                     ForEach(Self.suggestedAssets) { asset in
                         Button {
-                            suggestedAsset = asset
+                            activeSheet = .suggestedAsset(asset)
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: asset.category.iconName)
