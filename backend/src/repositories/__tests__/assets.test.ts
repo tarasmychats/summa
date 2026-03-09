@@ -19,9 +19,9 @@ describe("assets repository", () => {
       expect(mockQuery).not.toHaveBeenCalled();
     });
 
-    it("builds parameterized INSERT with ON CONFLICT DO NOTHING", async () => {
+    it("builds parameterized INSERT with ON CONFLICT DO UPDATE", async () => {
       await seedAssets([
-        { id: "bitcoin", category: "crypto", name: "Bitcoin", symbol: "BTC" },
+        { id: "bitcoin", category: "crypto", name: "Bitcoin", symbol: "BTC", enabled: true },
         { id: "AAPL", category: "stock", name: "Apple Inc.", symbol: "AAPL" },
       ]);
 
@@ -29,10 +29,11 @@ describe("assets repository", () => {
       const [sql, params] = mockQuery.mock.calls[0];
       expect(sql).toContain("INSERT INTO assets");
       expect(sql).toContain("ON CONFLICT");
-      expect(sql).toContain("DO NOTHING");
+      expect(sql).toContain("DO UPDATE SET");
+      expect(sql).toContain("enabled = EXCLUDED.enabled");
       expect(params).toEqual([
-        "bitcoin", "crypto", "Bitcoin", "BTC",
-        "AAPL", "stock", "Apple Inc.", "AAPL",
+        "bitcoin", "crypto", "Bitcoin", "BTC", true,
+        "AAPL", "stock", "Apple Inc.", "AAPL", false,
       ]);
     });
   });

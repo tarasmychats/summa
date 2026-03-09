@@ -1,9 +1,6 @@
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Query private var assets: [Asset]
-
     var body: some View {
         TabView {
             DashboardView()
@@ -27,5 +24,4 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Asset.self, inMemory: true)
 }

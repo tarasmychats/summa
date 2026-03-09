@@ -1,9 +1,10 @@
 import Foundation
-import SwiftData
 import Observation
 
 @MainActor @Observable
 class DashboardViewModel {
+    var assets: [Asset] = []
+    var transactions: [String: [Transaction]] = [:] // assetId -> transactions
     var holdings: [PortfolioHolding] = []
     var totalValue: Double = 0
     var previousValue: Double?
@@ -24,8 +25,33 @@ class DashboardViewModel {
         return f
     }()
 
-    func refresh(assets: [Asset], baseCurrency: String = "USD") async {
+    func refresh(baseCurrency: String = "USD") async {
         currencyCode = baseCurrency
+        isLoading = true
+        priceError = nil
+
+        // Fetch assets from API
+        do {
+            let response: AssetListResponse = try await UserAPIClient.shared.get(path: "/user/assets")
+            assets = response.assets
+        } catch {
+            print("[Summa] Failed to fetch assets: \(error)")
+            if assets.isEmpty {
+                isLoading = false
+                return
+            }
+        }
+
+        // Fetch transactions for all assets
+        for asset in assets {
+            do {
+                let response: TransactionListResponse = try await UserAPIClient.shared.get(path: "/user/assets/\(asset.id)/transactions")
+                transactions[asset.id] = response.transactions
+            } catch {
+                print("[Summa] Failed to fetch transactions for \(asset.id): \(error)")
+            }
+        }
+
         guard !assets.isEmpty else {
             holdings = []
             totalValue = 0
@@ -39,8 +65,6 @@ class DashboardViewModel {
             isLoading = false
             return
         }
-        isLoading = true
-        priceError = nil
 
         // Fetch prices from API
         do {
@@ -73,7 +97,7 @@ class DashboardViewModel {
         } catch {
             print("[Summa] Price fetch failed: \(error)")
             priceError = PriceErrorMessage.userMessage(from: error)
-            // Use zero prices on error — user still sees their assets
+            // Use zero prices on error -- user still sees their assets
             holdings = assets.map { asset in
                 PortfolioHolding(
                     id: asset.id,
@@ -131,7 +155,7 @@ class DashboardViewModel {
 
             // Pre-compute sorted transactions for each asset
             let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
-                let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+                let txns = (transactions[asset.id] ?? []).sorted { $0.parsedDate < $1.parsedDate }
                 return (asset, txns)
             }
 
@@ -165,14 +189,14 @@ class DashboardViewModel {
                         allHavePrice = false
                         break
                     }
-                    let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns, fallbackAmount: asset.amount)
+                    let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns)
                     dayTotal += price * amount
                 }
 
                 if allHavePrice {
                     // Include assets without history (e.g. fiat) at their current price
                     for (asset, sortedTxns, currentPrice) in assetsWithoutHistory {
-                        let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns, fallbackAmount: asset.amount)
+                        let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns)
                         dayTotal += currentPrice * amount
                     }
                     return dayTotal > 0 ? dayTotal : nil

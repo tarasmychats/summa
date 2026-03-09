@@ -1,13 +1,33 @@
 {
   "info": {
     "name": "Summa API",
-    "description": "Summa backend price API — stateless proxy for crypto, stock, and fiat prices.",
+    "description": "Summa backend API — price proxy, auth, and user data for multi-asset wealth tracking.\n\nTip: Run 'Create Anonymous User' first — it auto-saves tokens so all authenticated requests just work.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assetId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "transactionId",
+      "value": "",
       "type": "string"
     }
   ],
@@ -38,10 +58,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -61,10 +78,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -84,10 +98,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -107,10 +118,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -130,10 +138,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -163,10 +168,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "search"],
               "query": [
-                {
-                  "key": "q",
-                  "value": "bitcoin"
-                }
+                { "key": "q", "value": "bitcoin" }
               ]
             },
             "description": "Search across all asset categories."
@@ -183,14 +185,8 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "search"],
               "query": [
-                {
-                  "key": "q",
-                  "value": "eth"
-                },
-                {
-                  "key": "category",
-                  "value": "crypto"
-                }
+                { "key": "q", "value": "eth" },
+                { "key": "category", "value": "crypto" }
               ]
             },
             "description": "Search for crypto assets only."
@@ -207,14 +203,8 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "search"],
               "query": [
-                {
-                  "key": "q",
-                  "value": "apple"
-                },
-                {
-                  "key": "category",
-                  "value": "stock"
-                }
+                { "key": "q", "value": "apple" },
+                { "key": "category", "value": "stock" }
               ]
             },
             "description": "Search for stock assets only."
@@ -231,14 +221,8 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "search"],
               "query": [
-                {
-                  "key": "q",
-                  "value": "eur"
-                },
-                {
-                  "key": "category",
-                  "value": "fiat"
-                }
+                { "key": "q", "value": "eur" },
+                { "key": "category", "value": "fiat" }
               ]
             },
             "description": "Search for fiat currencies only."
@@ -256,6 +240,553 @@
               "path": ["api", "search"]
             },
             "description": "Should return 400 — missing q parameter."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "item": [
+        {
+          "name": "Get History — Mixed Assets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/history?assets=bitcoin,AAPL&categories=crypto,stock&from=2024-01-01&to=2024-12-31&currency=usd",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "history"],
+              "query": [
+                { "key": "assets", "value": "bitcoin,AAPL" },
+                { "key": "categories", "value": "crypto,stock" },
+                { "key": "from", "value": "2024-01-01" },
+                { "key": "to", "value": "2024-12-31" },
+                { "key": "currency", "value": "usd" }
+              ]
+            },
+            "description": "Fetch historical prices for multiple assets."
+          },
+          "response": []
+        },
+        {
+          "name": "Get History — EUR currency",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/history?assets=ethereum&categories=crypto&from=2024-06-01&to=2024-06-30&currency=eur",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "history"],
+              "query": [
+                { "key": "assets", "value": "ethereum" },
+                { "key": "categories", "value": "crypto" },
+                { "key": "from", "value": "2024-06-01" },
+                { "key": "to", "value": "2024-06-30" },
+                { "key": "currency", "value": "eur" }
+              ]
+            },
+            "description": "Fetch historical prices in EUR."
+          },
+          "response": []
+        },
+        {
+          "name": "Get History — Missing Params (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/history?assets=bitcoin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "history"],
+              "query": [
+                { "key": "assets", "value": "bitcoin" }
+              ]
+            },
+            "description": "Should return 400 — missing required query parameters."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Create Anonymous User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refreshToken', res.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/anonymous",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "anonymous"]
+            },
+            "description": "Create an anonymous user and receive JWT tokens. Auto-saves accessToken and refreshToken."
+          },
+          "response": []
+        },
+        {
+          "name": "Apple Sign In",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refreshToken', res.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identityToken\": \"<paste-apple-identity-token-here>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/apple",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "apple"]
+            },
+            "description": "Sign in with Apple identity token. Auto-saves accessToken and refreshToken."
+          },
+          "response": []
+        },
+        {
+          "name": "Merge Anonymous into Apple",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refreshToken', res.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"anonymousToken\": \"{{accessToken}}\",\n  \"identityToken\": \"<paste-apple-identity-token-here>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/merge",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "merge"]
+            },
+            "description": "Merge anonymous account data into an Apple account. Auto-saves new tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) pm.collectionVariables.set('accessToken', res.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Refresh the access token. Auto-saves new accessToken."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Settings",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "settings"]
+            },
+            "description": "Get user settings (auto-creates defaults on first call)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Settings — Display Currency",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayCurrency\": \"EUR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "settings"]
+            },
+            "description": "Update display currency to EUR."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Settings — Premium",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isPremium\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "settings"]
+            },
+            "description": "Update premium status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Assets",
+      "item": [
+        {
+          "name": "List Assets",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets"]
+            },
+            "description": "List all user assets with computed currentAmount."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Asset — Crypto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.asset && res.asset.id) pm.collectionVariables.set('assetId', res.asset.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bitcoin\",\n  \"symbol\": \"bitcoin\",\n  \"ticker\": \"BTC\",\n  \"category\": \"crypto\",\n  \"amount\": 1.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets"]
+            },
+            "description": "Add a crypto asset. Auto-saves assetId."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Asset — Stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.asset && res.asset.id) pm.collectionVariables.set('assetId', res.asset.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Apple Inc.\",\n  \"symbol\": \"AAPL\",\n  \"ticker\": \"AAPL\",\n  \"category\": \"stock\",\n  \"amount\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets"]
+            },
+            "description": "Add a stock asset. Auto-saves assetId."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Asset — Missing Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bitcoin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets"]
+            },
+            "description": "Should return 400 — missing required fields (symbol, ticker, category)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Asset",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bitcoin (Updated)\",\n  \"amount\": 2.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}"]
+            },
+            "description": "Update an asset's name or amount."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Asset",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}"]
+            },
+            "description": "Delete an asset and all its transactions."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Transactions",
+      "item": [
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}", "transactions"]
+            },
+            "description": "List all transactions for an asset."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction — Delta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.transaction && res.transaction.id) pm.collectionVariables.set('transactionId', res.transaction.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"delta\",\n  \"amount\": 0.5,\n  \"date\": \"2024-06-15\",\n  \"note\": \"Bought more BTC\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}", "transactions"]
+            },
+            "description": "Add a delta transaction (add/subtract from current amount). Auto-saves transactionId."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction — Snapshot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.transaction && res.transaction.id) pm.collectionVariables.set('transactionId', res.transaction.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"snapshot\",\n  \"amount\": 3.0,\n  \"date\": \"2024-07-01\",\n  \"note\": \"Portfolio rebalance — set total to 3 BTC\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}", "transactions"]
+            },
+            "description": "Add a snapshot transaction (set total amount). Auto-saves transactionId."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction — Missing Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"delta\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}", "transactions"]
+            },
+            "description": "Should return 400 — missing required fields (amount, date)."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/assets/{{assetId}}/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "assets", "{{assetId}}", "transactions", "{{transactionId}}"]
+            },
+            "description": "Delete a specific transaction."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/account",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "account"]
+            },
+            "description": "Delete the authenticated user and all associated data (assets, transactions, settings)."
           },
           "response": []
         }

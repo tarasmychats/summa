@@ -1,18 +1,22 @@
 import SwiftUI
-import SwiftData
 
 struct AssetListView: View {
-    @Query private var assets: [Asset]
-    @Environment(\.modelContext) private var modelContext
     var viewModel: DashboardViewModel?
     @State private var assetsToDelete: [Asset] = []
     @State private var showDeleteConfirmation = false
     @State private var transactionAsset: Asset?
+    @State private var isDeleting = false
+
+    private var assets: [Asset] {
+        viewModel?.assets ?? []
+    }
 
     var body: some View {
         List {
             ForEach(assets) { asset in
-                NavigationLink(destination: AssetDetailView(asset: asset)) {
+                NavigationLink(destination: AssetDetailView(asset: asset, onUpdate: {
+                    await viewModel?.refresh(baseCurrency: viewModel?.currencyCode ?? "USD")
+                })) {
                     HStack {
                         Image(systemName: asset.assetCategory.iconName)
                             .foregroundStyle(Theme.categoryColor(asset.assetCategory))
@@ -56,10 +60,17 @@ struct AssetListView: View {
                : "Delete \(assetsToDelete.first?.name ?? "Asset")?",
                isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
-                for asset in assetsToDelete {
-                    modelContext.delete(asset)
+                Task {
+                    for asset in assetsToDelete {
+                        do {
+                            try await UserAPIClient.shared.delete(path: "/user/assets/\(asset.id)")
+                        } catch {
+                            print("[Summa] Failed to delete asset \(asset.id): \(error)")
+                        }
+                    }
+                    assetsToDelete = []
+                    await viewModel?.refresh(baseCurrency: viewModel?.currencyCode ?? "USD")
                 }
-                assetsToDelete = []
             }
             Button("Cancel", role: .cancel) {
                 assetsToDelete = []
@@ -72,7 +83,9 @@ struct AssetListView: View {
             }
         }
         .sheet(item: $transactionAsset) { asset in
-            AddTransactionView(asset: asset)
+            AddTransactionView(asset: asset) {
+                await viewModel?.refresh(baseCurrency: viewModel?.currencyCode ?? "USD")
+            }
         }
     }
 }

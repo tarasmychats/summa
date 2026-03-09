@@ -3,13 +3,14 @@ export interface SeedAsset {
   category: "fiat" | "crypto" | "stock" | "etf";
   name: string;
   symbol: string;
+  enabled?: boolean;
 }
 
 export const SEED_ASSETS: SeedAsset[] = [
   // === FIAT (8) ===
-  { id: "USD", category: "fiat", name: "US Dollar", symbol: "USD" },
-  { id: "EUR", category: "fiat", name: "Euro", symbol: "EUR" },
-  { id: "UAH", category: "fiat", name: "Ukrainian Hryvnia", symbol: "UAH" },
+  { id: "USD", category: "fiat", name: "US Dollar", symbol: "USD", enabled: true },
+  { id: "EUR", category: "fiat", name: "Euro", symbol: "EUR", enabled: true },
+  { id: "UAH", category: "fiat", name: "Ukrainian Hryvnia", symbol: "UAH", enabled: true },
   { id: "GBP", category: "fiat", name: "British Pound", symbol: "GBP" },
   { id: "CHF", category: "fiat", name: "Swiss Franc", symbol: "CHF" },
   { id: "JPY", category: "fiat", name: "Japanese Yen", symbol: "JPY" },
@@ -17,12 +18,12 @@ export const SEED_ASSETS: SeedAsset[] = [
   { id: "PLN", category: "fiat", name: "Polish Zloty", symbol: "PLN" },
 
   // === CRYPTO (100) ===
-  { id: "bitcoin", category: "crypto", name: "Bitcoin", symbol: "BTC" },
-  { id: "ethereum", category: "crypto", name: "Ethereum", symbol: "ETH" },
-  { id: "tether", category: "crypto", name: "Tether", symbol: "USDT" },
-  { id: "ripple", category: "crypto", name: "XRP", symbol: "XRP" },
+  { id: "bitcoin", category: "crypto", name: "Bitcoin", symbol: "BTC", enabled: true },
+  { id: "ethereum", category: "crypto", name: "Ethereum", symbol: "ETH", enabled: true },
+  { id: "tether", category: "crypto", name: "Tether", symbol: "USDT", enabled: true },
+  { id: "ripple", category: "crypto", name: "XRP", symbol: "XRP", enabled: true },
   { id: "binancecoin", category: "crypto", name: "BNB", symbol: "BNB" },
-  { id: "solana", category: "crypto", name: "Solana", symbol: "SOL" },
+  { id: "solana", category: "crypto", name: "Solana", symbol: "SOL", enabled: true },
   { id: "usd-coin", category: "crypto", name: "USD Coin", symbol: "USDC" },
   { id: "dogecoin", category: "crypto", name: "Dogecoin", symbol: "DOGE" },
   { id: "cardano", category: "crypto", name: "Cardano", symbol: "ADA" },
@@ -119,12 +120,12 @@ export const SEED_ASSETS: SeedAsset[] = [
   { id: "enjincoin", category: "crypto", name: "Enjin Coin", symbol: "ENJ" },
 
   // === STOCKS (100) ===
-  { id: "AAPL", category: "stock", name: "Apple Inc.", symbol: "AAPL" },
-  { id: "MSFT", category: "stock", name: "Microsoft Corporation", symbol: "MSFT" },
-  { id: "NVDA", category: "stock", name: "NVIDIA Corporation", symbol: "NVDA" },
-  { id: "AMZN", category: "stock", name: "Amazon.com, Inc.", symbol: "AMZN" },
-  { id: "GOOGL", category: "stock", name: "Alphabet Inc.", symbol: "GOOGL" },
-  { id: "META", category: "stock", name: "Meta Platforms, Inc.", symbol: "META" },
+  { id: "AAPL", category: "stock", name: "Apple Inc.", symbol: "AAPL", enabled: true },
+  { id: "MSFT", category: "stock", name: "Microsoft Corporation", symbol: "MSFT", enabled: true },
+  { id: "NVDA", category: "stock", name: "NVIDIA Corporation", symbol: "NVDA", enabled: true },
+  { id: "AMZN", category: "stock", name: "Amazon.com, Inc.", symbol: "AMZN", enabled: true },
+  { id: "GOOGL", category: "stock", name: "Alphabet Inc.", symbol: "GOOGL", enabled: true },
+  { id: "META", category: "stock", name: "Meta Platforms, Inc.", symbol: "META", enabled: true },
   { id: "BRK-B", category: "stock", name: "Berkshire Hathaway Inc.", symbol: "BRK-B" },
   { id: "LLY", category: "stock", name: "Eli Lilly and Company", symbol: "LLY" },
   { id: "TSM", category: "stock", name: "Taiwan Semiconductor Manufacturing Company", symbol: "TSM" },
@@ -221,11 +222,11 @@ export const SEED_ASSETS: SeedAsset[] = [
   { id: "ADBE", category: "stock", name: "Adobe Inc.", symbol: "ADBE" },
 
   // === ETFs (100) ===
-  { id: "SPY", category: "etf", name: "SPDR S&P 500 ETF Trust", symbol: "SPY" },
-  { id: "IVV", category: "etf", name: "iShares Core S&P 500 ETF", symbol: "IVV" },
-  { id: "VOO", category: "etf", name: "Vanguard S&P 500 ETF", symbol: "VOO" },
-  { id: "VTI", category: "etf", name: "Vanguard Total Stock Market ETF", symbol: "VTI" },
-  { id: "QQQ", category: "etf", name: "Invesco QQQ Trust", symbol: "QQQ" },
+  { id: "SPY", category: "etf", name: "SPDR S&P 500 ETF Trust", symbol: "SPY", enabled: true },
+  { id: "IVV", category: "etf", name: "iShares Core S&P 500 ETF", symbol: "IVV", enabled: true },
+  { id: "VOO", category: "etf", name: "Vanguard S&P 500 ETF", symbol: "VOO", enabled: true },
+  { id: "VTI", category: "etf", name: "Vanguard Total Stock Market ETF", symbol: "VTI", enabled: true },
+  { id: "QQQ", category: "etf", name: "Invesco QQQ Trust", symbol: "QQQ", enabled: true },
   { id: "VEA", category: "etf", name: "Vanguard FTSE Developed Markets ETF", symbol: "VEA" },
   { id: "VTV", category: "etf", name: "Vanguard Value ETF", symbol: "VTV" },
   { id: "BND", category: "etf", name: "Vanguard Total Bond Market ETF", symbol: "BND" },

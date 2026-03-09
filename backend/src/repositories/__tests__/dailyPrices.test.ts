@@ -12,6 +12,7 @@ import { resetPool } from "../../db.js";
 import {
   insertDailyPrices,
   getMultiAssetPrices,
+  getMultiAssetPricesAggregated,
 } from "../dailyPrices.js";
 
 describe("dailyPrices repository", () => {
@@ -214,6 +215,119 @@ describe("dailyPrices repository", () => {
           "usd"
         )
       ).rejects.toThrow("connection lost");
+    });
+  });
+
+  describe("getMultiAssetPricesAggregated", () => {
+    it("delegates to getMultiAssetPrices for daily resolution", async () => {
+      mockQuery.mockResolvedValue({
+        rows: [
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-01", price: "42000.00" },
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-02", price: "43000.00" },
+        ],
+      });
+
+      const result = await getMultiAssetPricesAggregated(
+        [{ assetId: "bitcoin", category: "crypto" }],
+        "2025-01-01",
+        "2025-01-31",
+        "usd",
+        "daily"
+      );
+
+      expect(result["bitcoin:crypto"]).toHaveLength(2);
+      const [sql] = mockQuery.mock.calls[0];
+      expect(sql).not.toContain("DISTINCT ON");
+    });
+
+    it("uses DISTINCT ON for weekly resolution", async () => {
+      mockQuery.mockResolvedValue({
+        rows: [
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-07", price: "43000.00" },
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-14", price: "44000.00" },
+        ],
+      });
+
+      const result = await getMultiAssetPricesAggregated(
+        [{ assetId: "bitcoin", category: "crypto" }],
+        "2025-01-01",
+        "2025-03-31",
+        "usd",
+        "weekly"
+      );
+
+      const [sql] = mockQuery.mock.calls[0];
+      expect(sql).toContain("DISTINCT ON");
+      expect(sql).toContain("date_trunc('week', date)");
+      expect(sql).toContain("date DESC");
+      expect(result["bitcoin:crypto"]).toHaveLength(2);
+    });
+
+    it("uses DISTINCT ON for monthly resolution", async () => {
+      mockQuery.mockResolvedValue({
+        rows: [
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-31", price: "43000.00" },
+        ],
+      });
+
+      await getMultiAssetPricesAggregated(
+        [{ assetId: "bitcoin", category: "crypto" }],
+        "2024-01-01",
+        "2025-12-31",
+        "usd",
+        "monthly"
+      );
+
+      const [sql] = mockQuery.mock.calls[0];
+      expect(sql).toContain("DISTINCT ON");
+      expect(sql).toContain("date_trunc('month', date)");
+    });
+
+    it("uses floor-based grouping for 3day resolution", async () => {
+      mockQuery.mockResolvedValue({
+        rows: [
+          { asset_id: "bitcoin", category: "crypto", date: "2025-01-03", price: "43000.00" },
+        ],
+      });
+
+      await getMultiAssetPricesAggregated(
+        [{ assetId: "bitcoin", category: "crypto" }],
+        "2025-01-01",
+        "2025-06-30",
+        "usd",
+        "3day"
+      );
+
+      const [sql] = mockQuery.mock.calls[0];
+      expect(sql).toContain("DISTINCT ON");
+      expect(sql).toContain("floor");
+    });
+
+    it("returns empty arrays for assets with no data", async () => {
+      mockQuery.mockResolvedValue({ rows: [] });
+
+      const result = await getMultiAssetPricesAggregated(
+        [{ assetId: "AAPL", category: "stock" }],
+        "2025-01-01",
+        "2025-12-31",
+        "usd",
+        "monthly"
+      );
+
+      expect(result["AAPL:stock"]).toEqual([]);
+    });
+
+    it("returns empty object for empty assets array", async () => {
+      const result = await getMultiAssetPricesAggregated(
+        [],
+        "2025-01-01",
+        "2025-12-31",
+        "usd",
+        "monthly"
+      );
+
+      expect(result).toEqual({});
+      expect(mockQuery).not.toHaveBeenCalled();
     });
   });
 });

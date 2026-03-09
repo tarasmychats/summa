@@ -1,12 +1,10 @@
 import SwiftUI
-import SwiftData
 
 struct AddAssetView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var allAssets: [Asset]
 
     var initialAsset: AssetDefinition?
+    var onSave: (() async -> Void)?
 
     @State private var searchText = ""
     @State private var selectedAsset: AssetDefinition?
@@ -19,15 +17,17 @@ struct AddAssetView: View {
     @State private var duplicateAsset: AssetDefinition?
     @State private var transactionDate = Date()
     @State private var note = ""
+    @State private var existingAssets: [Asset] = []
+    @State private var isSaving = false
 
     private var existingAssetIDs: Set<String> {
-        DuplicateAssetDetector.existingAssetIDs(from: allAssets)
+        DuplicateAssetDetector.existingAssetIDs(from: existingAssets)
     }
 
     var body: some View {
         NavigationStack {
             VStack {
-                if !PremiumGate.canAddAsset(currentCount: allAssets.count, isPremium: false) {
+                if !PremiumGate.canAddAsset(currentCount: existingAssets.count, isPremium: false) {
                     upgradePrompt
                 } else if let selected = selectedAsset {
                     amountInput(for: selected)
@@ -62,12 +62,24 @@ struct AddAssetView: View {
                     selectedAsset = initialAsset
                 }
             }
+            .task {
+                await loadExistingAssets()
+            }
             .navigationTitle("Add Asset")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
             }
+        }
+    }
+
+    private func loadExistingAssets() async {
+        do {
+            let response: AssetListResponse = try await UserAPIClient.shared.get(path: "/user/assets")
+            existingAssets = response.assets
+        } catch {
+            print("[Summa] Failed to load existing assets: \(error)")
         }
     }
 
@@ -242,7 +254,7 @@ struct AddAssetView: View {
                     saveAsset(asset)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .disabled(parsedAmount == nil || parsedAmount! <= 0)
+                .disabled(parsedAmount == nil || parsedAmount! <= 0 || isSaving)
             }
             .listRowBackground(Theme.bgCard)
 
@@ -285,24 +297,46 @@ struct AddAssetView: View {
 
     private func saveAsset(_ definition: AssetDefinition) {
         guard let value = parsedAmount, value > 0 else { return }
+        isSaving = true
 
-        let asset = Asset(
-            name: definition.name,
-            symbol: definition.id,
-            ticker: definition.symbol,
-            category: definition.category,
-            amount: value
-        )
-        modelContext.insert(asset)
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime]
 
-        let txn = Transaction(date: transactionDate, type: .delta, amount: value, note: note.isEmpty ? nil : note)
-        txn.asset = asset
-        modelContext.insert(txn)
+        Task {
+            do {
+                // Create asset via API
+                let createAsset = CreateAssetRequest(
+                    name: definition.name,
+                    symbol: definition.id,
+                    ticker: definition.symbol,
+                    category: definition.category.rawValue
+                )
+                let assetResponse: AssetResponse = try await UserAPIClient.shared.post(
+                    path: "/user/assets",
+                    body: createAsset
+                )
 
-        try? modelContext.save()
-        savedTrigger += 1
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            dismiss()
+                // Create initial transaction
+                let createTxn = CreateTransactionRequest(
+                    type: "delta",
+                    amount: value,
+                    date: dateFormatter.string(from: transactionDate),
+                    note: note.isEmpty ? nil : note
+                )
+                let _: TransactionResponse = try await UserAPIClient.shared.post(
+                    path: "/user/assets/\(assetResponse.asset.id)/transactions",
+                    body: createTxn
+                )
+
+                savedTrigger += 1
+                await onSave?()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    dismiss()
+                }
+            } catch {
+                print("[Summa] Failed to save asset: \(error)")
+                isSaving = false
+            }
         }
     }
 }

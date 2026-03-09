@@ -1,15 +1,15 @@
 import SwiftUI
-import SwiftData
 
 struct AssetDetailView: View {
     let asset: Asset
-    @Environment(\.modelContext) private var modelContext
-    @Query private var allSettings: [UserSettings]
+    var onUpdate: (() async -> Void)?
+    @State private var transactions: [Transaction] = []
     @State private var showingAddTransaction = false
     @State private var showingSetTotal = false
+    @State private var displayCurrency: String = "USD"
 
-    private var displayCurrency: String {
-        allSettings.first?.displayCurrency ?? "USD"
+    private var computedCurrentAmount: Double {
+        transactions.reduce(0) { $0 + $1.amount }
     }
 
     var body: some View {
@@ -28,7 +28,7 @@ struct AssetDetailView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.categoryColor(asset.assetCategory))
 
-                    Text(asset.currentAmount.formatted(.number.precision(.fractionLength(0...8)))
+                    Text(computedCurrentAmount.formatted(.number.precision(.fractionLength(0...8)))
                          + " " + asset.displayTicker)
                         .font(Theme.largeValue)
 
@@ -55,19 +55,23 @@ struct AssetDetailView: View {
                     }
                     .onDelete { indexSet in
                         let previewTransactions = Array(sortedTransactions.prefix(5))
-                        for index in indexSet {
-                            let txn = previewTransactions[index]
-                            modelContext.delete(txn)
+                        Task {
+                            for index in indexSet {
+                                let txn = previewTransactions[index]
+                                do {
+                                    try await UserAPIClient.shared.delete(path: "/user/assets/\(asset.id)/transactions/\(txn.id)")
+                                } catch {
+                                    print("[Summa] Failed to delete transaction: \(error)")
+                                }
+                            }
+                            await loadTransactions()
+                            await onUpdate?()
                         }
-                        // Persist deletion before recomputing to ensure currentAmount
-                        // doesn't include the deleted transaction
-                        try? modelContext.save()
-                        asset.amount = asset.currentAmount
                     }
 
                     if sortedTransactions.count > 5 {
                         NavigationLink {
-                            TransactionListView(asset: asset)
+                            TransactionListView(asset: asset, onUpdate: onUpdate)
                         } label: {
                             Text("View All Transactions (\(sortedTransactions.count))")
                                 .font(Theme.bodyFont)
@@ -102,15 +106,43 @@ struct AssetDetailView: View {
             }
         }
         .sheet(isPresented: $showingSetTotal) {
-            AddTransactionView(asset: asset, initialMode: .setTotal)
+            AddTransactionView(asset: asset, initialMode: .setTotal) {
+                await loadTransactions()
+                await onUpdate?()
+            }
         }
         .sheet(isPresented: $showingAddTransaction) {
-            AddTransactionView(asset: asset)
+            AddTransactionView(asset: asset) {
+                await loadTransactions()
+                await onUpdate?()
+            }
+        }
+        .task {
+            await loadSettings()
+            await loadTransactions()
         }
     }
 
     private var sortedTransactions: [Transaction] {
-        (asset.transactions ?? []).sorted { $0.date > $1.date }
+        transactions.sorted { $0.parsedDate > $1.parsedDate }
+    }
+
+    private func loadSettings() async {
+        do {
+            let response: SettingsResponse = try await UserAPIClient.shared.get(path: "/user/settings")
+            displayCurrency = response.settings.displayCurrency
+        } catch {
+            print("[Summa] Failed to fetch settings: \(error)")
+        }
+    }
+
+    private func loadTransactions() async {
+        do {
+            let response: TransactionListResponse = try await UserAPIClient.shared.get(path: "/user/assets/\(asset.id)/transactions")
+            transactions = response.transactions
+        } catch {
+            print("[Summa] Failed to fetch transactions: \(error)")
+        }
     }
 }
 
@@ -128,7 +160,7 @@ struct TransactionRow: View {
                 Text(amountText)
                     .font(Theme.headlineFont)
 
-                Text(transaction.date, style: .date)
+                Text(transaction.parsedDate, style: .date)
                     .font(Theme.captionFont)
                     .foregroundStyle(Theme.textMuted)
             }
@@ -149,7 +181,7 @@ struct TransactionRow: View {
 
     private var typeBadge: some View {
         let isPositive = transaction.amount >= 0
-        return Text(isPositive ? "+" : "−")
+        return Text(isPositive ? "+" : "\u{2212}")
             .font(Theme.captionFont.weight(.bold))
             .foregroundStyle(.white)
             .frame(width: 28, height: 28)

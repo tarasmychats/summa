@@ -4,7 +4,7 @@ import XCTest
 final class DuplicateAssetDetectorTests: XCTestCase {
 
     private func makeAsset(symbol: String) -> Asset {
-        Asset(name: "Test", symbol: symbol, ticker: symbol.uppercased(), category: .crypto, amount: 1)
+        Asset(name: "Test", symbol: symbol, ticker: symbol.uppercased(), category: .crypto, currentAmount: 1)
     }
 
     private func makeDefinition(id: String) -> AssetDefinition {

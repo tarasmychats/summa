@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import Charts
 
 enum ChartTimeRange: String, CaseIterable, Identifiable {
@@ -71,14 +70,18 @@ struct PortfolioDataPoint: Identifiable {
 }
 
 struct PortfolioChartView: View {
-    let assets: [Asset]
+    let viewModel: DashboardViewModel
     let currency: String
+
+    private var assets: [Asset] { viewModel.assets }
 
     @State private var selectedRange: ChartTimeRange = .threeMonths
     @State private var dataPoints: [PortfolioDataPoint] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var selectedIndex: Int?
+    @State private var transactionMarkers: [TransactionMarker] = []
+    @State private var tappedMarker: TransactionMarker?
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -135,7 +138,7 @@ struct PortfolioChartView: View {
             }
         }
         .themeCard()
-        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id.uuidString).joined())-\(currency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
+        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id).joined())-\(currency)") {
             await loadHistory()
         }
     }
@@ -166,26 +169,52 @@ struct PortfolioChartView: View {
 
     private var chart: some View {
         ZStack(alignment: .topLeading) {
-            Chart(dataPoints) { point in
-                LineMark(
-                    x: .value("Date", point.date),
-                    y: .value("Value", point.value)
-                )
-                .foregroundStyle(Theme.sage)
-                .interpolationMethod(.catmullRom)
-
-                AreaMark(
-                    x: .value("Date", point.date),
-                    y: .value("Value", point.value)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Theme.sage.opacity(0.3), Theme.sage.opacity(0.0)],
-                        startPoint: .top,
-                        endPoint: .bottom
+            Chart {
+                ForEach(dataPoints) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Value", point.value)
                     )
-                )
-                .interpolationMethod(.catmullRom)
+                    .foregroundStyle(Theme.sage)
+                    .interpolationMethod(.catmullRom)
+
+                    AreaMark(
+                        x: .value("Date", point.date),
+                        y: .value("Value", point.value)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Theme.sage.opacity(0.3), Theme.sage.opacity(0.0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .interpolationMethod(.catmullRom)
+                }
+
+                ForEach(transactionMarkers) { marker in
+                    PointMark(
+                        x: .value("Date", marker.date),
+                        y: .value("Value", marker.value)
+                    )
+                    .symbolSize(marker.isGrouped ? 100 : 64)
+                    .foregroundStyle(marker.isPositive ? Theme.sage : Theme.coral)
+                    .symbol {
+                        Circle()
+                            .fill(marker.isPositive ? Theme.sage : Theme.coral)
+                            .overlay(
+                                Circle()
+                                    .stroke(.white, lineWidth: 1.5)
+                            )
+                            .overlay {
+                                if marker.isGrouped {
+                                    Text("\(marker.transactions.count)")
+                                        .font(.system(size: 7, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                    }
+                }
             }
             .chartYScale(domain: yDomain)
             .chartPlotStyle { plot in
@@ -219,6 +248,7 @@ struct PortfolioChartView: View {
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
+                                    tappedMarker = nil
                                     guard let plotFrame = proxy.plotFrame else { return }
                                     let xPosition = value.location.x - geometry[plotFrame].origin.x
                                     guard let date: Date = proxy.value(atX: xPosition) else { return }
@@ -228,7 +258,22 @@ struct PortfolioChartView: View {
                                         }
                                     }
                                 }
-                                .onEnded { _ in
+                                .onEnded { value in
+                                    let translation = value.translation
+                                    let isTap = abs(translation.width) < 5 && abs(translation.height) < 5
+                                    if isTap {
+                                        guard let plotFrame = proxy.plotFrame else { return }
+                                        let xPosition = value.location.x - geometry[plotFrame].origin.x
+                                        guard let date: Date = proxy.value(atX: xPosition) else { return }
+                                        let nearest = transactionMarkers.min(by: {
+                                            abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
+                                        })
+                                        if let nearest, abs(nearest.date.timeIntervalSince(date)) < 86400 * 1.5 {
+                                            tappedMarker = tappedMarker?.id == nearest.id ? nil : nearest
+                                        } else {
+                                            tappedMarker = nil
+                                        }
+                                    }
                                     selectedIndex = nil
                                 }
                         )
@@ -238,25 +283,87 @@ struct PortfolioChartView: View {
             if let selected = selectedPoint {
                 selectionOverlay(for: selected)
             }
+
+            if let marker = tappedMarker {
+                transactionOverlay(for: marker)
+            }
         }
         .frame(height: 200)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Portfolio value chart showing \(selectedRange.accessibilityName) history")
+        .accessibilityLabel({
+            let baseLabel = "Portfolio value chart showing \(selectedRange.accessibilityName) history"
+            if transactionMarkers.isEmpty {
+                return baseLabel
+            }
+            return "\(baseLabel) with \(transactionMarkers.count) transaction marker\(transactionMarkers.count == 1 ? "" : "s")"
+        }())
     }
 
     private func selectionOverlay(for point: PortfolioDataPoint) -> some View {
-        VStack(spacing: 2) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(point.value, format: .currency(code: currency).precision(.fractionLength(0)))
                 .font(Theme.captionFont.weight(.semibold))
                 .foregroundStyle(Theme.textPrimary)
             Text(point.date, format: .dateTime.month(.abbreviated).day())
                 .font(Theme.captionFont)
                 .foregroundStyle(Theme.textMuted)
+            if let marker = markerForPoint(point) {
+                Divider()
+                let lines = marker.summaryLines(assets: assets)
+                if lines.count > 2 {
+                    Text("\(marker.transactions.count) txns")
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textMuted)
+                    ForEach(lines.prefix(2), id: \.self) { line in
+                        Text(line)
+                            .font(Theme.captionFont)
+                            .foregroundStyle(line.hasPrefix("+") ? Theme.sage : Theme.coral)
+                    }
+                    Text("...")
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textMuted)
+                } else {
+                    ForEach(lines, id: \.self) { line in
+                        Text(line)
+                            .font(Theme.captionFont)
+                            .foregroundStyle(line.hasPrefix("+") ? Theme.sage : Theme.coral)
+                    }
+                }
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Theme.bgCard, in: RoundedRectangle(cornerRadius: 6))
         .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+    }
+
+    private func transactionOverlay(for marker: TransactionMarker) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(marker.date, format: .dateTime.month(.abbreviated).day())
+                    .font(Theme.captionFont.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                if marker.isGrouped {
+                    Text("\(marker.transactions.count) txns")
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textMuted)
+                }
+            }
+            ForEach(marker.summaryLines(assets: assets), id: \.self) { line in
+                Text(line)
+                    .font(Theme.captionFont)
+                    .foregroundStyle(line.hasPrefix("+") ? Theme.sage : Theme.coral)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Theme.bgCard, in: RoundedRectangle(cornerRadius: 6))
+        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+    }
+
+    private func markerForPoint(_ point: PortfolioDataPoint) -> TransactionMarker? {
+        let dateString = Self.dateFormatter.string(from: point.date)
+        return transactionMarkers.first(where: { $0.id == dateString })
     }
 
     private func loadHistory() async {
@@ -271,6 +378,10 @@ struct PortfolioChartView: View {
         }
         if PortfolioCalculator.allFiatMatchingCurrency(holdings: holdings, currency: currency) {
             dataPoints = generateFiatDataPoints(assets: assets)
+            transactionMarkers = TransactionMarkerBuilder.buildMarkers(
+                dataPoints: dataPoints,
+                transactionsByAsset: viewModel.transactions
+            )
             isLoading = false
             errorMessage = nil
             return
@@ -293,9 +404,14 @@ struct PortfolioChartView: View {
             )
 
             dataPoints = computePortfolioSeries(history: history, assets: assets, from: fromDate, to: toDate)
+            transactionMarkers = TransactionMarkerBuilder.buildMarkers(
+                dataPoints: dataPoints,
+                transactionsByAsset: viewModel.transactions
+            )
         } catch {
             errorMessage = "Could not load chart data"
             dataPoints = []
+            transactionMarkers = []
         }
 
         isLoading = false
@@ -331,7 +447,7 @@ struct PortfolioChartView: View {
 
         // Pre-compute sorted transactions for each asset
         let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
-            let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+            let txns = (viewModel.transactions[asset.id] ?? []).sorted { $0.parsedDate < $1.parsedDate }
             return (asset, txns)
         }
 
@@ -346,7 +462,7 @@ struct PortfolioChartView: View {
                 let compositeKey = "\(asset.symbol):\(asset.category)"
                 guard let price = priceLookup[compositeKey]?[dateString] else { continue }
 
-                let amount = PortfolioCalculator.amountAtDate(date: date, transactions: sortedTxns, fallbackAmount: asset.amount)
+                let amount = PortfolioCalculator.amountAtDate(date: date, transactions: sortedTxns)
                 dayTotal += price * amount
             }
 
@@ -363,7 +479,7 @@ struct PortfolioChartView: View {
         let toDate = calendar.startOfDay(for: Date())
 
         let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
-            let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+            let txns = (viewModel.transactions[asset.id] ?? []).sorted { $0.parsedDate < $1.parsedDate }
             return (asset, txns)
         }
 
@@ -376,8 +492,7 @@ struct PortfolioChartView: View {
             for (asset, sortedTxns) in assetTransactions {
                 dayTotal += PortfolioCalculator.amountAtDate(
                     date: current,
-                    transactions: sortedTxns,
-                    fallbackAmount: asset.amount
+                    transactions: sortedTxns
                 )
             }
             results.append(PortfolioDataPoint(id: index, date: current, value: dayTotal))

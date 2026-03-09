@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import Charts
 
 enum DashboardSheet: Identifiable {
@@ -15,12 +14,12 @@ enum DashboardSheet: Identifiable {
 }
 
 struct DashboardView: View {
-    @Query private var assets: [Asset]
-    @Query private var allSettings: [UserSettings]
     @State private var viewModel = DashboardViewModel()
     @State private var activeSheet: DashboardSheet?
     @State private var cardsAppeared = false
     @State private var transactionAsset: Asset?
+    @State private var displayCurrency: String = "USD"
+    @State private var showAssetList = false
 
     static let suggestedAssets: [AssetDefinition] = [
         AssetDefinition(id: "bitcoin", name: "Bitcoin", symbol: "BTC", category: .crypto),
@@ -28,14 +27,10 @@ struct DashboardView: View {
         AssetDefinition(id: "USD", name: "US Dollar", symbol: "USD", category: .fiat),
     ]
 
-    private var displayCurrency: String {
-        allSettings.first?.displayCurrency ?? "USD"
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView {
-                if assets.isEmpty {
+                if viewModel.assets.isEmpty && !viewModel.isLoading {
                     emptyState
                 } else if viewModel.isLoading && viewModel.holdings.isEmpty {
                     loadingSkeleton
@@ -50,7 +45,7 @@ struct DashboardView: View {
                                 .background(Theme.coral.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
-                        PortfolioChartView(assets: assets, currency: displayCurrency)
+                        PortfolioChartView(viewModel: viewModel, currency: displayCurrency)
                             .cardAppearance(index: 0, appeared: cardsAppeared)
                         totalValueCard
                             .cardAppearance(index: 1, appeared: cardsAppeared)
@@ -72,12 +67,18 @@ struct DashboardView: View {
             }
             .background(Theme.bgPrimary)
             .refreshable {
-                await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
+                await loadSettings()
+                await viewModel.refresh(baseCurrency: displayCurrency)
             }
             .navigationTitle("Summa")
+            .navigationDestination(isPresented: $showAssetList) {
+                AssetListView(viewModel: viewModel)
+            }
             .toolbar {
-                ToolbarItem(placement: .navigation) {
-                    NavigationLink(destination: AssetListView(viewModel: viewModel)) {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showAssetList = true
+                    } label: {
                         Image(systemName: "list.bullet")
                     }
                 }
@@ -97,17 +98,27 @@ struct DashboardView: View {
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .addAsset:
-                    AddAssetView()
+                    AddAssetView { await viewModel.refresh(baseCurrency: displayCurrency) }
                 case .suggestedAsset(let asset):
-                    AddAssetView(initialAsset: asset)
+                    AddAssetView(initialAsset: asset) { await viewModel.refresh(baseCurrency: displayCurrency) }
                 }
             }
             .sheet(item: $transactionAsset) { asset in
-                AddTransactionView(asset: asset)
+                AddTransactionView(asset: asset) { await viewModel.refresh(baseCurrency: displayCurrency) }
             }
-            .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
-                await viewModel.refresh(assets: assets, baseCurrency: displayCurrency)
+            .task {
+                await loadSettings()
+                await viewModel.refresh(baseCurrency: displayCurrency)
             }
+        }
+    }
+
+    private func loadSettings() async {
+        do {
+            let response: SettingsResponse = try await UserAPIClient.shared.get(path: "/user/settings")
+            displayCurrency = response.settings.displayCurrency
+        } catch {
+            print("[Summa] Failed to fetch settings: \(error)")
         }
     }
 
@@ -255,8 +266,8 @@ struct DashboardView: View {
                 .font(Theme.headlineFont)
 
             ForEach(topHoldings) { holding in
-                if let asset = assets.first(where: { $0.id == holding.id }) {
-                    NavigationLink(destination: AssetDetailView(asset: asset)) {
+                if let asset = viewModel.assets.first(where: { $0.id == holding.id }) {
+                    NavigationLink(destination: AssetDetailView(asset: asset, onUpdate: { await viewModel.refresh(baseCurrency: displayCurrency) })) {
                         HStack(spacing: 12) {
                             Image(systemName: holding.category.iconName)
                                 .foregroundStyle(Theme.categoryColor(holding.category))
@@ -285,7 +296,9 @@ struct DashboardView: View {
             }
 
             if hasMore {
-                NavigationLink(destination: AssetListView(viewModel: viewModel)) {
+                Button {
+                    showAssetList = true
+                } label: {
                     Text("View All")
                         .font(Theme.bodyFont)
                         .foregroundStyle(Theme.sage)

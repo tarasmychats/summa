@@ -1,4 +1,5 @@
 import { getPool } from "../db.js";
+import type { Resolution } from "../config/historyResolution.js";
 
 export interface DailyPrice {
   date: string;
@@ -110,6 +111,77 @@ export async function getMultiAssetPrices(
   );
 
   // Initialize result with empty arrays for all requested assets, keyed by assetId:category
+  const grouped: Record<string, DailyPrice[]> = {};
+  for (const asset of assets) {
+    grouped[assetKey(asset.assetId, asset.category)] = [];
+  }
+
+  for (const row of result.rows) {
+    const key = assetKey(row.asset_id, row.category);
+    grouped[key]?.push({
+      date: typeof row.date === "string" ? row.date : row.date.toISOString().split("T")[0],
+      price: Number(row.price),
+    });
+  }
+
+  return grouped;
+}
+
+const TRUNC_EXPR: Record<Exclude<Resolution, "daily">, string> = {
+  "3day": "floor((extract(epoch from date) - extract(epoch from date_trunc('year', date))) / (3 * 86400))",
+  weekly: "date_trunc('week', date)",
+  monthly: "date_trunc('month', date)",
+};
+
+/**
+ * Get daily prices with optional aggregation.
+ * For 'daily' resolution, behaves identically to getMultiAssetPrices.
+ * For other resolutions, returns the last price per interval bucket
+ * using DISTINCT ON.
+ */
+export async function getMultiAssetPricesAggregated(
+  assets: Array<{ assetId: string; category: string }>,
+  from: string,
+  to: string,
+  currency: "usd" | "eur",
+  resolution: Resolution
+): Promise<Record<string, DailyPrice[]>> {
+  if (resolution === "daily") {
+    return getMultiAssetPrices(assets, from, to, currency);
+  }
+
+  if (assets.length === 0) return {};
+
+  const pool = getPool();
+  const priceColumn = PRICE_COLUMNS[currency];
+  if (!priceColumn) throw new Error(`Invalid currency: ${currency}`);
+
+  const conditions: string[] = [];
+  const params: string[] = [];
+  for (let i = 0; i < assets.length; i++) {
+    const offset = i * 2;
+    conditions.push(
+      `(asset_id = $${offset + 1} AND category = $${offset + 2})`
+    );
+    params.push(assets[i].assetId, assets[i].category);
+  }
+
+  const dateFromIdx = params.length + 1;
+  const dateToIdx = params.length + 2;
+  params.push(from, to);
+
+  const bucket = TRUNC_EXPR[resolution];
+
+  const result = await pool.query(
+    `SELECT DISTINCT ON (asset_id, category, ${bucket})
+       asset_id, category, date, ${priceColumn} AS price
+     FROM daily_prices
+     WHERE (${conditions.join(" OR ")}) AND date >= $${dateFromIdx} AND date <= $${dateToIdx}
+       AND ${priceColumn} IS NOT NULL
+     ORDER BY asset_id, category, ${bucket}, date DESC`,
+    params
+  );
+
   const grouped: Record<string, DailyPrice[]> = {};
   for (const asset of assets) {
     grouped[assetKey(asset.assetId, asset.category)] = [];
