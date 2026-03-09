@@ -4,10 +4,12 @@ import request from "supertest";
 import { createHistoryRouter } from "../history.js";
 
 const mockGetMultiAssetPrices = vi.fn();
+const mockGetMultiAssetPricesAggregated = vi.fn();
 const mockBackfillAsset = vi.fn();
 
 vi.mock("../../repositories/dailyPrices.js", () => ({
   getMultiAssetPrices: (...args: unknown[]) => mockGetMultiAssetPrices(...args),
+  getMultiAssetPricesAggregated: (...args: unknown[]) => mockGetMultiAssetPricesAggregated(...args),
   assetKey: (assetId: string, category: string) => `${assetId}:${category}`,
 }));
 
@@ -39,7 +41,7 @@ describe("GET /api/history", () => {
 
   describe("valid requests", () => {
     it("returns history for a single asset", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "bitcoin:crypto": [
           { date: "2024-01-01", price: 42000 },
           { date: "2024-01-02", price: 43000 },
@@ -59,16 +61,17 @@ describe("GET /api/history", () => {
       expect(response.body.currency).toBe("usd");
       expect(response.body.from).toBe("2024-01-01");
       expect(response.body.to).toBe("2024-01-31");
-      expect(mockGetMultiAssetPrices).toHaveBeenCalledWith(
+      expect(mockGetMultiAssetPricesAggregated).toHaveBeenCalledWith(
         [{ assetId: "bitcoin", category: "crypto" }],
         "2024-01-01",
         "2024-01-31",
-        "usd"
+        "usd",
+        "daily"
       );
     });
 
     it("returns history for multiple assets", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "bitcoin:crypto": [{ date: "2024-01-01", price: 42000 }],
         "AAPL:stock": [{ date: "2024-01-01", price: 185 }],
       });
@@ -84,19 +87,20 @@ describe("GET /api/history", () => {
       expect(response.status).toBe(200);
       expect(response.body.history["bitcoin:crypto"]).toHaveLength(1);
       expect(response.body.history["AAPL:stock"]).toHaveLength(1);
-      expect(mockGetMultiAssetPrices).toHaveBeenCalledWith(
+      expect(mockGetMultiAssetPricesAggregated).toHaveBeenCalledWith(
         [
           { assetId: "bitcoin", category: "crypto" },
           { assetId: "AAPL", category: "stock" },
         ],
         "2024-01-01",
         "2024-01-31",
-        "usd"
+        "usd",
+        "daily"
       );
     });
 
     it("accepts EUR currency", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "AAPL:stock": [{ date: "2024-01-01", price: 170 }],
       });
 
@@ -109,16 +113,17 @@ describe("GET /api/history", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(mockGetMultiAssetPrices).toHaveBeenCalledWith(
+      expect(mockGetMultiAssetPricesAggregated).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        "eur"
+        "eur",
+        "daily"
       );
     });
 
     it("handles case-insensitive currency", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "AAPL:stock": [],
       });
 
@@ -131,11 +136,12 @@ describe("GET /api/history", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(mockGetMultiAssetPrices).toHaveBeenCalledWith(
+      expect(mockGetMultiAssetPricesAggregated).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        "usd"
+        "usd",
+        "daily"
       );
     });
   });
@@ -286,7 +292,7 @@ describe("GET /api/history", () => {
 
   describe("empty history and backfill", () => {
     it("returns empty array for asset with no history and triggers backfill", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "bitcoin:crypto": [],
       });
 
@@ -305,7 +311,7 @@ describe("GET /api/history", () => {
     });
 
     it("does not trigger backfill for assets with existing history", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "bitcoin:crypto": [{ date: "2024-01-01", price: 42000 }],
       });
 
@@ -321,7 +327,7 @@ describe("GET /api/history", () => {
     });
 
     it("triggers backfill only for empty assets in a multi-asset request", async () => {
-      mockGetMultiAssetPrices.mockResolvedValue({
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
         "bitcoin:crypto": [{ date: "2024-01-01", price: 42000 }],
         "AAPL:stock": [],
       });
@@ -341,7 +347,7 @@ describe("GET /api/history", () => {
 
   describe("error handling", () => {
     it("returns 500 when repository throws", async () => {
-      mockGetMultiAssetPrices.mockRejectedValue(new Error("DB connection failed"));
+      mockGetMultiAssetPricesAggregated.mockRejectedValue(new Error("DB connection failed"));
 
       const response = await request(app).get("/api/history").query({
         assets: "bitcoin",
@@ -353,6 +359,83 @@ describe("GET /api/history", () => {
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe("Internal server error");
+    });
+  });
+
+  describe("resolution and aggregation", () => {
+    it("returns resolution field in response", async () => {
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
+        "bitcoin:crypto": [{ date: "2024-01-31", price: 42000 }],
+      });
+
+      const response = await request(app).get("/api/history").query({
+        assets: "bitcoin",
+        categories: "crypto",
+        from: "2024-01-01",
+        to: "2024-01-31",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.resolution).toBe("daily");
+    });
+
+    it("uses monthly resolution for 5-year range", async () => {
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
+        "bitcoin:crypto": [{ date: "2025-12-31", price: 50000 }],
+      });
+
+      const response = await request(app).get("/api/history").query({
+        assets: "bitcoin",
+        categories: "crypto",
+        from: "2021-03-09",
+        to: "2026-03-09",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.resolution).toBe("monthly");
+      expect(mockGetMultiAssetPricesAggregated).toHaveBeenCalledWith(
+        expect.anything(),
+        "2021-03-09",
+        "2026-03-09",
+        "usd",
+        "monthly"
+      );
+    });
+
+    it("uses weekly resolution for 1-year range", async () => {
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
+        "bitcoin:crypto": [],
+      });
+
+      const response = await request(app).get("/api/history").query({
+        assets: "bitcoin",
+        categories: "crypto",
+        from: "2025-03-09",
+        to: "2026-03-09",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.resolution).toBe("weekly");
+    });
+
+    it("uses daily resolution for short ranges", async () => {
+      mockGetMultiAssetPricesAggregated.mockResolvedValue({
+        "bitcoin:crypto": [],
+      });
+
+      const response = await request(app).get("/api/history").query({
+        assets: "bitcoin",
+        categories: "crypto",
+        from: "2026-02-01",
+        to: "2026-03-01",
+        currency: "usd",
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.resolution).toBe("daily");
     });
   });
 });

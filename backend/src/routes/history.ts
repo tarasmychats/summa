@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getMultiAssetPrices, assetKey } from "../repositories/dailyPrices.js";
+import { getMultiAssetPricesAggregated, assetKey } from "../repositories/dailyPrices.js";
 import { backfillAsset } from "../services/backfill.js";
 import { logger } from "../logger.js";
 import { isDbReady } from "../db.js";
+import { getResolution } from "../config/historyResolution.js";
 
 /**
  * Validates a date string is in YYYY-MM-DD format and represents a real date.
@@ -86,6 +87,8 @@ export function createHistoryRouter(): Router {
       return;
     }
 
+    const resolution = getResolution(fromStr, toStr);
+
     // If DB is not available, return empty history (graceful degradation)
     if (!isDbReady()) {
       const emptyHistory: Record<string, Array<{ date: string; price: number }>> = {};
@@ -97,6 +100,7 @@ export function createHistoryRouter(): Router {
         currency: currencyStr,
         from: fromStr,
         to: toStr,
+        resolution,
       });
       return;
     }
@@ -107,11 +111,12 @@ export function createHistoryRouter(): Router {
         category: categoryList[i],
       }));
 
-      const history = await getMultiAssetPrices(
+      const history = await getMultiAssetPricesAggregated(
         assetPairs,
         fromStr,
         toStr,
-        currencyStr
+        currencyStr,
+        resolution
       );
 
       // For assets with no history, trigger async backfill (fire-and-forget)
@@ -140,6 +145,7 @@ export function createHistoryRouter(): Router {
         currency: currencyStr,
         from: fromStr,
         to: toStr,
+        resolution,
       });
     } catch (err) {
       logger.error("history endpoint error", { error: String(err) });
