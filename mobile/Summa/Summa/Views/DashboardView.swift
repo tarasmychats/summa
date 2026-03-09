@@ -19,6 +19,7 @@ struct DashboardView: View {
     @State private var cardsAppeared = false
     @State private var transactionAsset: Asset?
     @State private var displayCurrency: String = "USD"
+    @State private var showAssetList = false
 
     static let suggestedAssets: [AssetDefinition] = [
         AssetDefinition(id: "bitcoin", name: "Bitcoin", symbol: "BTC", category: .crypto),
@@ -70,9 +71,14 @@ struct DashboardView: View {
                 await viewModel.refresh(baseCurrency: displayCurrency)
             }
             .navigationTitle("Summa")
+            .navigationDestination(isPresented: $showAssetList) {
+                AssetListView(viewModel: viewModel)
+            }
             .toolbar {
-                ToolbarItem(placement: .navigation) {
-                    NavigationLink(destination: AssetListView(viewModel: viewModel)) {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showAssetList = true
+                    } label: {
                         Image(systemName: "list.bullet")
                     }
                 }
@@ -290,7 +296,9 @@ struct DashboardView: View {
             }
 
             if hasMore {
-                NavigationLink(destination: AssetListView(viewModel: viewModel)) {
+                Button {
+                    showAssetList = true
+                } label: {
                     Text("View All")
                         .font(Theme.bodyFont)
                         .foregroundStyle(Theme.sage)

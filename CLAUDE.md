@@ -84,6 +84,7 @@ Prerequisites: Node.js, Docker (for PostgreSQL)
 - Server starts without PostgreSQL; history and cron features degrade gracefully
 - All business logic (projections, risk, insights) runs on-device in the iOS app
 - Dependencies: `pg` (PostgreSQL driver), `node-cron` (scheduled jobs), `yahoo-finance2`, CoinGecko API, Frankfurter API
+- Transactions are the single source of truth for asset amounts: `currentAmount = SUM(transactions)`. No initial amount on the asset itself.
 - Transactions use a replay model: `delta` (add/subtract) and `snapshot` (set total) types, replayed chronologically to compute `currentAmount`
 - Portfolio chart: iOS fetches price history from backend, then locally computes daily portfolio total as sum(price x amount) per day
 - UserSettings singleton auto-created on first launch; stores `displayCurrency` (USD or EUR)

@@ -309,8 +309,7 @@ struct AddAssetView: View {
                     name: definition.name,
                     symbol: definition.id,
                     ticker: definition.symbol,
-                    category: definition.category.rawValue,
-                    amount: value
+                    category: definition.category.rawValue
                 )
                 let assetResponse: AssetResponse = try await UserAPIClient.shared.post(
                     path: "/user/assets",

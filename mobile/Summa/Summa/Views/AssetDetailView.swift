@@ -8,6 +8,10 @@ struct AssetDetailView: View {
     @State private var showingSetTotal = false
     @State private var displayCurrency: String = "USD"
 
+    private var computedCurrentAmount: Double {
+        transactions.reduce(0) { $0 + $1.amount }
+    }
+
     var body: some View {
         List {
             // Price chart section
@@ -24,7 +28,7 @@ struct AssetDetailView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.categoryColor(asset.assetCategory))
 
-                    Text(asset.currentAmount.formatted(.number.precision(.fractionLength(0...8)))
+                    Text(computedCurrentAmount.formatted(.number.precision(.fractionLength(0...8)))
                          + " " + asset.displayTicker)
                         .font(Theme.largeValue)
 

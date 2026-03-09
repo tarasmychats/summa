@@ -37,7 +37,6 @@ struct Asset: Codable, Identifiable, Equatable, Hashable {
     let symbol: String
     let ticker: String
     let category: String
-    let amount: Double
     let currentAmount: Double
     let createdAt: String
 
@@ -50,14 +49,13 @@ struct Asset: Codable, Identifiable, Equatable, Hashable {
     }
 
     /// Convenience init for local construction (e.g. tests, previews)
-    init(id: String = UUID().uuidString, name: String, symbol: String, ticker: String = "", category: AssetCategory, amount: Double, currentAmount: Double? = nil) {
+    init(id: String = UUID().uuidString, name: String, symbol: String, ticker: String = "", category: AssetCategory, currentAmount: Double) {
         self.id = id
         self.name = name
         self.symbol = symbol
         self.ticker = ticker
         self.category = category.rawValue
-        self.amount = amount
-        self.currentAmount = currentAmount ?? amount
+        self.currentAmount = currentAmount
         self.createdAt = ISO8601DateFormatter().string(from: Date())
     }
 }
@@ -67,7 +65,6 @@ struct CreateAssetRequest: Codable {
     let symbol: String
     let ticker: String
     let category: String
-    let amount: Double
 }
 
 struct AssetListResponse: Codable {

@@ -3,12 +3,12 @@ import XCTest
 
 final class AssetValueFormatterTests: XCTestCase {
 
-    private func makeAsset(name: String, symbol: String, amount: Double, category: AssetCategory = .crypto) -> Asset {
-        Asset(name: name, symbol: symbol, ticker: symbol.uppercased(), category: category, amount: amount)
+    private func makeAsset(name: String, symbol: String, currentAmount: Double, category: AssetCategory = .crypto) -> Asset {
+        Asset(name: name, symbol: symbol, ticker: symbol.uppercased(), category: category, currentAmount: currentAmount)
     }
 
     func testFormattedValueWithMatchingHolding() {
-        let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", amount: 1.5)
+        let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", currentAmount: 1.5)
         let holdings = [
             PortfolioHolding(id: asset.id, name: "Bitcoin", symbol: "bitcoin", amount: 1.5, pricePerUnit: 60000, category: .crypto)
         ]
@@ -19,14 +19,14 @@ final class AssetValueFormatterTests: XCTestCase {
     }
 
     func testFormattedValueReturnsPlaceholderWhenNoHolding() {
-        let asset = makeAsset(name: "Ethereum", symbol: "ethereum", amount: 10)
+        let asset = makeAsset(name: "Ethereum", symbol: "ethereum", currentAmount: 10)
         let holdings: [PortfolioHolding] = []
         let result = AssetValueFormatter.formattedValue(for: asset, holdings: holdings, currencyCode: "USD")
         XCTAssertEqual(result, "—")
     }
 
     func testFormattedValueReturnsPlaceholderWhenPriceIsZero() {
-        let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", amount: 1)
+        let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", currentAmount: 1)
         let holdings = [
             PortfolioHolding(id: asset.id, name: "Bitcoin", symbol: "bitcoin", amount: 1, pricePerUnit: 0, category: .crypto)
         ]
@@ -35,7 +35,7 @@ final class AssetValueFormatterTests: XCTestCase {
     }
 
     func testFormattedValueWithEURCurrency() {
-        let asset = makeAsset(name: "VOO", symbol: "VOO", amount: 10, category: .stock)
+        let asset = makeAsset(name: "VOO", symbol: "VOO", currentAmount: 10, category: .stock)
         let holdings = [
             PortfolioHolding(id: asset.id, name: "VOO", symbol: "VOO", amount: 10, pricePerUnit: 500, category: .stock)
         ]
@@ -55,7 +55,7 @@ final class AssetValueFormatterTests: XCTestCase {
     }
 
     func testFormattedValueMatchesByAssetID() {
-        let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", amount: 2)
+        let asset = makeAsset(name: "Bitcoin", symbol: "bitcoin", currentAmount: 2)
         let holdings = [
             PortfolioHolding(name: "Ethereum", symbol: "ethereum", amount: 10, pricePerUnit: 3000, category: .crypto),
             PortfolioHolding(id: asset.id, name: "Bitcoin", symbol: "bitcoin", amount: 2, pricePerUnit: 50000, category: .crypto),

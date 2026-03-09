@@ -69,12 +69,8 @@ enum PortfolioCalculator {
 
     /// Replay transactions up to a given date to determine asset amount at that point in time.
     /// Transactions must be pre-sorted by date ascending.
-    static func amountAtDate(date: Date, transactions: [Transaction], fallbackAmount: Double) -> Double {
-        guard !transactions.isEmpty else { return fallbackAmount }
-
+    static func amountAtDate(date: Date, transactions: [Transaction]) -> Double {
         let relevant = transactions.filter { utcCalendar.startOfDay(for: $0.parsedDate) <= utcCalendar.startOfDay(for: date) }
-        guard !relevant.isEmpty else { return fallbackAmount }
-
         return relevant.reduce(0.0) { $0 + $1.amount }
     }
 

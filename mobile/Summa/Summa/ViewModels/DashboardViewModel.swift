@@ -189,14 +189,14 @@ class DashboardViewModel {
                         allHavePrice = false
                         break
                     }
-                    let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns, fallbackAmount: asset.amount)
+                    let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns)
                     dayTotal += price * amount
                 }
 
                 if allHavePrice {
                     // Include assets without history (e.g. fiat) at their current price
                     for (asset, sortedTxns, currentPrice) in assetsWithoutHistory {
-                        let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns, fallbackAmount: asset.amount)
+                        let amount = PortfolioCalculator.amountAtDate(date: candidateDateParsed, transactions: sortedTxns)
                         dayTotal += currentPrice * amount
                     }
                     return dayTotal > 0 ? dayTotal : nil
