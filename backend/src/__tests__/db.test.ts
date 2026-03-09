@@ -78,19 +78,23 @@ describe("db", () => {
     it("creates assets table and drops legacy tracked_assets", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
-      expect(mockQuery).toHaveBeenCalledTimes(4);
+      expect(mockQuery).toHaveBeenCalledTimes(8);
       const calls = mockQuery.mock.calls.map((c: string[][]) => c[0]);
       expect(calls[0]).toContain("assets");
       expect(calls[1]).toContain("DROP TABLE IF EXISTS tracked_assets");
       expect(calls[2]).toContain("daily_prices");
       expect(calls[3]).toContain("backfill_status");
+      expect(calls[4]).toContain("users");
+      expect(calls[5]).toContain("user_settings");
+      expect(calls[6]).toContain("user_assets");
+      expect(calls[7]).toContain("user_transactions");
     });
 
     it("is idempotent (uses IF NOT EXISTS)", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
       await initDb();
-      expect(mockQuery).toHaveBeenCalledTimes(8);
+      expect(mockQuery).toHaveBeenCalledTimes(16);
     });
 
     it("propagates database errors", async () => {

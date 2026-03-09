@@ -70,6 +70,55 @@ export async function initDb(): Promise<void> {
     )
   `);
 
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      apple_user_id VARCHAR UNIQUE,
+      auth_type VARCHAR NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      display_currency VARCHAR DEFAULT 'USD',
+      is_premium BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id)
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_assets (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR NOT NULL,
+      symbol VARCHAR NOT NULL,
+      ticker VARCHAR NOT NULL,
+      category VARCHAR NOT NULL,
+      amount DOUBLE PRECISION DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_transactions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      asset_id UUID REFERENCES user_assets(id) ON DELETE CASCADE,
+      type VARCHAR NOT NULL,
+      amount DOUBLE PRECISION NOT NULL,
+      note TEXT,
+      date TIMESTAMP NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   logger.info("database tables initialized");
 }
 
