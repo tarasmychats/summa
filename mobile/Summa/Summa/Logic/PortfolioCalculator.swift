@@ -73,7 +73,7 @@ enum PortfolioCalculator {
         guard !transactions.isEmpty else { return fallbackAmount }
 
         let relevant = transactions.filter { utcCalendar.startOfDay(for: $0.parsedDate) <= utcCalendar.startOfDay(for: date) }
-        guard !relevant.isEmpty else { return 0.0 }
+        guard !relevant.isEmpty else { return fallbackAmount }
 
         return relevant.reduce(0.0) { $0 + $1.amount }
     }
