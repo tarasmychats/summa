@@ -30,6 +30,7 @@ struct HistoryResponseBody: Codable {
     let currency: String
     let from: String
     let to: String
+    let resolution: String?
 }
 
 struct HistoryDataPoint: Codable {
