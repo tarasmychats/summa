@@ -78,23 +78,25 @@ describe("db", () => {
     it("creates assets table and drops legacy tracked_assets", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
-      expect(mockQuery).toHaveBeenCalledTimes(8);
+      expect(mockQuery).toHaveBeenCalledTimes(10);
       const calls = mockQuery.mock.calls.map((c: string[][]) => c[0]);
       expect(calls[0]).toContain("assets");
-      expect(calls[1]).toContain("DROP TABLE IF EXISTS tracked_assets");
-      expect(calls[2]).toContain("daily_prices");
-      expect(calls[3]).toContain("backfill_status");
-      expect(calls[4]).toContain("users");
-      expect(calls[5]).toContain("user_settings");
-      expect(calls[6]).toContain("user_assets");
-      expect(calls[7]).toContain("user_transactions");
+      expect(calls[1]).toContain("ADD COLUMN IF NOT EXISTS enabled");
+      expect(calls[2]).toContain("DROP TABLE IF EXISTS tracked_assets");
+      expect(calls[3]).toContain("daily_prices");
+      expect(calls[4]).toContain("backfill_status");
+      expect(calls[5]).toContain("users");
+      expect(calls[6]).toContain("user_settings");
+      expect(calls[7]).toContain("user_assets");
+      expect(calls[8]).toContain("DROP COLUMN IF EXISTS amount");
+      expect(calls[9]).toContain("user_transactions");
     });
 
     it("is idempotent (uses IF NOT EXISTS)", async () => {
       mockQuery.mockResolvedValue({ rows: [] });
       await initDb();
       await initDb();
-      expect(mockQuery).toHaveBeenCalledTimes(16);
+      expect(mockQuery).toHaveBeenCalledTimes(20);
     });
 
     it("propagates database errors", async () => {

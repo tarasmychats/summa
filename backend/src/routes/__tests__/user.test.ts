@@ -63,14 +63,14 @@ describe("user routes", () => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.displayCurrency).toBe("USD");
+      expect(res.body.settings.displayCurrency).toBe("USD");
     });
   });
 
   describe("GET /api/user/assets", () => {
     it("returns user assets with currentAmount", async () => {
       mockGetUserAssets.mockResolvedValue([
-        { id: "a1", name: "Bitcoin", symbol: "bitcoin", ticker: "BTC", category: "crypto", amount: 1, currentAmount: 1.5, createdAt: new Date() },
+        { id: "a1", name: "Bitcoin", symbol: "bitcoin", ticker: "BTC", category: "crypto", currentAmount: 1.5, createdAt: new Date() },
       ]);
 
       const res = await request(app)
@@ -85,13 +85,13 @@ describe("user routes", () => {
 
   describe("POST /api/user/assets", () => {
     it("creates an asset", async () => {
-      const newAsset = { id: "a1", name: "Ethereum", symbol: "ethereum", ticker: "ETH", category: "crypto", amount: 10, currentAmount: 10, createdAt: new Date() };
+      const newAsset = { id: "a1", name: "Ethereum", symbol: "ethereum", ticker: "ETH", category: "crypto", currentAmount: 0, createdAt: new Date() };
       mockCreateAsset.mockResolvedValue(newAsset);
 
       const res = await request(app)
         .post("/api/user/assets")
         .set("Authorization", `Bearer ${token}`)
-        .send({ name: "Ethereum", symbol: "ethereum", ticker: "ETH", category: "crypto", amount: 10 });
+        .send({ name: "Ethereum", symbol: "ethereum", ticker: "ETH", category: "crypto" });
 
       expect(res.status).toBe(201);
       expect(res.body.asset.name).toBe("Ethereum");

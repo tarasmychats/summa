@@ -15,6 +15,10 @@ export function setDbReady(ready: boolean): void {
   dbReady = ready;
 }
 
+export function query(text: string, params?: any[]): Promise<pg.QueryResult> {
+  return getPool().query(text, params);
+}
+
 export function getPool(): pg.Pool {
   if (!pool) {
     pool = new Pool(
@@ -41,8 +45,14 @@ export async function initDb(): Promise<void> {
       category VARCHAR(20) NOT NULL,
       name VARCHAR(200) NOT NULL,
       symbol VARCHAR(20) NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT true,
       PRIMARY KEY (id, category)
     )
+  `);
+
+  // Migration: add enabled column to assets table
+  await db.query(`
+    ALTER TABLE assets ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT true
   `);
 
   // Drop legacy table (data now lives in seed file)
@@ -69,6 +79,14 @@ export async function initDb(): Promise<void> {
       PRIMARY KEY(asset_id, category)
     )
   `);
+
+  if (config.resetUserData) {
+    logger.warn("RESET_USER_DATA is set — dropping user tables");
+    await db.query(`DROP TABLE IF EXISTS user_transactions`);
+    await db.query(`DROP TABLE IF EXISTS user_assets`);
+    await db.query(`DROP TABLE IF EXISTS user_settings`);
+    await db.query(`DROP TABLE IF EXISTS users`);
+  }
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -100,10 +118,14 @@ export async function initDb(): Promise<void> {
       symbol VARCHAR NOT NULL,
       ticker VARCHAR NOT NULL,
       category VARCHAR NOT NULL,
-      amount DOUBLE PRECISION DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     )
+  `);
+
+  // Migration: drop legacy amount column (initial amount now stored as a transaction)
+  await db.query(`
+    ALTER TABLE user_assets DROP COLUMN IF EXISTS amount
   `);
 
   await db.query(`

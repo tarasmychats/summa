@@ -6,10 +6,11 @@ export interface AssetSeed {
   category: string;
   name: string;
   symbol: string;
+  enabled?: boolean;
 }
 
 /**
- * Batch insert assets from seed data. ON CONFLICT DO NOTHING makes this idempotent.
+ * Batch insert assets from seed data. Updates name, symbol, and enabled on conflict.
  */
 export async function seedAssets(assets: AssetSeed[]): Promise<void> {
   if (assets.length === 0) return;
@@ -17,19 +18,22 @@ export async function seedAssets(assets: AssetSeed[]): Promise<void> {
   const pool = getPool();
 
   const values: string[] = [];
-  const params: string[] = [];
+  const params: (string | boolean)[] = [];
   for (let i = 0; i < assets.length; i++) {
-    const offset = i * 4;
+    const offset = i * 5;
     values.push(
-      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`
     );
-    params.push(assets[i].id, assets[i].category, assets[i].name, assets[i].symbol);
+    params.push(assets[i].id, assets[i].category, assets[i].name, assets[i].symbol, assets[i].enabled ?? false);
   }
 
   await pool.query(
-    `INSERT INTO assets (id, category, name, symbol)
+    `INSERT INTO assets (id, category, name, symbol, enabled)
      VALUES ${values.join(", ")}
-     ON CONFLICT (id, category) DO NOTHING`,
+     ON CONFLICT (id, category) DO UPDATE SET
+       name = EXCLUDED.name,
+       symbol = EXCLUDED.symbol,
+       enabled = EXCLUDED.enabled`,
     params
   );
 }
@@ -42,7 +46,7 @@ export async function getAllAssets(): Promise<
 > {
   const pool = getPool();
   const result = await pool.query(
-    `SELECT id, category FROM assets ORDER BY category, id`
+    `SELECT id, category FROM assets WHERE enabled = true ORDER BY category, id`
   );
 
   const grouped: Record<string, Array<{ assetId: string; category: string }>> = {};
@@ -68,7 +72,7 @@ export async function searchAssets(
 
   let sql = `
     SELECT id, category, name, symbol FROM assets
-    WHERE (name ILIKE $1 OR symbol ILIKE $1 OR id ILIKE $1)
+    WHERE enabled = true AND (name ILIKE $1 OR symbol ILIKE $1 OR id ILIKE $1)
   `;
   const params: string[] = [pattern, prefixPattern];
 
@@ -96,7 +100,7 @@ export async function searchAssets(
 
 /**
  * Looks up the symbol for an asset by its ID and category.
- * Returns null if the asset is not found.
+ * Returns null if the asset is not found or disabled.
  */
 export async function getAssetSymbol(
   assetId: string,
@@ -104,8 +108,23 @@ export async function getAssetSymbol(
 ): Promise<string | null> {
   const pool = getPool();
   const result = await pool.query(
-    `SELECT symbol FROM assets WHERE id = $1 AND category = $2`,
+    `SELECT symbol FROM assets WHERE id = $1 AND category = $2 AND enabled = true`,
     [assetId, category]
   );
   return result.rows.length > 0 ? result.rows[0].symbol : null;
+}
+
+/**
+ * Check if an asset is enabled. Used to block adding disabled assets.
+ */
+export async function isAssetEnabled(
+  assetId: string,
+  category: string
+): Promise<boolean> {
+  const pool = getPool();
+  const result = await pool.query(
+    `SELECT 1 FROM assets WHERE id = $1 AND category = $2 AND enabled = true`,
+    [assetId, category]
+  );
+  return result.rows.length > 0;
 }

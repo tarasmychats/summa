@@ -68,7 +68,7 @@ describe("db schema — user tables", () => {
     expect(assetsCall).toContain("symbol VARCHAR NOT NULL");
     expect(assetsCall).toContain("ticker VARCHAR NOT NULL");
     expect(assetsCall).toContain("category VARCHAR NOT NULL");
-    expect(assetsCall).toContain("amount DOUBLE PRECISION DEFAULT 0");
+    expect(assetsCall).not.toContain("amount");
   });
 
   it("creates user_transactions table", async () => {

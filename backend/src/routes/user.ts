@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getOrCreateSettings, updateSettings } from "../repositories/userSettings.js";
 import { getUserAssets, createAsset, updateAsset, deleteAsset } from "../repositories/userAssets.js";
+import { isAssetEnabled } from "../repositories/assets.js";
 import { getTransactions, createTransaction, deleteTransaction } from "../repositories/userTransactions.js";
 import { deleteUser } from "../repositories/users.js";
 
@@ -12,7 +13,7 @@ export function createUserRouter(): Router {
   router.get("/settings", async (req, res) => {
     try {
       const settings = await getOrCreateSettings(req.userId!);
-      res.json(settings);
+      res.json({ settings });
     } catch (error) {
       console.error("Failed to get settings:", error);
       res.status(500).json({ error: "Failed to get settings" });
@@ -23,7 +24,7 @@ export function createUserRouter(): Router {
     try {
       const { displayCurrency, isPremium } = req.body;
       const settings = await updateSettings(req.userId!, { displayCurrency, isPremium });
-      res.json(settings);
+      res.json({ settings });
     } catch (error) {
       console.error("Failed to update settings:", error);
       res.status(500).json({ error: "Failed to update settings" });
@@ -43,15 +44,21 @@ export function createUserRouter(): Router {
   });
 
   router.post("/assets", async (req, res) => {
-    const { name, symbol, ticker, category, amount } = req.body;
+    const { name, symbol, ticker, category } = req.body;
     if (!name || !symbol || !ticker || !category) {
       res.status(400).json({ error: "Required: name, symbol, ticker, category" });
       return;
     }
 
     try {
+      const enabled = await isAssetEnabled(symbol, category);
+      if (!enabled) {
+        res.status(403).json({ error: "This asset is currently disabled" });
+        return;
+      }
+
       const asset = await createAsset(req.userId!, {
-        name, symbol, ticker, category, amount: amount ?? 0,
+        name, symbol, ticker, category,
       });
       res.status(201).json({ asset });
     } catch (error) {
@@ -61,9 +68,9 @@ export function createUserRouter(): Router {
   });
 
   router.patch("/assets/:id", async (req, res) => {
-    const { name, amount } = req.body;
+    const { name } = req.body;
     try {
-      const asset = await updateAsset(req.userId!, req.params.id, { name, amount });
+      const asset = await updateAsset(req.userId!, req.params.id, { name });
       if (!asset) {
         res.status(404).json({ error: "Asset not found" });
         return;

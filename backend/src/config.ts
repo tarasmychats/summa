@@ -30,6 +30,7 @@ export const config = {
   },
 
   runCronOnStartup: process.env.RUN_CRON_ON_STARTUP === "true",
+  resetUserData: process.env.RESET_USER_DATA === "true",
 
   coingeckoApiKey: process.env.COINGECKO_API_KEY || undefined,
   cryptoCompareApiKey: process.env.CRYPTOCOMPARE_API_KEY || undefined,

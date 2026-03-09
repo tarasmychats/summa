@@ -7,7 +7,6 @@ export interface UserAssetRow {
   symbol: string;
   ticker: string;
   category: string;
-  amount: number;
   currentAmount: number;
   createdAt: Date;
 }
@@ -17,14 +16,13 @@ export interface CreateAssetInput {
   symbol: string;
   ticker: string;
   category: string;
-  amount: number;
 }
 
 export async function getUserAssets(userId: string): Promise<UserAssetRow[]> {
   const result = await query(
     `SELECT
-      a.id, a.user_id, a.name, a.symbol, a.ticker, a.category, a.amount, a.created_at,
-      a.amount + COALESCE(
+      a.id, a.user_id, a.name, a.symbol, a.ticker, a.category, a.created_at,
+      COALESCE(
         (SELECT SUM(t.amount) FROM user_transactions t WHERE t.asset_id = a.id),
         0
       ) AS current_amount
@@ -38,10 +36,10 @@ export async function getUserAssets(userId: string): Promise<UserAssetRow[]> {
 
 export async function createAsset(userId: string, input: CreateAssetInput): Promise<UserAssetRow> {
   const result = await query(
-    `INSERT INTO user_assets (user_id, name, symbol, ticker, category, amount)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, user_id, name, symbol, ticker, category, amount, amount AS current_amount, created_at`,
-    [userId, input.name, input.symbol, input.ticker, input.category, input.amount]
+    `INSERT INTO user_assets (user_id, name, symbol, ticker, category)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, user_id, name, symbol, ticker, category, 0 AS current_amount, created_at`,
+    [userId, input.name, input.symbol, input.ticker, input.category]
   );
   return mapRow(result.rows[0]);
 }
@@ -49,7 +47,7 @@ export async function createAsset(userId: string, input: CreateAssetInput): Prom
 export async function updateAsset(
   userId: string,
   assetId: string,
-  updates: { name?: string; amount?: number }
+  updates: { name?: string }
 ): Promise<UserAssetRow | null> {
   const sets: string[] = [];
   const params: (string | number)[] = [];
@@ -59,10 +57,6 @@ export async function updateAsset(
     sets.push(`name = $${paramIndex++}`);
     params.push(updates.name);
   }
-  if (updates.amount !== undefined) {
-    sets.push(`amount = $${paramIndex++}`);
-    params.push(updates.amount);
-  }
   if (sets.length === 0) return null;
 
   sets.push(`updated_at = NOW()`);
@@ -71,7 +65,9 @@ export async function updateAsset(
   const result = await query(
     `UPDATE user_assets SET ${sets.join(", ")}
      WHERE user_id = $${paramIndex} AND id = $${paramIndex + 1}
-     RETURNING id, user_id, name, symbol, ticker, category, amount, amount AS current_amount, created_at`,
+     RETURNING id, user_id, name, symbol, ticker, category,
+       COALESCE((SELECT SUM(t.amount) FROM user_transactions t WHERE t.asset_id = user_assets.id), 0) AS current_amount,
+       created_at`,
     params
   );
   return result.rows.length > 0 ? mapRow(result.rows[0]) : null;
@@ -93,7 +89,6 @@ function mapRow(row: any): UserAssetRow {
     symbol: row.symbol,
     ticker: row.ticker,
     category: row.category,
-    amount: parseFloat(row.amount),
     currentAmount: parseFloat(row.current_amount),
     createdAt: row.created_at,
   };
