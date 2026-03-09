@@ -3,10 +3,14 @@ import { resolve } from "path";
 
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
+import rateLimit from "express-rate-limit";
 import { createPricesRouter } from "./routes/prices.js";
 import { createSearchRouter } from "./routes/search.js";
 import { createHistoryRouter } from "./routes/history.js";
+import { createAuthRouter } from "./routes/auth.js";
+import { createUserRouter } from "./routes/user.js";
 import { requestLogger } from "./middleware/requestLogger.js";
+import { authMiddleware } from "./middleware/auth.js";
 import { logger } from "./logger.js";
 import { config } from "./config.js";
 import { initDb, isDbReady, setDbReady, closePool } from "./db.js";
@@ -27,6 +31,15 @@ app.get("/health", (_req, res) => {
 app.use("/api", createPricesRouter());
 app.use("/api", createSearchRouter());
 app.use("/api", createHistoryRouter());
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: "Too many auth requests, try again later" },
+});
+
+app.use("/api/auth", authLimiter, createAuthRouter());
+app.use("/api/user", authMiddleware, createUserRouter());
 
 // Global error handler — safety net for unhandled errors
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
