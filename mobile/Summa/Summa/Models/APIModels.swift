@@ -12,18 +12,26 @@ struct RefreshResponse: Codable {
     let accessToken: String
 }
 
-// MARK: - User Settings (API version, not SwiftData)
+// MARK: - User Settings
 
-struct APIUserSettings: Codable, Equatable {
+struct UserSettings: Codable, Equatable {
     let id: String
     let userId: String
     let displayCurrency: String
     let isPremium: Bool
 }
 
-// MARK: - User Asset (API version)
+struct UpdateSettingsRequest: Codable {
+    let displayCurrency: String
+}
 
-struct APIAsset: Codable, Identifiable, Equatable {
+struct SettingsResponse: Codable {
+    let settings: UserSettings
+}
+
+// MARK: - Asset
+
+struct Asset: Codable, Identifiable, Equatable, Hashable {
     let id: String
     let name: String
     let symbol: String
@@ -40,6 +48,18 @@ struct APIAsset: Codable, Identifiable, Equatable {
     var displayTicker: String {
         ticker.isEmpty ? symbol.uppercased() : ticker
     }
+
+    /// Convenience init for local construction (e.g. tests, previews)
+    init(id: String = UUID().uuidString, name: String, symbol: String, ticker: String = "", category: AssetCategory, amount: Double, currentAmount: Double? = nil) {
+        self.id = id
+        self.name = name
+        self.symbol = symbol
+        self.ticker = ticker
+        self.category = category.rawValue
+        self.amount = amount
+        self.currentAmount = currentAmount ?? amount
+        self.createdAt = ISO8601DateFormatter().string(from: Date())
+    }
 }
 
 struct CreateAssetRequest: Codable {
@@ -51,16 +71,16 @@ struct CreateAssetRequest: Codable {
 }
 
 struct AssetListResponse: Codable {
-    let assets: [APIAsset]
+    let assets: [Asset]
 }
 
 struct AssetResponse: Codable {
-    let asset: APIAsset
+    let asset: Asset
 }
 
-// MARK: - Transaction (API version)
+// MARK: - Transaction
 
-struct APITransaction: Codable, Identifiable, Equatable {
+struct Transaction: Codable, Identifiable, Equatable {
     let id: String
     let userId: String
     let assetId: String
@@ -69,6 +89,17 @@ struct APITransaction: Codable, Identifiable, Equatable {
     let note: String?
     let date: String
     let createdAt: String
+
+    /// Parsed date for display and computation
+    var parsedDate: Date {
+        Self.isoFormatter.date(from: date) ?? Date()
+    }
+
+    private static let isoFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
 }
 
 struct CreateTransactionRequest: Codable {
@@ -79,9 +110,9 @@ struct CreateTransactionRequest: Codable {
 }
 
 struct TransactionListResponse: Codable {
-    let transactions: [APITransaction]
+    let transactions: [Transaction]
 }
 
 struct TransactionResponse: Codable {
-    let transaction: APITransaction
+    let transaction: Transaction
 }

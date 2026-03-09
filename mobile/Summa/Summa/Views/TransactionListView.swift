@@ -1,13 +1,13 @@
 import SwiftUI
-import SwiftData
 
 struct TransactionListView: View {
     let asset: Asset
-    @Environment(\.modelContext) private var modelContext
+    var onUpdate: (() async -> Void)?
+    @State private var transactions: [Transaction] = []
     @State private var showingAddTransaction = false
 
     private var sortedTransactions: [Transaction] {
-        (asset.transactions ?? []).sorted { $0.date > $1.date }
+        transactions.sorted { $0.parsedDate > $1.parsedDate }
     }
 
     var body: some View {
@@ -26,11 +26,18 @@ struct TransactionListView: View {
                     }
                     .onDelete { indexSet in
                         let allTxns = sortedTransactions
-                        for index in indexSet {
-                            modelContext.delete(allTxns[index])
+                        Task {
+                            for index in indexSet {
+                                let txn = allTxns[index]
+                                do {
+                                    try await UserAPIClient.shared.delete(path: "/user/assets/\(asset.id)/transactions/\(txn.id)")
+                                } catch {
+                                    print("[Summa] Failed to delete transaction: \(error)")
+                                }
+                            }
+                            await loadTransactions()
+                            await onUpdate?()
                         }
-                        try? modelContext.save()
-                        asset.amount = asset.currentAmount
                     }
                 }
                 .scrollContentBackground(.hidden)
@@ -49,7 +56,22 @@ struct TransactionListView: View {
             }
         }
         .sheet(isPresented: $showingAddTransaction) {
-            AddTransactionView(asset: asset)
+            AddTransactionView(asset: asset) {
+                await loadTransactions()
+                await onUpdate?()
+            }
+        }
+        .task {
+            await loadTransactions()
+        }
+    }
+
+    private func loadTransactions() async {
+        do {
+            let response: TransactionListResponse = try await UserAPIClient.shared.get(path: "/user/assets/\(asset.id)/transactions")
+            transactions = response.transactions
+        } catch {
+            print("[Summa] Failed to fetch transactions: \(error)")
         }
     }
 }

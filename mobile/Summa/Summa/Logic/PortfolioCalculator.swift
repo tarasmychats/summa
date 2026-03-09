@@ -1,7 +1,7 @@
 import Foundation
 
 struct PortfolioHolding: Identifiable {
-    let id: UUID
+    let id: String
     let name: String
     let symbol: String
     let amount: Double
@@ -12,7 +12,7 @@ struct PortfolioHolding: Identifiable {
         amount * pricePerUnit
     }
 
-    init(id: UUID = UUID(), name: String, symbol: String, amount: Double, pricePerUnit: Double, category: AssetCategory) {
+    init(id: String = UUID().uuidString, name: String, symbol: String, amount: Double, pricePerUnit: Double, category: AssetCategory) {
         self.id = id
         self.name = name
         self.symbol = symbol
@@ -72,7 +72,7 @@ enum PortfolioCalculator {
     static func amountAtDate(date: Date, transactions: [Transaction], fallbackAmount: Double) -> Double {
         guard !transactions.isEmpty else { return fallbackAmount }
 
-        let relevant = transactions.filter { utcCalendar.startOfDay(for: $0.date) <= utcCalendar.startOfDay(for: date) }
+        let relevant = transactions.filter { utcCalendar.startOfDay(for: $0.parsedDate) <= utcCalendar.startOfDay(for: date) }
         guard !relevant.isEmpty else { return 0.0 }
 
         return relevant.reduce(0.0) { $0 + $1.amount }

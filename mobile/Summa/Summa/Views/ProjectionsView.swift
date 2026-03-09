@@ -1,18 +1,13 @@
 import SwiftUI
-import SwiftData
 import Charts
 
 struct ProjectionsView: View {
-    @Query private var assets: [Asset]
-    @Query private var allSettings: [UserSettings]
+    @State private var assets: [Asset] = []
     @State private var selectedYears = 10
     @State private var holdings: [PortfolioHolding] = []
     @State private var currencyCode: String = "USD"
     @State private var priceError: String?
-
-    private var displayCurrency: String {
-        allSettings.first?.displayCurrency ?? "USD"
-    }
+    @State private var displayCurrency: String = "USD"
 
     private let yearOptions = [10, 20, 50]
 
@@ -85,11 +80,11 @@ struct ProjectionsView: View {
             }
             .background(Theme.bgPrimary)
             .refreshable {
-                await refreshHoldings()
+                await refreshData()
             }
             .navigationTitle("Projections")
-            .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.reduce(0, +))") {
-                await refreshHoldings()
+            .task {
+                await refreshData()
             }
         }
     }
@@ -105,9 +100,33 @@ struct ProjectionsView: View {
         }
     }
 
+    private func refreshData() async {
+        // Fetch settings
+        do {
+            let response: SettingsResponse = try await UserAPIClient.shared.get(path: "/user/settings")
+            displayCurrency = response.settings.displayCurrency
+        } catch {
+            print("[Summa] Failed to fetch settings: \(error)")
+        }
+
+        // Fetch assets
+        do {
+            let response: AssetListResponse = try await UserAPIClient.shared.get(path: "/user/assets")
+            assets = response.assets
+        } catch {
+            print("[Summa] Failed to fetch assets: \(error)")
+        }
+
+        await refreshHoldings()
+    }
+
     private func refreshHoldings() async {
         priceError = nil
         currencyCode = displayCurrency
+        guard !assets.isEmpty else {
+            holdings = []
+            return
+        }
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,

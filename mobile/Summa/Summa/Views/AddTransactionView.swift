@@ -1,19 +1,19 @@
 import SwiftUI
-import SwiftData
 
 struct AddTransactionView: View {
     let asset: Asset
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var amount = ""
     var initialMode: EntryMode? = nil
+    var onSave: (() async -> Void)?
 
     @State private var mode: EntryMode = .addSubtract
     @State private var isSubtract = false
     @State private var date = Date()
     @State private var note = ""
     @State private var savedTrigger = 0
+    @State private var isSaving = false
 
     enum EntryMode: String {
         case addSubtract
@@ -35,7 +35,7 @@ struct AddTransactionView: View {
         if mode == .addSubtract {
             return true
         } else {
-            // "Set total" — the computed delta must be non-zero
+            // "Set total" -- the computed delta must be non-zero
             let delta = value - asset.currentAmount
             return delta != 0
         }
@@ -97,7 +97,7 @@ struct AddTransactionView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
-                        .disabled(!isValid)
+                        .disabled(!isValid || isSaving)
                 }
             }
         }
@@ -105,6 +105,7 @@ struct AddTransactionView: View {
 
     private func save() {
         guard let value = parsedAmount, isValid else { return }
+        isSaving = true
 
         let deltaAmount: Double
         let txnNote: String?
@@ -119,19 +120,30 @@ struct AddTransactionView: View {
             txnNote = note.isEmpty ? "Set total to \(formatted)" : note
         }
 
-        let txn = Transaction(
-            date: date,
-            type: .delta,
-            amount: deltaAmount,
-            note: txnNote
-        )
-        txn.asset = asset
-        modelContext.insert(txn)
-        try? modelContext.save()
-        asset.amount = asset.currentAmount
-        savedTrigger += 1
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            dismiss()
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime]
+
+        Task {
+            do {
+                let createTxn = CreateTransactionRequest(
+                    type: "delta",
+                    amount: deltaAmount,
+                    date: dateFormatter.string(from: date),
+                    note: txnNote
+                )
+                let _: TransactionResponse = try await UserAPIClient.shared.post(
+                    path: "/user/assets/\(asset.id)/transactions",
+                    body: createTxn
+                )
+                savedTrigger += 1
+                await onSave?()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    dismiss()
+                }
+            } catch {
+                print("[Summa] Failed to save transaction: \(error)")
+                isSaving = false
+            }
         }
     }
 }

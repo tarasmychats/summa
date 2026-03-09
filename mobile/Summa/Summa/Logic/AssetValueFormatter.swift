@@ -2,7 +2,7 @@ import Foundation
 
 enum AssetValueFormatter {
     /// Returns a formatted fiat value string for an asset based on its holdings data.
-    /// Returns "—" if no price data is available for the asset.
+    /// Returns "\u{2014}" if no price data is available for the asset.
     static func formattedValue(
         for asset: Asset,
         holdings: [PortfolioHolding],
@@ -10,7 +10,7 @@ enum AssetValueFormatter {
     ) -> String {
         guard let holding = holdings.first(where: { $0.id == asset.id }),
               holding.pricePerUnit > 0 else {
-            return "—"
+            return "\u{2014}"
         }
         let value = asset.currentAmount * holding.pricePerUnit
         return formatCurrency(value, code: currencyCode)
@@ -21,9 +21,9 @@ enum AssetValueFormatter {
         value.formatted(.currency(code: code).precision(.fractionLength(0...2)))
     }
 
-    /// Compact price for chart Y-axis labels (e.g. "92K $", "1.2M €").
+    /// Compact price for chart Y-axis labels (e.g. "92K $", "1.2M \u{20AC}").
     static func compactPrice(_ value: Double, code: String) -> String {
-        let symbol = code.uppercased() == "EUR" ? "€" : "$"
+        let symbol = code.uppercased() == "EUR" ? "\u{20AC}" : "$"
         let abs = Swift.abs(value)
         let sign = value < 0 ? "-" : ""
         if abs >= 1_000_000 {

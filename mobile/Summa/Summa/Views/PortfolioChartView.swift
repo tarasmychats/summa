@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import Charts
 
 enum ChartTimeRange: String, CaseIterable, Identifiable {
@@ -71,8 +70,10 @@ struct PortfolioDataPoint: Identifiable {
 }
 
 struct PortfolioChartView: View {
-    let assets: [Asset]
+    let viewModel: DashboardViewModel
     let currency: String
+
+    private var assets: [Asset] { viewModel.assets }
 
     @State private var selectedRange: ChartTimeRange = .threeMonths
     @State private var dataPoints: [PortfolioDataPoint] = []
@@ -135,7 +136,7 @@ struct PortfolioChartView: View {
             }
         }
         .themeCard()
-        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id.uuidString).joined())-\(currency)-\(assets.map { $0.transactions?.count ?? 0 }.description)") {
+        .task(id: "\(selectedRange.rawValue)-\(assets.map(\.id).joined())-\(currency)") {
             await loadHistory()
         }
     }
@@ -331,7 +332,7 @@ struct PortfolioChartView: View {
 
         // Pre-compute sorted transactions for each asset
         let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
-            let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+            let txns = (viewModel.transactions[asset.id] ?? []).sorted { $0.parsedDate < $1.parsedDate }
             return (asset, txns)
         }
 
@@ -363,7 +364,7 @@ struct PortfolioChartView: View {
         let toDate = calendar.startOfDay(for: Date())
 
         let assetTransactions: [(asset: Asset, sortedTxns: [Transaction])] = assets.map { asset in
-            let txns = (asset.transactions ?? []).sorted { $0.date < $1.date }
+            let txns = (viewModel.transactions[asset.id] ?? []).sorted { $0.parsedDate < $1.parsedDate }
             return (asset, txns)
         }
 

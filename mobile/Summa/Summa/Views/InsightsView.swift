@@ -1,15 +1,10 @@
 import SwiftUI
-import SwiftData
 
 struct InsightsView: View {
-    @Query private var assets: [Asset]
-    @Query private var allSettings: [UserSettings]
+    @State private var assets: [Asset] = []
     @State private var holdings: [PortfolioHolding] = []
     @State private var priceError: String?
-
-    private var displayCurrency: String {
-        allSettings.first?.displayCurrency ?? "USD"
-    }
+    @State private var displayCurrency: String = "USD"
 
     private var insights: [Insight] {
         InsightsEngine.generate(holdings: holdings)
@@ -58,17 +53,41 @@ struct InsightsView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.bgPrimary)
             .refreshable {
-                await refreshHoldings()
+                await refreshData()
             }
             .navigationTitle("Insights")
-            .task(id: "\(assets.map(\.id.uuidString).sorted().joined(separator: ","))-\(displayCurrency)-\(assets.map { $0.transactions?.count ?? 0 }.reduce(0, +))") {
-                await refreshHoldings()
+            .task {
+                await refreshData()
             }
         }
     }
 
+    private func refreshData() async {
+        // Fetch settings
+        do {
+            let response: SettingsResponse = try await UserAPIClient.shared.get(path: "/user/settings")
+            displayCurrency = response.settings.displayCurrency
+        } catch {
+            print("[Summa] Failed to fetch settings: \(error)")
+        }
+
+        // Fetch assets
+        do {
+            let response: AssetListResponse = try await UserAPIClient.shared.get(path: "/user/assets")
+            assets = response.assets
+        } catch {
+            print("[Summa] Failed to fetch assets: \(error)")
+        }
+
+        await refreshHoldings()
+    }
+
     private func refreshHoldings() async {
         priceError = nil
+        guard !assets.isEmpty else {
+            holdings = []
+            return
+        }
         do {
             let prices = try await PriceAPIClient.shared.fetchPrices(
                 assets: assets,
